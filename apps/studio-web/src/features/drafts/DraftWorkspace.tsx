@@ -8,6 +8,7 @@ import type {
 import {
   Braces,
   FlaskConical,
+  PanelRight,
   Save,
   Settings2,
   Workflow,
@@ -20,6 +21,7 @@ import {
   useReducer,
   useState,
 } from "react";
+import type {KeyboardEvent} from "react";
 
 import {BulkDiffPanel} from "@/features/drafts/BulkDiffPanel";
 import {DraftCanvas} from "@/features/drafts/DraftCanvas";
@@ -54,7 +56,19 @@ type Props = {
   startTestRun?: typeof createDraftTestRun;
   connectRun?: RunEventConnector;
   loadTrace?: typeof getRunTrace;
+  restoredNodeId?: string | null;
+  restoredPanel?: string | null;
+  restoredRunId?: string | null;
 };
+
+type DraftPanel = "simple" | "graph" | "inspector" | "bulk" | "test";
+const DRAFT_PANELS: DraftPanel[] = [
+  "simple",
+  "graph",
+  "inspector",
+  "bulk",
+  "test",
+];
 
 export function DraftWorkspace(props: Props) {
   if (props.initialDraft) {
@@ -120,13 +134,34 @@ function ReadyDraftWorkspace({
   startTestRun,
   connectRun,
   loadTrace,
+  restoredNodeId: nodeIdFromUrl = null,
+  restoredPanel: panelFromUrl = null,
+  restoredRunId: runIdFromUrl = null,
 }: Omit<Props, "initialDraft"> & {initialDraft: AgentDraft}) {
   const t = useTranslations("draft");
+  const initialSelectedNodeId = restoredNodeId(
+    initialDraft.agent_spec,
+    nodeIdFromUrl,
+  );
+  const initialRunId = restoredRunId(runIdFromUrl);
   const [state, dispatch] = useReducer(
     draftEditorReducer,
-    initialDraft,
-    initialDraftState,
+    {
+      draft: initialDraft,
+      selectedNodeId: initialSelectedNodeId,
+      runId: initialRunId,
+    },
+    (initial) =>
+      initialDraftState(initial.draft, {
+        selectedNodeId: initial.selectedNodeId,
+        runId: initial.runId,
+      }),
   );
+  const compactPanels = useMediaQuery("(max-width: 1023px)");
+  const [activePanel, setActivePanel] = useState<DraftPanel>(
+    restoredPanel(panelFromUrl),
+  );
+  const [testStarting, setTestStarting] = useState(false);
   const projection = useMemo(
     () =>
       projectDraftToFlow(
@@ -140,16 +175,28 @@ function ReadyDraftWorkspace({
   );
 
   const save = useCallback(
-    async (agentSpec: AgentSpec, bubbleError = false) => {
+    async (
+      agentSpec: AgentSpec,
+      bubbleError = false,
+      replaceEditorOnSuccess = false,
+    ) => {
+      const submittedAgentSpec = agentSpec;
+      const submittedLayout = state.layout;
       dispatch({type: "save-started"});
       try {
         const saved = await persistDraft({
           agentId,
           expectedRevision: state.serverDraft.revision,
-          agentSpec,
-          layout: state.layout,
+          agentSpec: submittedAgentSpec,
+          layout: submittedLayout,
         });
-        dispatch({type: "save-succeeded", draft: saved});
+        dispatch({
+          type: "save-succeeded",
+          draft: saved,
+          replaceEditorOnSuccess,
+          submittedAgentSpec,
+          submittedLayout,
+        });
       } catch (error) {
         const code =
           error instanceof ApiClientError ? error.code : "unknown";
@@ -171,9 +218,17 @@ function ReadyDraftWorkspace({
     ],
   );
 
-  const selectNode = useCallback((nodeId: string) => {
-    dispatch({type: "select-node", nodeId});
-  }, []);
+  const selectNode = useCallback(
+    (nodeId: string) => {
+      dispatch({type: "select-node", nodeId});
+      replaceDraftQuery({node: nodeId});
+      if (compactPanels) {
+        setActivePanel("inspector");
+        replaceDraftQuery({panel: "inspector"});
+      }
+    },
+    [compactPanels],
+  );
   const moveNode = useCallback(
     (nodeId: string, position: {x: number; y: number}) => {
       dispatch({type: "move-node", nodeId, position});
@@ -196,6 +251,36 @@ function ReadyDraftWorkspace({
   const recordRunEvent = useCallback((event: RunEvent) => {
     dispatch({type: "run-event", event});
   }, []);
+  const choosePanel = useCallback(
+    (panel: DraftPanel) => {
+      setActivePanel(panel);
+      replaceDraftQuery({panel});
+      if (!compactPanels) {
+        document.getElementById(panelAnchor(panel))?.scrollIntoView({
+          block: "start",
+          behavior: "smooth",
+        });
+      }
+    },
+    [compactPanels],
+  );
+  const panelProps = (panel: DraftPanel) => ({
+    "aria-labelledby": compactPanels
+      ? `draft-tab-${panel}`
+      : panel === "graph"
+        ? "graph-title"
+        : undefined,
+    hidden: compactPanels && activePanel !== panel,
+    role: compactPanels ? ("tabpanel" as const) : undefined,
+    tabIndex: compactPanels ? 0 : undefined,
+  });
+  const workbenchHidden =
+    compactPanels && (activePanel === "bulk" || activePanel === "test");
+  const utilityHidden =
+    compactPanels &&
+    activePanel !== "bulk" &&
+    activePanel !== "test";
+  const editorLocked = state.saveStatus === "saving" || testStarting;
 
   const statusKey =
     state.saveStatus === "saving"
@@ -223,23 +308,51 @@ function ReadyDraftWorkspace({
             </span>
           </span>
         </div>
-        <nav className="workspaceJumps" aria-label={t("sections")}>
-          <a href="#simple-settings">
-            <Settings2 aria-hidden />
-            {t("tabs.simple")}
-          </a>
-          <a href="#graph-editor">
-            <Workflow aria-hidden />
-            {t("tabs.graph")}
-          </a>
-          <a href="#bulk-editor">
-            <Braces aria-hidden />
-            {t("tabs.bulk")}
-          </a>
-          <a href="#test-console">
-            <FlaskConical aria-hidden />
-            {t("tabs.test")}
-          </a>
+        <nav
+          className="workspaceJumps"
+          aria-label={t("sections")}
+          role={compactPanels ? "tablist" : undefined}
+        >
+          <PanelButton
+            active={activePanel === "simple"}
+            compact={compactPanels}
+            icon={<Settings2 aria-hidden />}
+            label={t("tabs.simple")}
+            panel="simple"
+            onSelect={choosePanel}
+          />
+          <PanelButton
+            active={activePanel === "graph"}
+            compact={compactPanels}
+            icon={<Workflow aria-hidden />}
+            label={t("tabs.graph")}
+            panel="graph"
+            onSelect={choosePanel}
+          />
+          <PanelButton
+            active={activePanel === "inspector"}
+            compact={compactPanels}
+            icon={<PanelRight aria-hidden />}
+            label={t("tabs.inspector")}
+            panel="inspector"
+            onSelect={choosePanel}
+          />
+          <PanelButton
+            active={activePanel === "bulk"}
+            compact={compactPanels}
+            icon={<Braces aria-hidden />}
+            label={t("tabs.bulk")}
+            panel="bulk"
+            onSelect={choosePanel}
+          />
+          <PanelButton
+            active={activePanel === "test"}
+            compact={compactPanels}
+            icon={<FlaskConical aria-hidden />}
+            label={t("tabs.test")}
+            panel="test"
+            onSelect={choosePanel}
+          />
         </nav>
         <div className="saveCluster">
           <span
@@ -250,7 +363,11 @@ function ReadyDraftWorkspace({
           </span>
           <button
             className="primaryButton"
-            disabled={!state.dirty || state.saveStatus === "saving"}
+            disabled={
+              !state.dirty ||
+              state.saveStatus === "saving" ||
+              testStarting
+            }
             type="button"
             onClick={() => void save(state.agentSpec)}
           >
@@ -264,8 +381,17 @@ function ReadyDraftWorkspace({
         <ValidationSummary issues={state.issues} />
       ) : null}
 
-      <div className="draftWorkbench">
-        <div id="simple-settings">
+      <div
+        aria-busy={editorLocked}
+        className="draftWorkbench"
+        hidden={workbenchHidden}
+        inert={editorLocked}
+      >
+        <div
+          className="draftResponsiveShell"
+          id="simple-settings"
+          {...panelProps("simple")}
+        >
           <SimpleSettings
             agentSpec={state.agentSpec}
             issues={state.issues}
@@ -277,7 +403,7 @@ function ReadyDraftWorkspace({
         <section
           className="editorPanel graphPanel"
           id="graph-editor"
-          aria-labelledby="graph-title"
+          {...panelProps("graph")}
         >
           <header className="editorPanelHeader">
             <p className="eyebrow">{t("graph.eyebrow")}</p>
@@ -302,46 +428,207 @@ function ReadyDraftWorkspace({
             onSelect={selectNode}
           />
         </section>
-        <NodeInspector
-          agentSpec={state.agentSpec}
-          issues={state.issues}
-          locale={locale}
-          selectedNodeId={state.selectedNodeId}
-          onEdit={(pointer, value) =>
-            dispatch({type: "semantic-edit", pointer, value})
-          }
-        />
+        <div
+          className="draftResponsiveShell"
+          id="node-inspector"
+          {...panelProps("inspector")}
+        >
+          <NodeInspector
+            agentSpec={state.agentSpec}
+            issues={state.issues}
+            locale={locale}
+            selectedNodeId={state.selectedNodeId}
+            onEdit={(pointer, value) =>
+              dispatch({type: "semantic-edit", pointer, value})
+            }
+          />
+        </div>
       </div>
 
-      <div className="draftUtilityGrid">
-        <BulkDiffPanel
-          agentSpec={state.agentSpec}
-          key={`${state.serverDraft.revision}:${state.serverDraft.digest}`}
-          revision={state.serverDraft.revision}
-          onApply={(candidate) => save(candidate, true)}
-          onPreview={(candidate) =>
-            previewDraft({
-              agentId,
-              expectedRevision: state.serverDraft.revision,
-              candidateAgentSpec: candidate,
-            })
-          }
-        />
-        <DraftTestConsole
-          agentId={agentId}
-          agentSpec={state.agentSpec}
-          connect={connectRun}
-          loadTrace={loadTrace}
-          locale={locale}
-          revision={state.serverDraft.revision}
-          runId={state.runId}
-          startRun={startTestRun}
-          onEvent={recordRunEvent}
-          onRunStarted={(runId) => dispatch({type: "run-started", runId})}
-        />
+      <div className="draftUtilityGrid" hidden={utilityHidden}>
+        <div
+          className="draftResponsiveShell"
+          id="bulk-editor-panel"
+          inert={editorLocked}
+          {...panelProps("bulk")}
+        >
+          <BulkDiffPanel
+            agentSpec={state.agentSpec}
+            key={`${state.serverDraft.revision}:${state.serverDraft.digest}`}
+            revision={state.serverDraft.revision}
+            onApply={(candidate) => save(candidate, true, true)}
+            onPreview={(candidate) =>
+              previewDraft({
+                agentId,
+                expectedRevision: state.serverDraft.revision,
+                candidateAgentSpec: candidate,
+              })
+            }
+          />
+        </div>
+        <div
+          className="draftResponsiveShell"
+          id="test-console-panel"
+          {...panelProps("test")}
+        >
+          <DraftTestConsole
+            agentId={agentId}
+            agentSpec={state.serverDraft.agent_spec}
+            connect={connectRun}
+            disabled={state.dirty}
+            loadTrace={loadTrace}
+            locale={locale}
+            revision={state.serverDraft.revision}
+            runId={state.runId}
+            startRun={startTestRun}
+            onEvent={recordRunEvent}
+            onRunStarted={(runId) => {
+              dispatch({type: "run-started", runId});
+              replaceDraftQuery({run: runId});
+            }}
+            onStartingChange={setTestStarting}
+          />
+        </div>
       </div>
     </div>
   );
+}
+
+function PanelButton({
+  active,
+  compact,
+  icon,
+  label,
+  onSelect,
+  panel,
+}: {
+  active: boolean;
+  compact: boolean;
+  icon: React.ReactNode;
+  label: string;
+  onSelect: (panel: DraftPanel) => void;
+  panel: DraftPanel;
+}) {
+  return (
+    <button
+      aria-controls={compact ? panelElementId(panel) : undefined}
+      aria-selected={compact ? active : undefined}
+      id={`draft-tab-${panel}`}
+      role={compact ? "tab" : undefined}
+      tabIndex={compact && !active ? -1 : 0}
+      type="button"
+      onClick={() => onSelect(panel)}
+      onKeyDown={(event) =>
+        compact && handlePanelKeyDown(event, panel, onSelect)
+      }
+    >
+      {icon}
+      {label}
+    </button>
+  );
+}
+
+function handlePanelKeyDown(
+  event: KeyboardEvent<HTMLButtonElement>,
+  panel: DraftPanel,
+  onSelect: (panel: DraftPanel) => void,
+) {
+  const currentIndex = DRAFT_PANELS.indexOf(panel);
+  const nextIndex =
+    event.key === "ArrowRight"
+      ? (currentIndex + 1) % DRAFT_PANELS.length
+      : event.key === "ArrowLeft"
+        ? (currentIndex - 1 + DRAFT_PANELS.length) % DRAFT_PANELS.length
+        : event.key === "Home"
+          ? 0
+          : event.key === "End"
+            ? DRAFT_PANELS.length - 1
+            : null;
+  if (nextIndex === null) {
+    return;
+  }
+  event.preventDefault();
+  const nextPanel = DRAFT_PANELS[nextIndex];
+  onSelect(nextPanel);
+  document.getElementById(`draft-tab-${nextPanel}`)?.focus();
+}
+
+function panelElementId(panel: DraftPanel): string {
+  const ids: Record<DraftPanel, string> = {
+    simple: "simple-settings",
+    graph: "graph-editor",
+    inspector: "node-inspector",
+    bulk: "bulk-editor-panel",
+    test: "test-console-panel",
+  };
+  return ids[panel];
+}
+
+function panelAnchor(panel: DraftPanel): string {
+  const anchors: Record<DraftPanel, string> = {
+    simple: "simple-settings",
+    graph: "graph-editor",
+    inspector: "node-inspector",
+    bulk: "bulk-editor",
+    test: "test-console",
+  };
+  return anchors[panel];
+}
+
+function restoredPanel(value: string | null): DraftPanel {
+  return value === "graph" ||
+    value === "inspector" ||
+    value === "bulk" ||
+    value === "test"
+    ? value
+    : "simple";
+}
+
+function restoredNodeId(
+  agentSpec: AgentSpec,
+  value: string | null,
+): string | null {
+  return value && agentSpec.nodes.some((node) => node.id === value)
+    ? value
+    : null;
+}
+
+function restoredRunId(value: string | null): string | null {
+  return value &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+      value,
+    )
+    ? value
+    : null;
+}
+
+function replaceDraftQuery(
+  values: Partial<Record<"node" | "panel" | "run", string>>,
+) {
+  const url = new URL(window.location.href);
+  for (const [key, value] of Object.entries(values)) {
+    url.searchParams.set(key, value);
+  }
+  window.history.replaceState(
+    null,
+    "",
+    `${url.pathname}${url.search}${url.hash}`,
+  );
+}
+
+function useMediaQuery(query: string): boolean {
+  const [matches, setMatches] = useState(false);
+  useEffect(() => {
+    if (typeof window.matchMedia !== "function") {
+      return;
+    }
+    const media = window.matchMedia(query);
+    const update = () => setMatches(media.matches);
+    update();
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
+  }, [query]);
+  return matches;
 }
 
 function ValidationSummary({issues}: {issues: DraftValidationIssue[]}) {

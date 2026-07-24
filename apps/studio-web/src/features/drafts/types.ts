@@ -45,7 +45,13 @@ export type DraftEditorAction =
   | {type: "set-viewport"; viewport: Layout["viewport"]}
   | {type: "select-node"; nodeId: string | null}
   | {type: "save-started"}
-  | {type: "save-succeeded"; draft: AgentDraft}
+  | {
+      type: "save-succeeded";
+      draft: AgentDraft;
+      replaceEditorOnSuccess: boolean;
+      submittedAgentSpec: AgentSpec;
+      submittedLayout: Layout;
+    }
   | {
       type: "save-failed";
       issues: DraftValidationIssue[];

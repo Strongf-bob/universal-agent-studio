@@ -1,7 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import {usePathname, useRouter} from "next/navigation";
+import {
+  usePathname,
+  useRouter,
+  useSearchParams,
+} from "next/navigation";
 import {useState} from "react";
 
 import {logoutOwner} from "@/lib/api/client";
@@ -27,6 +31,7 @@ export function HeaderActions({
   signOutLabel,
 }: Props) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const router = useRouter();
   const [signingOut, setSigningOut] = useState(false);
   const otherLocale = alternateLocale(locale);
@@ -36,6 +41,8 @@ export function HeaderActions({
     : "/agents/calculator-agent";
   const authenticatedSurface =
     localPath.startsWith("/agents/") || localPath.startsWith("/runs/");
+  const query = searchParams.toString();
+  const localePath = localizedPath(otherLocale, localPath);
 
   async function signOut() {
     setSigningOut(true);
@@ -51,7 +58,7 @@ export function HeaderActions({
     <div className="headerActions">
       <Link
         className="localeSwitch"
-        href={localizedPath(otherLocale, localPath)}
+        href={query ? `${localePath}?${query}` : localePath}
         aria-label={languageLabel}
       >
         {otherLocale === "ru-RU" ? russianLabel : englishLabel}

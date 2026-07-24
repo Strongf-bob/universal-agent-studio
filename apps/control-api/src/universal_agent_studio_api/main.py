@@ -63,15 +63,27 @@ class RequestGuardsMiddleware(BaseHTTPMiddleware):
         self._rate_lock = asyncio.Lock()
 
     async def _rate_limited(self, request: Request) -> bool:
-        if request.method != "POST" or request.url.path not in {
-            "/api/v1/bootstrap/owner",
-            "/api/v1/session",
-            "/api/v1/agent-versions/import",
-            "/api/v1/runs",
-        }:
+        path = request.url.path
+        path_parts = path.split("/")
+        is_draft_run = (
+            len(path_parts) == 7
+            and path_parts[1:4] == ["api", "v1", "agents"]
+            and bool(path_parts[4])
+            and path_parts[5:] == ["draft", "runs"]
+        )
+        if request.method != "POST" or (
+            path not in {
+                "/api/v1/bootstrap/owner",
+                "/api/v1/session",
+                "/api/v1/agent-versions/import",
+                "/api/v1/runs",
+            }
+            and not is_draft_run
+        ):
             return False
         client_host = request.client.host if request.client is not None else "unknown"
-        key = (client_host, request.url.path)
+        rate_path = "/api/v1/agents/*/draft/runs" if is_draft_run else path
+        key = (client_host, rate_path)
         now = time.monotonic()
         cutoff = now - self.settings.auth_rate_window_seconds
         async with self._rate_lock:

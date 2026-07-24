@@ -1468,20 +1468,24 @@ h1 {
   background: var(--surface-subtle);
 }
 
-.workspaceJumps a {
+.workspaceJumps button {
   display: inline-flex;
   min-height: var(--editor-control-height);
+  cursor: pointer;
   align-items: center;
   gap: var(--space-2);
   padding: 0 var(--space-3);
+  border: 0;
   border-radius: var(--radius-sm);
+  background: transparent;
   color: var(--text-muted);
+  font-family: inherit;
   font-size: 13px;
   font-weight: 680;
-  text-decoration: none;
 }
 
-.workspaceJumps a:hover {
+.workspaceJumps button:hover,
+.workspaceJumps button[aria-selected="true"] {
   background: var(--surface);
   color: var(--text);
 }
@@ -1600,6 +1604,17 @@ h1 {
       270px,
       0.78fr
     );
+}
+
+.draftResponsiveShell {
+  display: contents;
+}
+
+.draftResponsiveShell[hidden],
+.draftWorkbench[hidden],
+.draftUtilityGrid[hidden],
+.graphPanel[hidden] {
+  display: none !important;
 }
 
 .draftWorkbench > * {
@@ -2029,12 +2044,15 @@ h1 {
   }
 
   .draftWorkbench {
-    grid-template-columns: minmax(240px, 0.72fr) minmax(0, 1.28fr);
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .draftResponsiveShell {
+    display: block;
   }
 
   .inspectorPanel {
     position: static;
-    grid-column: 1 / -1;
   }
 
   .draftUtilityGrid {
@@ -2184,7 +2202,7 @@ h1 {
     overflow-x: auto;
   }
 
-  .workspaceJumps a {
+  .workspaceJumps button {
     flex: 0 0 auto;
   }
 

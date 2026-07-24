@@ -7,10 +7,17 @@ import {isLocale, localizedPath} from "@/lib/i18n/routing";
 
 export default async function AgentBuildPage({
   params,
+  searchParams,
 }: {
   params: Promise<{locale: string; agentId: string}>;
+  searchParams: Promise<{
+    node?: string;
+    panel?: string;
+    run?: string;
+  }>;
 }) {
   const {locale, agentId} = await params;
+  const restored = await searchParams;
   if (!isLocale(locale)) {
     notFound();
   }
@@ -38,6 +45,9 @@ export default async function AgentBuildPage({
       agentId={agentId}
       initialDraft={draft}
       locale={locale}
+      restoredNodeId={restored.node}
+      restoredPanel={restored.panel}
+      restoredRunId={restored.run}
     />
   );
 }

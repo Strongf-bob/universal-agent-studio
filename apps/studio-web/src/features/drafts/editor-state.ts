@@ -6,17 +6,23 @@ import type {
   DraftValidationIssue,
 } from "@/features/drafts/types";
 
-export function initialDraftState(draft: AgentDraft): DraftEditorState {
+export function initialDraftState(
+  draft: AgentDraft,
+  restored: {
+    selectedNodeId?: string | null;
+    runId?: string | null;
+  } = {},
+): DraftEditorState {
   return {
     serverDraft: draft,
     agentSpec: draft.agent_spec,
     layout: draft.layout,
     dirty: false,
-    selectedNodeId: null,
+    selectedNodeId: restored.selectedNodeId ?? null,
     issues: [],
     saveStatus: "idle",
     errorCode: null,
-    runId: null,
+    runId: restored.runId ?? null,
     runEvents: [],
   };
 }
@@ -69,6 +75,19 @@ export function draftEditorReducer(
     case "save-started":
       return {...state, saveStatus: "saving", errorCode: null};
     case "save-succeeded":
+      if (
+        !action.replaceEditorOnSuccess &&
+        (state.agentSpec !== action.submittedAgentSpec ||
+          state.layout !== action.submittedLayout)
+      ) {
+        return {
+          ...state,
+          serverDraft: action.draft,
+          dirty: true,
+          saveStatus: "idle",
+          errorCode: null,
+        };
+      }
       return {
         ...state,
         serverDraft: action.draft,

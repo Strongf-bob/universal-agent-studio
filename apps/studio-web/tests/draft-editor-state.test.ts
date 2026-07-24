@@ -86,12 +86,46 @@ test("save success installs the authoritative server draft", () => {
   const changed = draftEditorReducer(state, {
     type: "save-succeeded",
     draft: serverDraft,
+    replaceEditorOnSuccess: false,
+    submittedAgentSpec: state.agentSpec,
+    submittedLayout: state.layout,
   });
 
   expect(changed.serverDraft).toBe(serverDraft);
   expect(changed.agentSpec).toBe(serverDraft.agent_spec);
   expect(changed.dirty).toBe(false);
   expect(changed.saveStatus).toBe("saved");
+});
+
+test("save success preserves edits made after the request started", () => {
+  const state = initialDraftState(draftFixture());
+  const submittedAgentSpec = state.agentSpec;
+  const submittedLayout = state.layout;
+  const edited = draftEditorReducer(state, {
+    type: "semantic-edit",
+    pointer: "/localized_metadata/name/en-US",
+    value: "Newest local name",
+  });
+  const serverDraft = {
+    ...draftFixture(),
+    revision: 2,
+    digest: "b".repeat(64),
+  };
+
+  const changed = draftEditorReducer(edited, {
+    type: "save-succeeded",
+    draft: serverDraft,
+    replaceEditorOnSuccess: false,
+    submittedAgentSpec,
+    submittedLayout,
+  });
+
+  expect(changed.serverDraft).toBe(serverDraft);
+  expect(changed.agentSpec.localized_metadata.name["en-US"]).toBe(
+    "Newest local name",
+  );
+  expect(changed.dirty).toBe(true);
+  expect(changed.saveStatus).toBe("idle");
 });
 
 test("validation issues are projected by node and exact JSON pointer", () => {

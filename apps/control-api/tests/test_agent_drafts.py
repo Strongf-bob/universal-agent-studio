@@ -306,6 +306,33 @@ async def test_http_create_update_diff_and_stale_conflict(
 
 
 @pytest.mark.asyncio
+async def test_malformed_nested_agent_spec_returns_stable_validation(
+    draft_client: AsyncClient,
+) -> None:
+    created = await draft_client.post(
+        "/api/v1/agents/calculator-agent/draft"
+    )
+    malformed = copy.deepcopy(created.json()["agent_spec"])
+    malformed["nodes"] = [None]
+
+    response = await draft_client.put(
+        "/api/v1/agents/calculator-agent/draft",
+        json={
+            "expected_revision": created.json()["revision"],
+            "agent_spec": malformed,
+            "layout": {
+                "nodes": [],
+                "viewport": {"x": 0, "y": 0, "zoom": 1},
+            },
+        },
+    )
+
+    assert response.status_code == 422
+    assert response.json()["code"] == "agent_spec_invalid"
+    assert response.json()["details"]["validation"]["valid"] is False
+
+
+@pytest.mark.asyncio
 async def test_secret_candidate_is_rejected_without_echoing_value(
     draft_client: AsyncClient,
 ) -> None:

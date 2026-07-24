@@ -1,4 +1,4 @@
-import {render, screen, within} from "@testing-library/react";
+import {render, screen, waitFor, within} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import {describe, expect, it, vi} from "vitest";
 
@@ -95,5 +95,67 @@ describe("dual-view draft workspace", () => {
     expect(
       within(plannerRow as HTMLTableRowElement).getByText("264, 160"),
     ).toBeVisible();
+  });
+
+  it("does not run an unsaved AgentSpec as a saved revision", async () => {
+    const user = userEvent.setup();
+    const draft = editorDraftFixture();
+    render(
+      <WithMessages>
+        <DraftWorkspace
+          agentId={draft.agent_id}
+          initialDraft={draft}
+          locale="en-US"
+        />
+      </WithMessages>,
+    );
+
+    const run = screen.getByRole("button", {name: "Run saved draft"});
+    expect(run).toBeEnabled();
+    await user.type(
+      screen.getByRole("textbox", {name: "Name in English"}),
+      " changed",
+    );
+
+    expect(run).toBeDisabled();
+    expect(
+      screen.getByText("Save current changes before running."),
+    ).toBeVisible();
+  });
+
+  it("locks editor controls while a snapshot run is being created", async () => {
+    const user = userEvent.setup();
+    const draft = editorDraftFixture();
+    const startTestRun = vi.fn(
+      async () =>
+        await new Promise<never>(() => {
+          // Intentionally unresolved so the starting state can be observed.
+        }),
+    );
+    const {container} = render(
+      <WithMessages>
+        <DraftWorkspace
+          agentId={draft.agent_id}
+          initialDraft={draft}
+          locale="en-US"
+          startTestRun={startTestRun}
+        />
+      </WithMessages>,
+    );
+
+    await user.type(
+      screen.getByRole("textbox", {name: "Arithmetic problem"}),
+      "What is 19 × 23?",
+    );
+    await user.click(
+      screen.getByRole("button", {name: "Run saved draft"}),
+    );
+
+    await waitFor(() =>
+      expect(container.querySelector(".draftWorkbench")).toHaveAttribute(
+        "inert",
+      ),
+    );
+    expect(screen.getByRole("button", {name: "Save draft"})).toBeDisabled();
   });
 });

@@ -156,3 +156,44 @@ async def test_draft_run_rejects_a_stale_revision(
     assert response.status_code == 409
     assert response.json()["code"] == "agent_draft_revision_conflict"
     assert durable.commands == []
+
+
+@pytest.mark.asyncio
+async def test_draft_run_route_is_rate_limited() -> None:
+    app = create_app(
+        auth_store=MemoryAuthStore(),
+        agent_persistence=MemoryAgentVersionPersistence(),
+        draft_persistence=MemoryDraftPersistence(),
+        settings=Settings(
+            allowed_hosts=["testserver"],
+            allowed_origins=["http://testserver"],
+            secure_cookies=False,
+            auth_rate_limit=2,
+            auth_rate_window_seconds=60,
+        ),
+    )
+    async with AsyncClient(
+        transport=ASGITransport(app=app),
+        base_url="http://testserver",
+        headers={"Origin": "http://testserver"},
+    ) as client:
+        bootstrap = await client.post(
+            "/api/v1/bootstrap/owner",
+            json={
+                "login_name": "owner",
+                "password": "correct horse battery staple",
+                "preferred_locale": "en-US",
+            },
+        )
+        client.headers["X-CSRF-Token"] = bootstrap.json()["csrf_token"]
+        statuses = [
+            (
+                await client.post(
+                    "/api/v1/agents/calculator-agent/draft/runs",
+                    json={},
+                )
+            ).status_code
+            for _ in range(3)
+        ]
+
+    assert statuses == [422, 422, 429]

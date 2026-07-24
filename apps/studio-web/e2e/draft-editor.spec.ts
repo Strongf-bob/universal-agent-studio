@@ -91,6 +91,7 @@ test("one canonical draft survives both editors, validation, run and locale", as
     draftNodeRow(page, "Planner").getByText("Completed", {exact: true}),
   ).toBeVisible();
   await expect(page.getByText('{"value":437}', {exact: true})).toBeVisible();
+  await expect(page.locator(".draftCanvas [tabindex='0']")).toHaveCount(0);
 
   const draftBeforeLocale = await page.request.get(
     "/api/v1/agents/calculator-agent/draft",
@@ -98,12 +99,23 @@ test("one canonical draft survives both editors, validation, run and locale", as
   const revisionBeforeLocale = (
     (await draftBeforeLocale.json()) as {revision: number}
   ).revision;
+  const runId = await page.locator(".testRunMeta code").innerText();
+  await page.getByRole("link", {name: "Language"}).click();
+  await expect(page).toHaveURL(
+    new RegExp(
+      `/ru-RU/agents/calculator-agent/build\\?.*node=planner-model.*run=${runId}`,
+    ),
+  );
+  await expect(
+    page.getByRole("heading", {name: "Настройки «Планировщик»"}),
+  ).toBeVisible();
+  await expect(page.getByText(runId, {exact: true})).toBeVisible();
+  await page.getByRole("link", {name: "Язык"}).click();
+  await expect(page).toHaveURL(
+    new RegExp(`/en-US/agents/calculator-agent/build\\?.*run=${runId}`),
+  );
   await page.getByRole("link", {name: "Open full trace"}).click();
   await expect(page).toHaveURL(/\/en-US\/runs\/[0-9a-f-]+$/);
-  const runId = page.url().split("/").at(-1) ?? "";
-  await expect(page.getByText(runId, {exact: true})).toBeVisible();
-  await page.getByRole("link", {name: "Language"}).click();
-  await expect(page).toHaveURL(new RegExp(`/ru-RU/runs/${runId}$`));
   await expect(page.getByText(runId, {exact: true})).toBeVisible();
   const draftAfterLocale = await page.request.get(
     "/api/v1/agents/calculator-agent/draft",
@@ -118,6 +130,15 @@ test("narrow layout keeps graph selection and movement keyboard-operable", async
 }) => {
   await page.setViewportSize({width: 390, height: 844});
   await openDraft(page);
+  await page.getByRole("tab", {name: "Simple"}).focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(page.getByRole("tab", {name: "Graph"})).toBeFocused();
+  await expect(
+    page.getByRole("region", {name: "Agent basics"}),
+  ).toBeHidden();
+  await expect(
+    page.getByRole("table", {name: "Editable agent graph nodes"}),
+  ).toBeVisible();
   const plannerRow = draftNodeRow(page, "Planner");
   const select = plannerRow.getByRole("button", {name: "Select Planner"});
   await select.focus();
@@ -126,6 +147,7 @@ test("narrow layout keeps graph selection and movement keyboard-operable", async
     page.getByRole("heading", {name: "Planner settings"}),
   ).toBeVisible();
 
+  await page.getByRole("tab", {name: "Graph"}).click();
   const before = await plannerRow.locator(".positionCell").innerText();
   const moveDown = plannerRow.getByRole("button", {
     name: "Move Planner down",
@@ -135,6 +157,7 @@ test("narrow layout keeps graph selection and movement keyboard-operable", async
   await expect(plannerRow.locator(".positionCell")).not.toHaveText(before);
   await expect(page.locator(".draftCanvas")).toBeHidden();
 
+  await page.getByRole("tab", {name: "Inspector"}).click();
   const storageProbe = "slice2-browser-storage-probe-47a1c3";
   await page.getByLabel("Prompt in English").fill(storageProbe);
   const storage = await page.evaluate(() => ({

@@ -216,6 +216,7 @@
     "tabs": {
       "simple": "Simple",
       "graph": "Graph",
+      "inspector": "Inspector",
       "bulk": "JSON",
       "test": "Test"
     },
@@ -312,6 +313,7 @@
       "starting": "Creating test run…",
       "error": "Enter an input and save a valid revision before running.",
       "empty": "No draft test has been started in this session.",
+      "dirty": "Save current changes before running.",
       "history": "Node event history",
       "historyLabel": "Draft run node history",
       "output": "Structured output",

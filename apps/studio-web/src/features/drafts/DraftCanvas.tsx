@@ -58,14 +58,18 @@ export function DraftCanvas({
   return (
     <div className="draftCanvas" aria-hidden="true">
       <ReactFlow
+        disableKeyboardA11y
         edges={edges}
         edgesFocusable={false}
         elementsSelectable
         defaultViewport={viewport}
+        fitView
+        fitViewOptions={{padding: 0.18}}
         maxZoom={1.6}
         minZoom={0.4}
         nodes={nodes}
         nodesConnectable={false}
+        nodesFocusable={false}
         onNodeClick={(_, node) => onSelect(node.id)}
         onNodeDragStop={(_, node) => onMove(node.id, node.position)}
         onMoveEnd={(_, nextViewport) => onViewport(nextViewport)}

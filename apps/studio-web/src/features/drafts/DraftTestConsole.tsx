@@ -25,10 +25,12 @@ import {type Locale, localizedPath} from "@/lib/i18n/routing";
 type Props = {
   agentId: string;
   agentSpec: AgentSpec;
+  disabled?: boolean;
   locale: Locale;
   revision: number;
   runId: string | null;
   onRunStarted: (runId: string) => void;
+  onStartingChange?: (starting: boolean) => void;
   onEvent: (event: RunEvent) => void;
   startRun?: typeof createDraftTestRun;
   connect?: RunEventConnector;
@@ -38,10 +40,12 @@ type Props = {
 export function DraftTestConsole({
   agentId,
   agentSpec,
+  disabled = false,
   locale,
   revision,
   runId,
   onRunStarted,
+  onStartingChange,
   onEvent,
   startRun = createDraftTestRun,
   connect,
@@ -64,6 +68,7 @@ export function DraftTestConsole({
       return;
     }
     setStarting(true);
+    onStartingChange?.(true);
     setError(false);
     try {
       const created: CreatedRun = await startRun({
@@ -77,6 +82,7 @@ export function DraftTestConsole({
       setError(true);
     } finally {
       setStarting(false);
+      onStartingChange?.(false);
     }
   }
 
@@ -108,13 +114,16 @@ export function DraftTestConsole({
       </div>
       <button
         className="primaryButton"
-        disabled={starting}
+        disabled={disabled || starting}
         type="button"
         onClick={() => void run()}
       >
         <Play aria-hidden />
         {starting ? t("starting") : t("run")}
       </button>
+      {disabled ? (
+        <p className="emptyState">{t("dirty")}</p>
+      ) : null}
       {error ? (
         <p className="apiError" role="alert">
           {t("error")}

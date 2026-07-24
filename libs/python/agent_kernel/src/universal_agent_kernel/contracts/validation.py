@@ -194,28 +194,56 @@ def validate_agent_graph_issues(
     agent: dict[str, Any],
 ) -> list[ValidationIssue]:
     issues: list[ValidationIssue] = []
-    errors: set[str] = set()
-    nodes = agent.get("nodes", [])
-    node_ids = [node.get("id") for node in nodes]
+    nodes = _object_items(agent.get("nodes"))
+    node_ids = [
+        identifier
+        for node in nodes
+        if isinstance(identifier := node.get("id"), str)
+    ]
 
     if len(node_ids) != len(set(node_ids)):
         issues.append(_semantic_issue("duplicate_node_id", "/nodes"))
 
-    edge_ids = [edge.get("id") for edge in agent.get("edges", [])]
+    edges = _object_items(agent.get("edges"))
+    edge_ids = [
+        identifier
+        for edge in edges
+        if isinstance(identifier := edge.get("id"), str)
+    ]
     if len(edge_ids) != len(set(edge_ids)):
         issues.append(_semantic_issue("duplicate_edge_id", "/edges"))
 
     model_profile_ids = {
-        profile.get("id") for profile in agent.get("model_profiles", [])
+        identifier
+        for profile in _object_items(agent.get("model_profiles"))
+        if isinstance(identifier := profile.get("id"), str)
     }
-    tool_ids = {tool.get("id") for tool in agent.get("tools", [])}
-    nodes_by_id = {node.get("id"): node for node in nodes}
+    tool_ids = {
+        identifier
+        for tool in _object_items(agent.get("tools"))
+        if isinstance(identifier := tool.get("id"), str)
+    }
+    nodes_by_id = {
+        identifier: node
+        for node in nodes
+        if isinstance(identifier := node.get("id"), str)
+    }
 
     for node_index, node in enumerate(nodes):
         node_id = node.get("id")
         located_node_id = node_id if isinstance(node_id, str) else None
-        input_port_ids = [port.get("id") for port in node.get("input_ports", [])]
-        output_port_ids = [port.get("id") for port in node.get("output_ports", [])]
+        input_ports = _object_items(node.get("input_ports"))
+        output_ports = _object_items(node.get("output_ports"))
+        input_port_ids = [
+            identifier
+            for port in input_ports
+            if isinstance(identifier := port.get("id"), str)
+        ]
+        output_port_ids = [
+            identifier
+            for port in output_ports
+            if isinstance(identifier := port.get("id"), str)
+        ]
         if len(input_port_ids) != len(set(input_port_ids)):
             issues.append(
                 _semantic_issue(
@@ -253,12 +281,14 @@ def validate_agent_graph_issues(
                 )
             )
 
-    for edge_index, edge in enumerate(agent.get("edges", [])):
+    for edge_index, edge in enumerate(edges):
         for endpoint_name, port_collection in (
             ("source", "output_ports"),
             ("target", "input_ports"),
         ):
             endpoint = edge.get(endpoint_name, {})
+            if not isinstance(endpoint, dict):
+                continue
             node = nodes_by_id.get(endpoint.get("node_id"))
             if node is None:
                 issues.append(
@@ -269,7 +299,11 @@ def validate_agent_graph_issues(
                 )
                 continue
 
-            port_ids = {port.get("id") for port in node.get(port_collection, [])}
+            port_ids = {
+                identifier
+                for port in _object_items(node.get(port_collection))
+                if isinstance(identifier := port.get("id"), str)
+            }
             if endpoint.get("port_id") not in port_ids:
                 node_id = endpoint.get("node_id")
                 issues.append(
@@ -280,8 +314,13 @@ def validate_agent_graph_issues(
                     )
                 )
 
-    issues.extend(_semantic_issue(code, "") for code in sorted(errors))
     return issues
+
+
+def _object_items(value: Any) -> list[dict[str, Any]]:
+    if not isinstance(value, list):
+        return []
+    return [item for item in value if isinstance(item, dict)]
 
 
 def validate_agent_draft(document: dict[str, Any]) -> ValidationResult:
