@@ -1,5 +1,7 @@
 import type {
+  AgentDraft,
   AgentSpec,
+  Layout,
   RunTrace,
 } from "@universal-agent-studio/contracts";
 
@@ -46,6 +48,29 @@ export type CreatedRun = {
   reused: boolean;
 };
 
+export type DraftValidationIssue = {
+  code: string;
+  json_pointer: string;
+  node_id: string | null;
+  message_key: string;
+};
+
+export type DraftDiff = {
+  draft_id: string;
+  revision: number;
+  candidate_digest: string;
+  validation: {
+    valid: boolean;
+    issues: DraftValidationIssue[];
+  };
+  operations: Array<{
+    op: "add" | "remove" | "replace";
+    json_pointer: string;
+    before: unknown;
+    after: unknown;
+  }>;
+};
+
 export type RunSummary = {
   run_id: string;
   request_id: string;
@@ -64,6 +89,7 @@ export class ApiClientError extends Error {
     readonly code: string,
     readonly requestId: string | null,
     readonly retryable: boolean,
+    readonly details: Record<string, unknown> = {},
   ) {
     super(code);
     this.name = "ApiClientError";
@@ -98,6 +124,7 @@ async function requestJson<T>(
       envelope?.code ?? "unknown",
       response.headers.get("X-Request-ID"),
       envelope?.retryable ?? false,
+      envelope?.details ?? {},
     );
   }
   if (response.status === 204) {
@@ -130,6 +157,7 @@ async function serverRequestJson<T>(
       envelope?.code ?? "unknown",
       response.headers.get("X-Request-ID"),
       envelope?.retryable ?? false,
+      envelope?.details ?? {},
     );
   }
   return (await response.json()) as T;
@@ -248,6 +276,108 @@ export async function createRun(input: {
       locale: input.locale,
     }),
   });
+}
+
+export async function createAgentDraft(
+  agentId: string,
+): Promise<AgentDraft> {
+  const session = await getSession();
+  return requestJson<AgentDraft>(
+    `/api/v1/agents/${encodeURIComponent(agentId)}/draft`,
+    {
+      method: "POST",
+      headers: {"X-CSRF-Token": session.csrf_token},
+    },
+  );
+}
+
+export function getAgentDraft(agentId: string): Promise<AgentDraft> {
+  return requestJson<AgentDraft>(
+    `/api/v1/agents/${encodeURIComponent(agentId)}/draft`,
+  );
+}
+
+export function getAgentDraftForServer(
+  agentId: string,
+  cookieHeader: string,
+): Promise<AgentDraft> {
+  return serverRequestJson<AgentDraft>(
+    `/api/v1/agents/${encodeURIComponent(agentId)}/draft`,
+    cookieHeader,
+  );
+}
+
+export async function updateAgentDraft(input: {
+  agentId: string;
+  expectedRevision: number;
+  agentSpec: AgentSpec;
+  layout: Layout;
+}): Promise<AgentDraft> {
+  const session = await getSession();
+  return requestJson<AgentDraft>(
+    `/api/v1/agents/${encodeURIComponent(input.agentId)}/draft`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRF-Token": session.csrf_token,
+      },
+      body: JSON.stringify({
+        expected_revision: input.expectedRevision,
+        agent_spec: input.agentSpec,
+        layout: input.layout,
+      }),
+    },
+  );
+}
+
+export async function previewAgentDraftDiff(input: {
+  agentId: string;
+  expectedRevision: number;
+  candidateAgentSpec: AgentSpec;
+}): Promise<DraftDiff> {
+  const session = await getSession();
+  return requestJson<DraftDiff>(
+    `/api/v1/agents/${encodeURIComponent(input.agentId)}/draft/diff`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRF-Token": session.csrf_token,
+      },
+      body: JSON.stringify({
+        expected_revision: input.expectedRevision,
+        candidate_agent_spec: input.candidateAgentSpec,
+      }),
+    },
+  );
+}
+
+export async function createDraftTestRun(input: {
+  agentId: string;
+  expectedRevision: number;
+  runInput: Record<string, unknown>;
+  locale: "ru-RU" | "en-US";
+}): Promise<CreatedRun> {
+  const session = await getSession();
+  const requestId = crypto.randomUUID();
+  return requestJson<CreatedRun>(
+    `/api/v1/agents/${encodeURIComponent(input.agentId)}/draft/runs`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRF-Token": session.csrf_token,
+      },
+      body: JSON.stringify({
+        expected_revision: input.expectedRevision,
+        request_id: requestId,
+        idempotency_key: `draft:${requestId}`,
+        input: input.runInput,
+        locale: input.locale,
+      }),
+    },
+  );
 }
 
 export async function getActiveAgentVersion(

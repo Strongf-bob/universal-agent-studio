@@ -584,7 +584,7 @@ git commit -m "feat: run immutable draft snapshots"
 - Produces: typed API functions for create/get/update/diff/test-run.
 - Consumes: generated AgentDraft and existing RunEvent/Run types.
 
-- [ ] **Step 1: Write failing pure-state tests**
+- [x] **Step 1: Write failing pure-state tests**
 
 Prove:
 
@@ -601,7 +601,7 @@ expect(selected.selectedNodeId).toBe("planner-model");
 Also test layout movement leaves the AgentSpec object unchanged, save success
 replaces server state, validation grouping, and run status precedence.
 
-- [ ] **Step 2: Implement reducer and immutable pointer helper**
+- [x] **Step 2: Implement reducer and immutable pointer helper**
 
 Reducer actions:
 
@@ -620,7 +620,7 @@ type DraftEditorAction =
 
 Never use local/session storage.
 
-- [ ] **Step 3: Implement the projection boundary**
+- [x] **Step 3: Implement the projection boundary**
 
 `projectDraftToFlow` returns first-party `DraftFlowNode`/`DraftFlowEdge`
 objects. Only `DraftCanvas.tsx` will convert them to React Flow types. Fallback
@@ -630,7 +630,7 @@ with default-locale fallback.
 `statusByNode` maps `node.started` to running, terminal node events to their
 status and untouched nodes to pending.
 
-- [ ] **Step 4: Add typed API functions**
+- [x] **Step 4: Add typed API functions**
 
 Add:
 
@@ -645,7 +645,7 @@ createDraftTestRun(agentId, request, csrfToken)
 All browser writes use `credentials: "same-origin"` and the existing CSRF
 header helper. API errors retain code, request id and validation details.
 
-- [ ] **Step 5: Run Web unit gates**
+- [x] **Step 5: Run Web unit gates**
 
 ```bash
 pnpm --filter @universal-agent-studio/studio-web test -- draft-editor-state draft-projection draft-api
@@ -654,7 +654,7 @@ pnpm --filter @universal-agent-studio/studio-web check
 
 Expected: all pass.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add apps/studio-web/src/features/drafts apps/studio-web/src/lib/api/client.ts apps/studio-web/tests
