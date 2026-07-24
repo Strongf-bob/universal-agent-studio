@@ -2,7 +2,7 @@
 
 ## Overview
 
-Universal Agent Studio is a local-first platform that will create, execute, publish and improve AI-agent workflows. The repository currently contains Foundation contracts and policies rather than deployed runtime code, so this model describes the intended production surfaces and the invariants future code must preserve.
+Universal Agent Studio is a local-first platform that will create, execute, publish and improve AI-agent workflows. The repository contains the executable Local Preview Slice 1: authenticated control API, durable runtime, deterministic tool path, persisted traces and Web UI. Later publishing, RAG, sandbox, eval and autoresearch surfaces remain prospective.
 
 Primary protected assets:
 

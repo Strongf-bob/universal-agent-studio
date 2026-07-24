@@ -1,89 +1,133 @@
 # Universal Agent Studio
 
-> Local-first web-платформа для визуального создания, запуска, публикации и контролируемого улучшения AI-агентов.
+> Local-first web-платформа, в которой один AI-агент остаётся понятным
+> приложением для пользователя и раскрывается до версий, графа, событий,
+> trace, моделей, tools и API для инженера.
 
-## Статус
+[![Slice 1 Executable Spine](https://github.com/Strongf-bob/universal-agent-studio/actions/workflows/slice1.yml/badge.svg?branch=main)](https://github.com/Strongf-bob/universal-agent-studio/actions/workflows/slice1.yml)
+[![Contract Conformance](https://github.com/Strongf-bob/universal-agent-studio/actions/workflows/contracts.yml/badge.svg?branch=main)](https://github.com/Strongf-bob/universal-agent-studio/actions/workflows/contracts.yml)
+[![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-0b8793.svg)](LICENSE)
+[![RU / EN](https://img.shields.io/badge/UI-ru--RU%20%7C%20en--US-172331.svg)](LOCALIZATION.md)
 
-**Slice 0 завершён; Slice 1 планируется.** Production-кода пока нет:
-архитектурные решения и канонические контракты зафиксированы, а их
-Python/TypeScript conformance проверяется локально и в CI.
+## Уже работает
 
-Первый deployment target — локальная single-workspace установка с BYOK. После прохождения локальных acceptance gates та же сборка переносится на частный сервер.
+Slice 1 — это локальный исполняемый spine, а не макет интерфейса:
 
-## Зафиксированные решения
+- immutable `AgentVersion` с каноническим digest;
+- local owner, Argon2id, opaque session, CSRF и project scope;
+- Web + REST API на одном контракте;
+- Temporal workflow, resumable SSE и idempotent run creation;
+- deterministic model → allowlisted calculator → structured output;
+- persisted redacted trace, read-only graph и keyboard table;
+- `ru-RU` / `en-US`, сохранение текущего run при смене языка;
+- opt-in OpenAI-compatible BYOK adapter за явным origin allowlist;
+- Docker Compose с отдельными PostgreSQL и Temporal volumes.
 
-- Основной пользовательский интерфейс — web app.
-- Основной программный интерфейс — публичный API.
-- Telegram не входит в первый обязательный контур, но архитектура каналов должна позволить добавить его адаптером.
-- Визуальный редактор обязателен и должен напоминать по удобству современные workflow-системы.
-- Пользователь видит простой интерфейс по умолчанию и может раскрыть граф, параметры, промпты, модели, код и traces по мере необходимости.
-- Платформа не привязывается к одному LLM-провайдеру или agent framework.
-- Корректность, воспроизводимость и качество важнее скорости разработки.
-- Публичный релиз не выполняется до прохождения полного набора критериев первой версии.
-- Архитектура строится вокруг переиспользуемого Agent Kernel, capability-пакетов, blueprints и assets.
-- Локализация закладывается с первого дня; первые локали — `ru-RU` и `en-US`.
-- Канонические контракты описываются JSON Schema и генерируют Python/TypeScript types.
-- Durable execution реализуется через порт ядра; первая реализация — Temporal.
-- Canvas использует React Flow как заменяемый UI-примитив и не хранит отдельную модель агента.
-- Первый репозиторий публичный; базовая лицензия first-party кода — Apache-2.0.
+![Реальный завершённый запуск: события, структурированный результат и trace](assets/readme/slice1-run.png)
 
-## Порядок разработки
+Скриншот создан из фактически запущенного локального стека. Golden input
+`19 × 23` возвращает `{"value":437}` и сохраняет восемь упорядоченных событий.
 
-1. **Slice 0 — Foundation:** ADR, contracts, invariants, fixtures и acceptance criteria.
-2. **Slice 1 — Executable Spine:** один agent version запускается локально через Web и API, вызывает безопасный tool и сохраняет trace.
-3. **Slice 2 — Minimal Studio:** simple settings и graph projection редактируют один AgentSpec.
-4. Последующие slices добавляют publishing, providers, RAG, capability packs, AI Builder, evals и autoresearch.
+## Запуск локально
 
-Полная декомпозиция и границы каждого slice описаны в [ROADMAP.md](ROADMAP.md).
-
-## Проверка контрактов
+Нужны Docker Desktop (или Docker Engine + Compose v2), Node.js 26,
+pnpm 11.7.0, Python 3.14 и uv 0.11.32.
 
 ```bash
-uv sync --frozen
+uv sync --all-packages --frozen
 pnpm install --frozen-lockfile
-uv run pytest tests/contracts -q
-pnpm check:contracts
-pnpm test:contracts
+pnpm dev:local
 ```
 
-Обе реализации валидируют один manifest с valid и invalid fixtures из
-[`contracts/examples/v0.1.0`](contracts/examples/v0.1.0/). Первый runnable
-сценарий заранее определён в
-[acceptance-контракте Slice 1](docs/acceptance/SLICE_1_EXECUTABLE_SPINE.md).
+После readiness:
 
-## Основные документы
+- Studio: <http://localhost:3000/ru-RU/setup>
+- Control API: <http://localhost:8000/health/ready>
+- Temporal UI: <http://localhost:8080>
 
-- [PRODUCT.md](PRODUCT.md) — спецификация продукта.
-- [ARCHITECTURE.md](ARCHITECTURE.md) — первоначальная архитектура.
-- [DESIGN.md](DESIGN.md) — UX и визуальные принципы.
-- [AGENTS.md](AGENTS.md) — инструкции для coding agents.
-- [SECURITY.md](SECURITY.md) — базовая модель безопасности.
-- [EVALS.md](EVALS.md) — требования к тестированию AI-поведения.
-- [LOCALIZATION.md](LOCALIZATION.md) — правила i18n/L10n.
-- [OPEN_SOURCE_POLICY.md](OPEN_SOURCE_POLICY.md) — политика внешних компонентов.
-- [ROADMAP.md](ROADMAP.md) — внутренний порядок реализации.
-- [docs/DECISIONS.md](docs/DECISIONS.md) — принятые исходные решения.
-- [docs/ARCHITECTURAL_INVARIANTS.md](docs/ARCHITECTURAL_INVARIANTS.md) — правила, которые нельзя нарушать реализацией.
-- [docs/CONTRACTS.md](docs/CONTRACTS.md) — стратегия канонических схем.
-- [contracts/schemas/v0.1.0/](contracts/schemas/v0.1.0/) — исполняемые JSON Schema 2020-12.
-- [docs/THREAT_MODEL.md](docs/THREAT_MODEL.md) — trust boundaries, attacker stories и severity.
-- [docs/FRONTEND_SOURCES.md](docs/FRONTEND_SOURCES.md) — происхождение и границы frontend-компонентов.
-- [docs/adr/](docs/adr/) — architecture decision records.
-- [docs/OPEN_QUESTIONS.md](docs/OPEN_QUESTIONS.md) — решения, которые ещё предстоит принять.
-- [CODEX_KICKOFF_PROMPT.md](CODEX_KICKOFF_PROMPT.md) — стартовый запрос для Codex.
+Первый воспроизводимый walkthrough, включая setup, импорт/активацию fixture,
+run, refresh, locale switch, trace inspection, cancellation и login:
 
-## Правило начала разработки
+```bash
+pnpm --filter @universal-agent-studio/studio-web exec playwright install chromium
+pnpm test:e2e
+```
 
-До написания production-кода Slice 1 необходимо:
+Остановка сохраняет локальные данные:
 
-1. Прочитать все документы выше.
-2. Зафиксировать противоречия и недостающие решения.
-3. Принять блокирующие ADR.
-4. Согласовать минимальные схемы `AgentSpec`, `NodeSpec`, `ModelProfile`, `ToolManifest`, `RunEvent`, `RunTrace`.
-5. Утвердить executable acceptance contract Slice 1.
+```bash
+pnpm local:down
+```
 
-Не следует сначала писать красивый интерфейс, а затем пытаться подогнать под него runtime. Контракт агента и контракт исполнения должны появиться раньше полнофункционального canvas.
+Полный reset требует точной явной фразы и удаляет только Compose volumes и
+сгенерированные `.local` secrets:
+
+```bash
+pnpm local:reset -- --confirm "RESET LOCAL DATA"
+```
+
+Подробности, порты, диагностика и BYOK smoke описаны в
+[локальном operator guide](docs/operations/LOCAL_PREVIEW.md).
+
+## Один контракт, несколько представлений
+
+```mermaid
+flowchart LR
+    Spec["Canonical AgentSpec"] --> Version["Immutable AgentVersion + digest"]
+    Version --> API["Control API"]
+    API --> Temporal["Temporal workflow"]
+    Temporal --> Kernel["Provider-neutral Agent Kernel"]
+    Kernel --> Tool["Allowlisted calculator"]
+    Kernel --> Events["Persisted RunEvents"]
+    Kernel --> Trace["Redacted RunTrace"]
+    Events --> Web["Web runner + SSE resume"]
+    Trace --> Web
+    Version --> Web
+```
+
+`AgentSpec` — единственный источник истины. Web не хранит вторую модель
+графа, runtime не зависит от конкретного LLM provider, а durable execution
+скрыт за портом ядра.
+
+## Проверка
+
+```bash
+pnpm check
+pnpm test:contracts
+pnpm test:web
+uv run pytest -q
+pnpm test:e2e
+uv run pytest tests/security tests/integration -q
+```
+
+Обязательный GitHub Actions gate собирает контейнеры, мигрирует чистую БД,
+поднимает полный stack и выполняет Chromium E2E без внешнего LLM.
+BYOK smoke запускается только явно и не входит в обязательный CI.
+
+## Границы текущего preview
+
+Slice 1 доказывает путь `input → model → tool → output → trace`. Editable
+canvas, draft authoring, RAG, arbitrary HTTP/code nodes, MCP, public
+publishing, multi-user administration, eval campaigns и autoresearch
+начинаются в последующих slices.
+
+Порядок развития зафиксирован в [ROADMAP.md](ROADMAP.md), а точный release
+gate — в [acceptance-контракте Slice 1](docs/acceptance/SLICE_1_EXECUTABLE_SPINE.md).
+
+## Архитектурные и security-документы
+
+- [PRODUCT.md](PRODUCT.md) — продукт и progressive disclosure.
+- [ARCHITECTURE.md](ARCHITECTURE.md) — границы control plane, runtime и kernel.
+- [DESIGN.md](DESIGN.md) — UX, визуальный язык и accessibility.
+- [docs/CONTRACTS.md](docs/CONTRACTS.md) — JSON Schema и generated types.
+- [docs/ARCHITECTURAL_INVARIANTS.md](docs/ARCHITECTURAL_INVARIANTS.md) — неизменяемые правила.
+- [docs/adr/](docs/adr/) — принятые архитектурные решения.
+- [SECURITY.md](SECURITY.md) и [docs/THREAT_MODEL.md](docs/THREAT_MODEL.md) — policy и attacker stories.
+- [EVALS.md](EVALS.md) — будущий eval/autoresearch контур.
+- [OPEN_SOURCE_POLICY.md](OPEN_SOURCE_POLICY.md) и [third_party/candidates.yaml](third_party/candidates.yaml) — provenance и лицензии.
 
 ## Участие и лицензия
 
-Правила изменений описаны в [CONTRIBUTING.md](CONTRIBUTING.md). First-party код распространяется по [Apache License 2.0](LICENSE); выводы по коммерческой дистрибуции и сторонним компонентам требуют отдельной юридической проверки.
+Правила изменений находятся в [CONTRIBUTING.md](CONTRIBUTING.md).
+First-party код распространяется по [Apache License 2.0](LICENSE).
+Сторонние компоненты имеют собственные лицензии и фиксируются в registry.

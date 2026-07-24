@@ -143,3 +143,23 @@ Routing must fail closed when a selected provider violates the policy.
 ## 12. Severity escalation
 
 Critical issues include unauthenticated production code execution, cross-project credential access, bypass of manual publication, or extraction of model/tool secrets at scale. High severity includes project-level data access, durable approval bypass, SSRF into privileged networks, or stored XSS in Studio/Published App. Detailed calibration lives in the threat model.
+
+## 13. Slice 1 implemented controls
+
+The Local Preview executable spine currently enforces:
+
+- Argon2id owner password hashing and keyed hashes for opaque session/CSRF values;
+- `HttpOnly`, `SameSite=Lax` session cookies and CSRF validation on unsafe routes;
+- strict host/origin checks, request-size bounds and narrow rate limits;
+- workspace/project scope derived from the authenticated owner;
+- immutable AgentVersion digests and signed execution envelopes;
+- first-party calculator allowlisting with no arbitrary HTTP or code execution;
+- redaction before persisted events/traces;
+- file-mounted random local secrets with owner-only permissions;
+- loopback-only public Compose ports and isolated product/Temporal volumes;
+- provider URL allowlisting, HTTPS/loopback policy, timeout, redirect denial and response-size bounds.
+
+Automated evidence lives in `tests/security`, the Chromium E2E suite and
+[`docs/acceptance/evidence/SLICE_1.md`](docs/acceptance/evidence/SLICE_1.md).
+These controls are a Local Preview boundary, not a production deployment
+certification.

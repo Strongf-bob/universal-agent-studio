@@ -1052,7 +1052,7 @@ uv run pytest tests/security -q
 Expected: failures identify missing E2E fixtures, orchestration or security
 evidence.
 
-- [ ] **Step 3: Complete deterministic orchestration, CI and docs**
+- [x] **Step 3: Complete deterministic orchestration, CI and docs**
 
 Add a GitHub Actions workflow with immutable action SHAs that:
 
@@ -1070,7 +1070,7 @@ Update README with the real local command, screenshots only if generated from
 the actual app, exact tested versions and current Slice status. Remove resolved
 Slice 1 questions from `docs/OPEN_QUESTIONS.md`.
 
-- [ ] **Step 4: Run the full completion audit locally**
+- [x] **Step 4: Run the full completion audit locally**
 
 Run:
 

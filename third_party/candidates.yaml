@@ -1,6 +1,13 @@
 schema_version: "1.0"
 reviewed_at: "2026-07-24"
 candidates:
+  - name: Docker Compose
+    source: https://github.com/docker/compose
+    license: Apache-2.0
+    intended_use: Reproducible local orchestration and health-gated startup
+    status: installed_for_slice_1_tooling
+    version: 5.1.4
+    note: Operator tool; Compose file pins all runtime base images by immutable digest.
   - name: Temporal Server
     source: https://github.com/temporalio/temporal
     license: MIT

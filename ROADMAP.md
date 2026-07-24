@@ -35,6 +35,9 @@ acceptance examples не содержат незакрытых placeholders. Т�
 
 **Цель:** доказать путь от immutable AgentSpec до результата и trace.
 
+**Статус:** complete — локальный stack, deterministic Web/API journey,
+security acceptance и обязательный CI gate реализованы.
+
 - импорт одного golden AgentSpec;
 - validation и immutable AgentVersion с digest;
 - локальный Web runner и REST API;

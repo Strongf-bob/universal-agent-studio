@@ -2,14 +2,11 @@
 
 Решённые вопросы переносятся в `DECISIONS.md` и ADR. Этот файл содержит только решения, которые действительно остаются открытыми.
 
-## Blocking Slice 1
+## Blocking current slice
 
-На уровне продукта блокеров нет. До реализации должны быть утверждены:
-
-1. точный минимальный AgentSpec schema;
-2. RunEvent delivery and resume semantics;
-3. canonical hashing and signing envelope;
-4. acceptance examples Slice 1.
+Для завершённых Slice 0 и Slice 1 блокирующих вопросов нет. AgentSpec,
+RunEvent resume semantics, canonical hashing, signing envelope и executable
+acceptance examples закреплены контрактами и ADR.
 
 ## Blocking later slices
 
