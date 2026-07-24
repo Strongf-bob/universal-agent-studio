@@ -22,3 +22,38 @@ candidates:
     status: approved_for_slice_2
     version: null
     note: Core library only; examples and Pro materials require independent review.
+  - name: Next.js
+    source: https://github.com/vercel/next.js
+    license: MIT
+    intended_use: Studio and Published App framework
+    status: approved_for_slice_1
+    version: null
+    note: Pin exact version and review security support window before installation.
+  - name: React
+    source: https://github.com/facebook/react
+    license: MIT
+    intended_use: Web user interface runtime
+    status: approved_for_slice_1
+    version: null
+    note: Pin exact version before installation.
+  - name: Radix Primitives
+    source: https://github.com/radix-ui/primitives
+    license: MIT
+    intended_use: Candidate accessible behavior primitives beneath first-party components
+    status: review_required_for_slice_2
+    version: null
+    note: Audit only imported packages; Radix Themes is not implicitly approved.
+  - name: Lucide
+    source: https://github.com/lucide-icons/lucide
+    license: ISC
+    intended_use: Candidate consistent SVG icon set
+    status: review_required_for_slice_2
+    version: null
+    note: Preserve license notices and audit any inherited Feather icon obligations.
+  - name: CodeMirror
+    source: https://codemirror.net/
+    license: MIT
+    intended_use: Candidate prompt, schema and code editor
+    status: review_required_for_slice_2
+    version: null
+    note: Pin individual maintained CodeMirror 6 packages; do not use archived CodeMirror 5.

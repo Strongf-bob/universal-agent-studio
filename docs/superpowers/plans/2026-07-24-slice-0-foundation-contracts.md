@@ -35,7 +35,7 @@
 - Consumes: `PRODUCT.md`, `ARCHITECTURE.md`, `docs/ARCHITECTURAL_INVARIANTS.md`, ADR-0003, ADR-0005, ADR-0006.
 - Produces: explicit UX states and responsive/accessibility requirements; trust-boundary threat inventory; approved/rejected frontend-source policy; dependency review records used by later implementation plans.
 
-- [ ] **Step 1: Extend the design specification**
+- [x] **Step 1: Extend the design specification**
 
 Add concrete sections to `DESIGN.md`:
 
@@ -64,7 +64,7 @@ React Flow nodes and edges are ephemeral view models produced from AgentSpec. Po
 6. Node trace inspector.
 ```
 
-- [ ] **Step 2: Add a concrete threat model**
+- [x] **Step 2: Add a concrete threat model**
 
 Create `docs/THREAT_MODEL.md` with assets, actors, entry points, trust boundaries, STRIDE-oriented threats, mandatory mitigations, deferred risks, and security acceptance tests. Include at minimum:
 
@@ -79,7 +79,7 @@ Create `docs/THREAT_MODEL.md` with assets, actors, entry points, trust boundarie
 | Code → Host | sandbox escape | separate sandbox service, no host mounts/network | Slice 6 |
 ```
 
-- [ ] **Step 3: Document frontend source decisions**
+- [x] **Step 3: Document frontend source decisions**
 
 Create `docs/FRONTEND_SOURCES.md` with:
 
@@ -96,11 +96,11 @@ Create `docs/FRONTEND_SOURCES.md` with:
 
 State that n8n, Langflow, Flowise and similar products may be studied for workflows but their UI/code/assets are not copied or forked without a new ADR and license review.
 
-- [ ] **Step 4: Update security baseline and dependency candidates**
+- [x] **Step 4: Update security baseline and dependency candidates**
 
 Link `SECURITY.md` to `docs/THREAT_MODEL.md`. Add `data_classification`, `redaction_policy_id`, `retention_policy_id`, and `security_owner` as required metadata concepts. Add Next.js/React as approved future implementation candidates and Radix/Lucide/CodeMirror as review-required candidates in `third_party/candidates.yaml`; leave `version: null` because none is installed in this task.
 
-- [ ] **Step 5: Verify documentation**
+- [x] **Step 5: Verify documentation**
 
 Run:
 
@@ -113,7 +113,7 @@ python3 /Users/strongf/.codex/skills/beautify-github-readme/scripts/audit_readme
 
 Expected: `YAML OK`, `MARKDOWN LINKS OK`, README audit `OK`, and no diff errors.
 
-- [ ] **Step 6: Commit and push**
+- [x] **Step 6: Commit and push**
 
 ```bash
 git add DESIGN.md SECURITY.md README.md third_party/candidates.yaml docs/THREAT_MODEL.md docs/FRONTEND_SOURCES.md

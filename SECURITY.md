@@ -2,6 +2,8 @@
 
 This document is an engineering baseline, not legal or compliance advice.
 
+Repository-scoped attacker stories, trust boundaries and severity calibration are maintained in [`docs/THREAT_MODEL.md`](docs/THREAT_MODEL.md). `SECURITY.md` defines mandatory policy; the threat model explains how it applies to product surfaces.
+
 ## 1. Trust boundaries
 
 Untrusted by default:
@@ -71,7 +73,10 @@ Generated or user-provided code must run in a separate sandbox with:
 - project-level isolation;
 - configurable retention;
 - redaction before external model calls;
-- data-classification metadata;
+- `data_classification` metadata on stored and transmitted content;
+- versioned `redaction_policy_id`;
+- explicit `retention_policy_id`;
+- named `security_owner` for integrations, providers and privileged assets;
 - audit access to traces;
 - explicit consent for cross-project/platform research;
 - deletion workflow.
@@ -124,3 +129,17 @@ Routing must fail closed when a selected provider violates the policy.
 - unsafe file upload;
 - model routing policy bypass;
 - trace redaction.
+
+## 11. Security ownership and review gates
+
+- every public endpoint has an authentication/authorization decision;
+- every new external data flow updates `docs/THREAT_MODEL.md`;
+- every privileged dependency has a security owner and upgrade path;
+- every side-effecting tool declares scopes, idempotency and approval policy;
+- every schema change is checked for secret-bearing fields and unsafe free-form payloads;
+- every release records unresolved security risks and their accepted owner;
+- no Local Preview shortcut may be described as a production security boundary.
+
+## 12. Severity escalation
+
+Critical issues include unauthenticated production code execution, cross-project credential access, bypass of manual publication, or extraction of model/tool secrets at scale. High severity includes project-level data access, durable approval bypass, SSRF into privileged networks, or stored XSS in Studio/Published App. Detailed calibration lives in the threat model.

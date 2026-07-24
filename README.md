@@ -48,6 +48,8 @@
 - [docs/DECISIONS.md](docs/DECISIONS.md) — принятые исходные решения.
 - [docs/ARCHITECTURAL_INVARIANTS.md](docs/ARCHITECTURAL_INVARIANTS.md) — правила, которые нельзя нарушать реализацией.
 - [docs/CONTRACTS.md](docs/CONTRACTS.md) — стратегия канонических схем.
+- [docs/THREAT_MODEL.md](docs/THREAT_MODEL.md) — trust boundaries, attacker stories и severity.
+- [docs/FRONTEND_SOURCES.md](docs/FRONTEND_SOURCES.md) — происхождение и границы frontend-компонентов.
 - [docs/adr/](docs/adr/) — architecture decision records.
 - [docs/OPEN_QUESTIONS.md](docs/OPEN_QUESTIONS.md) — решения, которые ещё предстоит принять.
 - [CODEX_KICKOFF_PROMPT.md](CODEX_KICKOFF_PROMPT.md) — стартовый запрос для Codex.
