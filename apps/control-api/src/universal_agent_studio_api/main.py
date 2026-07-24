@@ -152,7 +152,11 @@ def create_app(
                     agent_persistence=agent_persistence,
                     durable_execution=durable_execution,
                 )
-            yield
+            app.state.ready = True
+            try:
+                yield
+            finally:
+                app.state.ready = False
             return
 
         engine = create_engine(resolved_settings.database_url.get_secret_value())
@@ -179,9 +183,11 @@ def create_app(
                 task_queue=resolved_settings.runtime_task_queue,
             ),
         )
+        app.state.ready = True
         try:
             yield
         finally:
+            app.state.ready = False
             await engine.dispose()
 
     app = FastAPI(
@@ -189,6 +195,7 @@ def create_app(
         version="0.1.0",
         lifespan=lifespan,
     )
+    app.state.ready = auth_store is not None
     app.state.settings = resolved_settings
     if auth_store is not None:
         app.state.auth_service = AuthService(auth_store, resolved_settings)
@@ -231,9 +238,16 @@ def create_app(
     app.include_router(agent_versions.router)
     app.include_router(runs.router)
 
+    @app.get("/health/live", include_in_schema=False)
     @app.get("/healthz", include_in_schema=False)
-    async def health() -> dict[str, str]:
+    async def health_live() -> dict[str, str]:
         return {"status": "ok"}
+
+    @app.get("/health/ready", include_in_schema=False)
+    async def health_ready() -> Response:
+        if not bool(app.state.ready):
+            return JSONResponse({"status": "starting"}, status_code=503)
+        return JSONResponse({"status": "ready"})
 
     return app
 

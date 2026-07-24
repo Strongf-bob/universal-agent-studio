@@ -29,6 +29,7 @@ class Settings(BaseSettings):
     auth_rate_window_seconds: int = Field(default=60, ge=1, le=3600)
     temporal_address: str = "temporal:7233"
     runtime_task_queue: str = "uas-runtime-v1"
+    session_hash_key_file: Path | None = None
     execution_signing_key_file: Path = Path("/run/secrets/uas_execution_signing_key")
     sse_poll_interval_seconds: float = Field(default=0.25, gt=0, le=5)
     sse_heartbeat_seconds: float = Field(default=15, gt=0, le=60)

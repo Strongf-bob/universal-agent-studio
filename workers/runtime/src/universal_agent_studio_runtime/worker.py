@@ -26,6 +26,7 @@ class RuntimeSettings(BaseSettings):
     temporal_address: str = "temporal:7233"
     runtime_task_queue: str = "uas-runtime-v1"
     execution_signing_key_file: Path = Path("/run/secrets/uas_execution_signing_key")
+    readiness_file: Path = Path("/tmp/uas-worker-ready")
 
 
 def load_signing_key(path: Path) -> bytes:
@@ -50,8 +51,10 @@ async def run_worker(settings: RuntimeSettings | None = None) -> None:
         activities=[activities.execute_run, activities.finalize_cancelled_run],
     )
     try:
+        resolved.readiness_file.touch(mode=0o600)
         await worker.run()
     finally:
+        resolved.readiness_file.unlink(missing_ok=True)
         await engine.dispose()
 
 

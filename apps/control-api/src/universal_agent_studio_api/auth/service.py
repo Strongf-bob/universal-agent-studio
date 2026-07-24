@@ -6,6 +6,7 @@ import hashlib
 import hmac
 import secrets
 from datetime import UTC, datetime, timedelta
+from pathlib import Path
 
 from argon2 import PasswordHasher
 from argon2.exceptions import InvalidHashError, VerificationError
@@ -22,8 +23,10 @@ from universal_agent_studio_api.settings import Settings
 DELETE_CONFIRMATION = "DELETE LOCAL WORKSPACE"
 
 
-def _hash_token(value: str) -> str:
-    return hashlib.sha256(value.encode("utf-8")).hexdigest()
+def _hash_token(value: str, key: bytes | None) -> str:
+    if key is None:
+        return hashlib.sha256(value.encode("utf-8")).hexdigest()
+    return hmac.new(key, value.encode("utf-8"), hashlib.sha256).hexdigest()
 
 
 class AuthService:
@@ -37,9 +40,24 @@ class AuthService:
         self.store = store
         self.settings = settings
         self.password_hasher = password_hasher or PasswordHasher()
+        self._session_hash_key = self._load_session_hash_key(
+            settings.session_hash_key_file
+        )
         self._dummy_password_hash = self.password_hasher.hash(
             "unusable timing equalization password"
         )
+
+    @staticmethod
+    def _load_session_hash_key(path: Path | None) -> bytes | None:
+        if path is None:
+            return None
+        key = path.read_bytes().strip()
+        if len(key) < 32:
+            raise ValueError("session_hash_key_too_short")
+        return key
+
+    def _hash_token(self, value: str) -> str:
+        return _hash_token(value, self._session_hash_key)
 
     @staticmethod
     def now() -> datetime:
@@ -99,8 +117,8 @@ class AuthService:
         raw_csrf_token = secrets.token_urlsafe(32)
         session = await self.store.create_session(
             owner=owner,
-            token_hash=_hash_token(raw_session_token),
-            csrf_token_hash=_hash_token(raw_csrf_token),
+            token_hash=self._hash_token(raw_session_token),
+            csrf_token_hash=self._hash_token(raw_csrf_token),
             expires_at=self.now()
             + timedelta(seconds=self.settings.session_ttl_seconds),
         )
@@ -121,7 +139,9 @@ class AuthService:
             if required:
                 raise ApiError(401, "authentication_failed")
             return None
-        result = await self.store.session_with_owner(_hash_token(raw_session_token))
+        result = await self.store.session_with_owner(
+            self._hash_token(raw_session_token)
+        )
         if result is None:
             if required:
                 raise ApiError(401, "authentication_failed")
@@ -140,7 +160,7 @@ class AuthService:
         raw_csrf_token = secrets.token_urlsafe(32)
         session = await self.store.update_session_csrf(
             authenticated.session.id,
-            _hash_token(raw_csrf_token),
+            self._hash_token(raw_csrf_token),
         )
         if session.revoked_at is not None:
             raise ApiError(401, "authentication_failed")
@@ -153,7 +173,7 @@ class AuthService:
     ) -> None:
         if raw_csrf_token is None or not hmac.compare_digest(
             authenticated.session.csrf_token_hash,
-            _hash_token(raw_csrf_token),
+            self._hash_token(raw_csrf_token),
         ):
             raise ApiError(403, "csrf_validation_failed")
 

@@ -940,7 +940,7 @@ git push
 - Consumes: all app entrypoints, migrations, health endpoints and ModelGatewayPort.
 - Produces: `pnpm dev:local`, `pnpm local:down`, guarded `pnpm local:reset`, healthy containers and opt-in OpenAI-compatible adapter.
 
-- [ ] **Step 1: Write failing launcher and adapter tests**
+- [x] **Step 1: Write failing launcher and adapter tests**
 
 Test missing-Docker diagnostics, Compose config validation, confirmation guard
 for reset, URL allowlist, HTTPS/loopback enforcement, authorization redaction,
@@ -949,7 +949,7 @@ mapping. Also test that the launcher creates separate session and internal
 signing secrets with owner-only permissions and never writes them to Compose
 config output.
 
-- [ ] **Step 2: Verify the tests are red**
+- [x] **Step 2: Verify the tests are red**
 
 Run:
 
@@ -961,7 +961,7 @@ node scripts/dev-local.mjs --check
 
 Expected: missing adapter/scripts/Compose file.
 
-- [ ] **Step 3: Implement images, Compose and BYOK**
+- [x] **Step 3: Implement images, Compose and BYOK**
 
 Pin:
 
@@ -984,7 +984,7 @@ The BYOK adapter uses `CredentialReference` to resolve environment-backed
 credentials and `httpx.AsyncClient` with explicit timeout/limits. The smoke
 test is marked and skipped without its dedicated environment variables.
 
-- [ ] **Step 4: Verify the complete local stack**
+- [x] **Step 4: Verify the complete local stack**
 
 Start Docker Desktop, then run:
 
@@ -1001,7 +1001,7 @@ pnpm local:down
 Expected: all three endpoints answer, integration test passes and normal
 shutdown preserves named volumes.
 
-- [ ] **Step 5: Commit and push**
+- [x] **Step 5: Commit and push**
 
 ```bash
 git add infra/docker scripts package.json third_party/candidates.yaml \

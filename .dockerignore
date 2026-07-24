@@ -1,0 +1,12 @@
+.git
+.github
+.local
+.worktrees
+**/.next
+**/.venv
+**/__pycache__
+**/node_modules
+**/*.pyc
+**/*.tsbuildinfo
+artifacts
+data

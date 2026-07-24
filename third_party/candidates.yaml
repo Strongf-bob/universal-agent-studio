@@ -5,9 +5,34 @@ candidates:
     source: https://github.com/temporalio/temporal
     license: MIT
     intended_use: Durable execution service behind DurableExecutionPort
-    status: approved_for_implementation
-    version: null
-    note: Pin exact version and image digest before installation.
+    status: installed_for_slice_1
+    version: 1.8.1
+    digest: 59561b9ef060eaeb1f46cb6a1842d6cbdd8a393eb3b6d315ecef5fe2f0b1d7a6
+    note: Local development image only; SQLite volume is independent from product PostgreSQL.
+  - name: PostgreSQL container image
+    source: https://github.com/docker-library/postgres
+    license: PostgreSQL
+    intended_use: Local product persistence service
+    status: installed_for_slice_1
+    version: 18.4-alpine3.23
+    digest: 996d0920e4ff9df1fc19dacb904492f3c1ec0ec1cc338f0ad7123be7731c5f5e
+    note: Local Compose image with a named product-data volume.
+  - name: Python container image
+    source: https://github.com/docker-library/python
+    license: PSF-2.0
+    intended_use: Control API, migration and runtime-worker image base
+    status: installed_for_slice_1
+    version: 3.14.6-slim-bookworm
+    digest: 86f975aca15cf04a40b399eebede9aea7c82eae084d1f1a0a6ef6bcaae871a30
+    note: Exact multi-architecture digest pinned in the local Dockerfile.
+  - name: Node.js container image
+    source: https://github.com/nodejs/docker-node
+    license: MIT
+    intended_use: Studio Web build and runtime image base
+    status: installed_for_slice_1
+    version: 26.3.0-bookworm-slim
+    digest: 3fe807a03a4436e7bc76b7e84e6861899cd75c9028ae99bc00581940141ae150
+    note: Exact multi-architecture digest pinned in both Web build stages.
   - name: Temporal Python SDK
     source: https://github.com/temporalio/sdk-python
     license: MIT

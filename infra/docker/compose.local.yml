@@ -1,0 +1,181 @@
+name: universal-agent-studio
+
+services:
+  postgres:
+    image: postgres:18.4-alpine3.23@sha256:996d0920e4ff9df1fc19dacb904492f3c1ec0ec1cc338f0ad7123be7731c5f5e
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: uas
+      POSTGRES_USER: uas
+      POSTGRES_PASSWORD_FILE: /run/secrets/uas_database_password
+    secrets:
+      - uas_database_password
+    volumes:
+      - product_postgres:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U uas -d uas"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+      start_period: 5s
+
+  temporal:
+    image: temporalio/temporal:1.8.1@sha256:59561b9ef060eaeb1f46cb6a1842d6cbdd8a393eb3b6d315ecef5fe2f0b1d7a6
+    restart: unless-stopped
+    command:
+      - server
+      - start-dev
+      - --ip
+      - 0.0.0.0
+      - --db-filename
+      - /home/temporal/temporal.db
+    ports:
+      - "127.0.0.1:${UAS_TEMPORAL_UI_PORT:-8080}:8233"
+    volumes:
+      - temporal_data:/home/temporal
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "temporal",
+          "operator",
+          "cluster",
+          "health",
+          "--address",
+          "127.0.0.1:7233",
+        ]
+      interval: 3s
+      timeout: 5s
+      retries: 40
+      start_period: 5s
+
+  migrate:
+    image: uas-control-api:local
+    build:
+      context: ../..
+      dockerfile: infra/docker/api.Dockerfile
+    restart: "no"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    entrypoint: ["/bin/sh", "-ec"]
+    command:
+      - |
+        export DATABASE_URL="postgresql+asyncpg://uas:$$(cat /run/secrets/uas_database_password)@postgres:5432/uas"
+        exec alembic -c infra/migrations/alembic.ini upgrade head
+    secrets:
+      - uas_database_password
+
+  control-api:
+    image: uas-control-api:local
+    build:
+      context: ../..
+      dockerfile: infra/docker/api.Dockerfile
+    restart: unless-stopped
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      temporal:
+        condition: service_healthy
+    entrypoint: ["/bin/sh", "-ec"]
+    command:
+      - |
+        export UAS_DATABASE_URL="postgresql+asyncpg://uas:$$(cat /run/secrets/uas_database_password)@postgres:5432/uas"
+        exec uvicorn universal_agent_studio_api.main:app --host 0.0.0.0 --port 8000
+    environment:
+      UAS_ALLOWED_HOSTS: '["localhost","127.0.0.1","control-api"]'
+      UAS_ALLOWED_ORIGINS: '["http://localhost:${UAS_WEB_PORT:-3000}"]'
+      UAS_EXECUTION_SIGNING_KEY_FILE: /run/secrets/uas_execution_signing_key
+      UAS_SESSION_HASH_KEY_FILE: /run/secrets/uas_session_hash_key
+      UAS_TEMPORAL_ADDRESS: temporal:7233
+    secrets:
+      - uas_database_password
+      - uas_execution_signing_key
+      - uas_session_hash_key
+    ports:
+      - "127.0.0.1:${UAS_API_PORT:-8000}:8000"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/ready', timeout=2)",
+        ]
+      interval: 3s
+      timeout: 4s
+      retries: 30
+      start_period: 5s
+
+  runtime-worker:
+    image: uas-control-api:local
+    build:
+      context: ../..
+      dockerfile: infra/docker/api.Dockerfile
+    restart: unless-stopped
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      temporal:
+        condition: service_healthy
+    entrypoint: ["/bin/sh", "-ec"]
+    command:
+      - |
+        export UAS_DATABASE_URL="postgresql+asyncpg://uas:$$(cat /run/secrets/uas_database_password)@postgres:5432/uas"
+        exec python -m universal_agent_studio_runtime.worker
+    environment:
+      UAS_EXECUTION_SIGNING_KEY_FILE: /run/secrets/uas_execution_signing_key
+      UAS_TEMPORAL_ADDRESS: temporal:7233
+    secrets:
+      - uas_database_password
+      - uas_execution_signing_key
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "from pathlib import Path; raise SystemExit(0 if Path('/tmp/uas-worker-ready').is_file() else 1)",
+        ]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+      start_period: 5s
+
+  studio-web:
+    image: uas-studio-web:local
+    build:
+      context: ../..
+      dockerfile: infra/docker/web.Dockerfile
+    restart: unless-stopped
+    depends_on:
+      control-api:
+        condition: service_healthy
+    environment:
+      CONTROL_API_INTERNAL_URL: http://control-api:8000
+    ports:
+      - "127.0.0.1:${UAS_WEB_PORT:-3000}:3000"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3000/ru-RU/setup').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 3s
+      timeout: 4s
+      retries: 30
+      start_period: 5s
+
+volumes:
+  product_postgres:
+  temporal_data:
+
+secrets:
+  uas_database_password:
+    file: ${UAS_DATABASE_PASSWORD_FILE:-../../.local/secrets/database-password}
+  uas_execution_signing_key:
+    file: ${UAS_EXECUTION_SIGNING_KEY_FILE:-../../.local/secrets/execution-signing.key}
+  uas_session_hash_key:
+    file: ${UAS_SESSION_HASH_KEY_FILE:-../../.local/secrets/session-hash.key}
