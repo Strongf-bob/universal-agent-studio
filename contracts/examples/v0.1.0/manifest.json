@@ -1,0 +1,44 @@
+{
+  "schema_version": "1.0",
+  "cases": [
+    {
+      "path": "valid/agent.calculator.ru-en.json",
+      "schema": "agent-spec.schema.json",
+      "valid": true
+    },
+    {
+      "path": "invalid/agent.secret-value.json",
+      "schema": "agent-spec.schema.json",
+      "valid": false,
+      "expected_error_code": "secret_key_forbidden"
+    },
+    {
+      "path": "invalid/agent.dangling-edge.json",
+      "schema": "agent-spec.schema.json",
+      "valid": false,
+      "expected_error_code": "dangling_node_reference"
+    },
+    {
+      "path": "valid/run.request.json",
+      "schema": "run-request.schema.json",
+      "valid": true
+    },
+    {
+      "path": "valid/run.trace.completed.json",
+      "schema": "run-trace.schema.json",
+      "valid": true
+    },
+    {
+      "path": "invalid/run.event.sequence.json",
+      "schema": "run-event.schema.json",
+      "valid": false,
+      "expected_error_code": "schema_validation_failed"
+    },
+    {
+      "path": "invalid/run.event.secret.json",
+      "schema": "run-event.schema.json",
+      "valid": false,
+      "expected_error_code": "secret_key_forbidden"
+    }
+  ]
+}

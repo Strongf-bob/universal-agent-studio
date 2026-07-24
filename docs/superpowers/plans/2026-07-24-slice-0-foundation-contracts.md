@@ -422,6 +422,7 @@ git push origin main
 
 **Files:**
 - Create: `contracts/examples/v0.1.0/manifest.json`
+- Create: `tests/contracts/contract_validation.py`
 - Create: `tests/contracts/test_contract_examples.py`
 - Create: `contracts/conformance/src/registry.ts`
 - Create: `contracts/conformance/src/invariants.ts`
@@ -431,7 +432,7 @@ git push origin main
 - Consumes: fixture manifest entries `{path, schema, valid, expected_error_code}`.
 - Produces: identical Python and TypeScript pass/fail results plus custom invariants for node/edge identity, dangling references, monotonic event sequence and forbidden secret-key names.
 
-- [ ] **Step 1: Create the fixture manifest**
+- [x] **Step 1: Create the fixture manifest**
 
 Use:
 
@@ -456,9 +457,9 @@ Use:
 
 Include every fixture created in Tasks 3–4.
 
-- [ ] **Step 2: Write Python tests**
+- [x] **Step 2: Write Python tests before the semantic validator**
 
-Implement:
+Create the test importing `validate_fixture` from the not-yet-created `tests/contracts/contract_validation.py`, run it, and confirm import failure. Then implement:
 
 ```python
 def test_fixture_matches_declared_validity(case, registry):
@@ -473,7 +474,7 @@ def test_valid_agent_has_no_dangling_edges(valid_agent):
 
 Add recursive forbidden-key detection for `api_key`, `token`, `password`, `secret`, and `private_key`, while allowing `credential_ref`.
 
-- [ ] **Step 3: Verify Python red then green**
+- [x] **Step 3: Verify Python red then green**
 
 Run before implementation completion:
 
@@ -483,7 +484,7 @@ uv run pytest tests/contracts -q
 
 Expected initially: failures for custom invalid cases. Complete registry/reference resolution and invariants, rerun, expect all pass.
 
-- [ ] **Step 4: Write TypeScript/Ajv tests**
+- [x] **Step 4: Write TypeScript/Ajv tests**
 
 `registry.ts` loads all schemas into one Ajv 2020 instance. `invariants.ts` returns stable error codes. The Vitest suite iterates the same manifest:
 
@@ -496,7 +497,7 @@ for (const fixtureCase of manifest.cases) {
 }
 ```
 
-- [ ] **Step 5: Verify cross-language result**
+- [x] **Step 5: Verify cross-language result**
 
 Run:
 
@@ -508,7 +509,7 @@ pnpm test:contracts
 
 Expected: all commands pass and both validators classify every manifest entry identically.
 
-- [ ] **Step 6: Commit and push**
+- [x] **Step 6: Commit and push**
 
 ```bash
 git add contracts/examples/v0.1.0/manifest.json contracts/conformance tests/contracts

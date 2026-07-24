@@ -82,6 +82,11 @@
         }
       },
       "then": {
+        "properties": {
+          "model_profile_ref": {
+            "$ref": "common.schema.json#/$defs/identifier"
+          }
+        },
         "required": [
           "model_profile_ref"
         ]
@@ -96,6 +101,11 @@
         }
       },
       "then": {
+        "properties": {
+          "tool_ref": {
+            "$ref": "common.schema.json#/$defs/identifier"
+          }
+        },
         "required": [
           "tool_ref"
         ]
