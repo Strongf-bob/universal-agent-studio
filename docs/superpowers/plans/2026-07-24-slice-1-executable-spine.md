@@ -1095,7 +1095,7 @@ git status --short
 Expected: every command exits zero, no untracked generated/runtime files
 remain, and acceptance evidence names the exact commit and observed results.
 
-- [ ] **Step 5: Commit, push and verify the branch**
+- [x] **Step 5: Commit, push and verify the branch**
 
 ```bash
 git add .github/workflows/slice1.yml apps/studio-web tests/security \
