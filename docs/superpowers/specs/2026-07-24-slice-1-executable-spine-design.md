@@ -124,6 +124,12 @@ libs/
         redaction/
         ports.py
       tests/
+    platform_store/
+      src/universal_agent_platform_store/
+        models.py
+        repositories/
+        session.py
+      tests/
   typescript/
     contracts/
     ui/
@@ -145,9 +151,11 @@ pnpm workspace. Imports follow accepted boundaries:
 
 - Web may import TypeScript contract and UI libraries;
 - API and worker may import Python contract/kernel libraries;
+- API and worker may import the shared PostgreSQL persistence adapter;
 - API may not import worker implementation;
 - worker may not import API or frontend code;
-- kernel may not import FastAPI, SQLAlchemy, Temporal or provider SDKs.
+- kernel may not import FastAPI, SQLAlchemy, Temporal, the persistence adapter
+  or provider SDKs.
 
 ## 5. Local process model
 
@@ -167,6 +175,11 @@ The Compose project contains:
 - `migrate`, a one-shot schema migration service;
 - product PostgreSQL;
 - Temporal development server and Temporal UI.
+
+Before Compose starts, the launcher creates independent session and internal
+command-signing secrets under ignored `.local/secrets` storage with owner-only
+permissions. Example environment files contain names and safe defaults, never
+working credentials.
 
 Images and actions are pinned to exact versions; container image digests are
 recorded before Slice 1 is declared complete. Services run as non-root where
@@ -344,6 +357,13 @@ TraceStore
 
 Domain command and result types contain no Temporal, FastAPI, SQLAlchemy or
 provider SDK objects.
+
+API-to-worker commands use a product-owned signed envelope. The API calculates
+an HMAC-SHA-256 over canonical command bytes with a local internal signing key;
+the worker verifies the signature before loading the snapshot or emitting an
+event. The key is generated into ignored local secret storage with restrictive
+permissions and is mounted read-only into API and worker containers. The key
+and signature never enter AgentSpec, RunEvent or RunTrace.
 
 ### Workflow
 
