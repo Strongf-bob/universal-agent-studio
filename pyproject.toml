@@ -7,6 +7,7 @@ dependencies = []
 [dependency-groups]
 dev = [
   "datamodel-code-generator==0.70.0",
+  "httpx==0.28.1",
   "jsonschema[format-nongpl]==4.26.0",
   "mypy==2.3.0",
   "pytest==9.1.1",

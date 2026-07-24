@@ -1655,6 +1655,7 @@ source = { virtual = "." }
 [package.dev-dependencies]
 dev = [
     { name = "datamodel-code-generator" },
+    { name = "httpx" },
     { name = "jsonschema", extra = ["format-nongpl"] },
     { name = "mypy" },
     { name = "pytest" },
@@ -1672,6 +1673,7 @@ dev = [
 [package.metadata.requires-dev]
 dev = [
     { name = "datamodel-code-generator", specifier = "==0.70.0" },
+    { name = "httpx", specifier = "==0.28.1" },
     { name = "jsonschema", extras = ["format-nongpl"], specifier = "==4.26.0" },
     { name = "mypy", specifier = "==2.3.0" },
     { name = "pytest", specifier = "==9.1.1" },

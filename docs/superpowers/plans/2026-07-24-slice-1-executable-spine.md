@@ -487,7 +487,7 @@ git push
 - Consumes: auth repository, RequestScope, Argon2id.
 - Produces: bootstrap/session/workspace endpoints, `AuthenticatedOwner`, opaque session cookie and CSRF header contract.
 
-- [ ] **Step 1: Write failing security API tests**
+- [x] **Step 1: Write failing security API tests**
 
 Cover one-time bootstrap, Argon2id hash shape, session rotation, `HttpOnly` and
 `SameSite=Lax`, trusted Host/Origin, CSRF rejection, expiry/revocation, generic
@@ -495,7 +495,7 @@ login error, request limits and exact deletion confirmation. Hash the session
 token before repository storage and assert the raw value never appears in
 database/log capture.
 
-- [ ] **Step 2: Verify the tests are red**
+- [x] **Step 2: Verify the tests are red**
 
 Run:
 
@@ -507,7 +507,7 @@ uv run pytest apps/control-api/tests/test_bootstrap_session.py \
 
 Expected: missing FastAPI application/auth modules.
 
-- [ ] **Step 3: Implement the auth boundary**
+- [x] **Step 3: Implement the auth boundary**
 
 Use JSON request bodies. The session cookie name is `uas_session`; browser
 mutations require `X-CSRF-Token`. Expose CSRF only in authenticated session
@@ -517,17 +517,19 @@ Use the canonical safe error shape:
 
 ```json
 {
-  "schema_version": "0.1.0",
   "code": "authentication_failed",
-  "message": "Request could not be authenticated.",
+  "message_key": "errors.authentication_failed",
   "retryable": false,
   "details": {}
 }
 ```
 
+This follows `error-envelope.schema.json`; localized display text is resolved
+by the client and is not duplicated in the transport contract.
+
 Add request correlation middleware and a redacting exception handler.
 
-- [ ] **Step 4: Verify security behavior**
+- [x] **Step 4: Verify security behavior**
 
 Run:
 
@@ -541,7 +543,7 @@ uv run mypy apps/control-api
 
 Expected: all auth/security tests pass with no raw secret in captured output.
 
-- [ ] **Step 5: Commit and push**
+- [x] **Step 5: Commit and push**
 
 ```bash
 git add apps/control-api
