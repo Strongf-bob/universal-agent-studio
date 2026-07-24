@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.universal-agent.studio/v0.1.0/common.schema.json",
+  "title": "Universal Agent Studio common contract definitions",
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_-]{2,63}$"
+    },
+    "semver": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "localizedText": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ru-RU",
+        "en-US"
+      ],
+      "properties": {
+        "ru-RU": {
+          "type": "string",
+          "minLength": 1
+        },
+        "en-US": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "localizedMetadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "description"
+      ],
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/localizedText"
+        },
+        "description": {
+          "$ref": "#/$defs/localizedText"
+        }
+      }
+    },
+    "extensions": {
+      "type": "object",
+      "propertyNames": {
+        "pattern": "^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)+$"
+      },
+      "additionalProperties": {
+        "type": "object"
+      }
+    },
+    "credentialReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "credential_ref"
+      ],
+      "properties": {
+        "credential_ref": {
+          "$ref": "#/$defs/identifier"
+        }
+      }
+    },
+    "policySet": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "data_classification",
+        "redaction_policy_id",
+        "retention_policy_id"
+      ],
+      "properties": {
+        "data_classification": {
+          "enum": [
+            "public",
+            "internal",
+            "confidential",
+            "restricted"
+          ]
+        },
+        "redaction_policy_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "retention_policy_id": {
+          "$ref": "#/$defs/identifier"
+        }
+      }
+    }
+  }
+}

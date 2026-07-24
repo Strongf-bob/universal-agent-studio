@@ -1,0 +1,82 @@
+{
+  "schema_version": "0.1.0",
+  "agent_id": "dangling-agent",
+  "revision": 1,
+  "localized_metadata": {
+    "name": {
+      "ru-RU": "Агент с оборванной связью",
+      "en-US": "Dangling Edge Agent"
+    },
+    "description": {
+      "ru-RU": "Невалидный пример со ссылкой на отсутствующий узел.",
+      "en-US": "Invalid example referencing a missing node."
+    }
+  },
+  "nodes": [
+    {
+      "id": "source-node",
+      "kind": "input",
+      "type": "core.input",
+      "version": "0.1.0",
+      "localized_metadata": {
+        "name": {
+          "ru-RU": "Источник",
+          "en-US": "Source"
+        },
+        "description": {
+          "ru-RU": "Существующий узел.",
+          "en-US": "Existing node."
+        }
+      },
+      "config": {},
+      "input_ports": [],
+      "output_ports": [
+        {
+          "id": "output",
+          "schema": {
+            "type": "object"
+          }
+        }
+      ],
+      "timeout_ms": 1000,
+      "retry_policy": {
+        "max_attempts": 1,
+        "backoff": "none"
+      },
+      "extensions": {}
+    }
+  ],
+  "edges": [
+    {
+      "id": "dangling-edge",
+      "source": {
+        "node_id": "source-node",
+        "port_id": "output"
+      },
+      "target": {
+        "node_id": "missing-node",
+        "port_id": "input"
+      }
+    }
+  ],
+  "model_profiles": [],
+  "tools": [],
+  "interface": {
+    "mode": "form",
+    "locales": [
+      "ru-RU",
+      "en-US"
+    ],
+    "default_locale": "en-US",
+    "input_fields": [],
+    "result_schema": {
+      "type": "object"
+    }
+  },
+  "policies": {
+    "data_classification": "internal",
+    "redaction_policy_id": "default-redaction",
+    "retention_policy_id": "local-preview"
+  },
+  "extensions": {}
+}

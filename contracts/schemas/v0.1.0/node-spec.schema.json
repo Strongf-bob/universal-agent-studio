@@ -1,0 +1,145 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.universal-agent.studio/v0.1.0/node-spec.schema.json",
+  "title": "NodeSpec",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "kind",
+    "type",
+    "version",
+    "localized_metadata",
+    "config",
+    "input_ports",
+    "output_ports",
+    "timeout_ms",
+    "retry_policy",
+    "extensions"
+  ],
+  "properties": {
+    "id": {
+      "$ref": "common.schema.json#/$defs/identifier"
+    },
+    "kind": {
+      "enum": [
+        "input",
+        "model",
+        "tool",
+        "output"
+      ]
+    },
+    "type": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*\\.[a-z][a-z0-9-]*$"
+    },
+    "version": {
+      "$ref": "common.schema.json#/$defs/semver"
+    },
+    "localized_metadata": {
+      "$ref": "common.schema.json#/$defs/localizedMetadata"
+    },
+    "config": {
+      "type": "object"
+    },
+    "input_ports": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/port"
+      }
+    },
+    "output_ports": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/port"
+      }
+    },
+    "model_profile_ref": {
+      "$ref": "common.schema.json#/$defs/identifier"
+    },
+    "tool_ref": {
+      "$ref": "common.schema.json#/$defs/identifier"
+    },
+    "timeout_ms": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 3600000
+    },
+    "retry_policy": {
+      "$ref": "#/$defs/retryPolicy"
+    },
+    "extensions": {
+      "$ref": "common.schema.json#/$defs/extensions"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "model"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "model_profile_ref"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "tool"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "tool_ref"
+        ]
+      }
+    }
+  ],
+  "$defs": {
+    "port": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "schema"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "common.schema.json#/$defs/identifier"
+        },
+        "schema": {
+          "type": "object"
+        }
+      }
+    },
+    "retryPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "max_attempts",
+        "backoff"
+      ],
+      "properties": {
+        "max_attempts": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10
+        },
+        "backoff": {
+          "enum": [
+            "none",
+            "fixed",
+            "exponential"
+          ]
+        }
+      }
+    }
+  }
+}

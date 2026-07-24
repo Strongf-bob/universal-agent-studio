@@ -1,0 +1,366 @@
+{
+  "schema_version": "0.1.0",
+  "agent_id": "calculator-agent",
+  "revision": 1,
+  "localized_metadata": {
+    "name": {
+      "ru-RU": "Агент-калькулятор",
+      "en-US": "Calculator Agent"
+    },
+    "description": {
+      "ru-RU": "Разбирает арифметическую задачу и возвращает структурированный результат.",
+      "en-US": "Interprets an arithmetic request and returns a structured result."
+    }
+  },
+  "nodes": [
+    {
+      "id": "user-input",
+      "kind": "input",
+      "type": "core.input",
+      "version": "0.1.0",
+      "localized_metadata": {
+        "name": {
+          "ru-RU": "Запрос",
+          "en-US": "Request"
+        },
+        "description": {
+          "ru-RU": "Принимает текст арифметической задачи.",
+          "en-US": "Accepts an arithmetic problem as text."
+        }
+      },
+      "config": {},
+      "input_ports": [],
+      "output_ports": [
+        {
+          "id": "request",
+          "schema": {
+            "type": "object",
+            "required": [
+              "question"
+            ],
+            "properties": {
+              "question": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      ],
+      "timeout_ms": 1000,
+      "retry_policy": {
+        "max_attempts": 1,
+        "backoff": "none"
+      },
+      "extensions": {}
+    },
+    {
+      "id": "planner-model",
+      "kind": "model",
+      "type": "core.model",
+      "version": "0.1.0",
+      "localized_metadata": {
+        "name": {
+          "ru-RU": "Планировщик",
+          "en-US": "Planner"
+        },
+        "description": {
+          "ru-RU": "Преобразует вопрос в типизированный вызов калькулятора.",
+          "en-US": "Converts the question into a typed calculator call."
+        }
+      },
+      "config": {
+        "prompt_template": {
+          "ru-RU": "Верни только операцию и два числа.",
+          "en-US": "Return only an operation and two numbers."
+        }
+      },
+      "input_ports": [
+        {
+          "id": "request",
+          "schema": {
+            "type": "object"
+          }
+        }
+      ],
+      "output_ports": [
+        {
+          "id": "tool-call",
+          "schema": {
+            "type": "object",
+            "required": [
+              "operation",
+              "left",
+              "right"
+            ],
+            "properties": {
+              "operation": {
+                "enum": [
+                  "add",
+                  "subtract",
+                  "multiply",
+                  "divide"
+                ]
+              },
+              "left": {
+                "type": "number"
+              },
+              "right": {
+                "type": "number"
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      ],
+      "model_profile_ref": "deterministic-planner",
+      "timeout_ms": 30000,
+      "retry_policy": {
+        "max_attempts": 2,
+        "backoff": "exponential"
+      },
+      "extensions": {}
+    },
+    {
+      "id": "calculator-tool",
+      "kind": "tool",
+      "type": "core.tool",
+      "version": "0.1.0",
+      "localized_metadata": {
+        "name": {
+          "ru-RU": "Калькулятор",
+          "en-US": "Calculator"
+        },
+        "description": {
+          "ru-RU": "Выполняет одну арифметическую операцию.",
+          "en-US": "Performs one arithmetic operation."
+        }
+      },
+      "config": {},
+      "input_ports": [
+        {
+          "id": "operation",
+          "schema": {
+            "type": "object"
+          }
+        }
+      ],
+      "output_ports": [
+        {
+          "id": "calculation",
+          "schema": {
+            "type": "object",
+            "required": [
+              "value"
+            ],
+            "properties": {
+              "value": {
+                "type": "number"
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      ],
+      "tool_ref": "builtin-calculator",
+      "timeout_ms": 1000,
+      "retry_policy": {
+        "max_attempts": 1,
+        "backoff": "none"
+      },
+      "extensions": {}
+    },
+    {
+      "id": "structured-output",
+      "kind": "output",
+      "type": "core.output",
+      "version": "0.1.0",
+      "localized_metadata": {
+        "name": {
+          "ru-RU": "Результат",
+          "en-US": "Result"
+        },
+        "description": {
+          "ru-RU": "Возвращает вычисленное значение.",
+          "en-US": "Returns the calculated value."
+        }
+      },
+      "config": {},
+      "input_ports": [
+        {
+          "id": "result",
+          "schema": {
+            "type": "object"
+          }
+        }
+      ],
+      "output_ports": [],
+      "timeout_ms": 1000,
+      "retry_policy": {
+        "max_attempts": 1,
+        "backoff": "none"
+      },
+      "extensions": {}
+    }
+  ],
+  "edges": [
+    {
+      "id": "input-to-planner",
+      "source": {
+        "node_id": "user-input",
+        "port_id": "request"
+      },
+      "target": {
+        "node_id": "planner-model",
+        "port_id": "request"
+      }
+    },
+    {
+      "id": "planner-to-tool",
+      "source": {
+        "node_id": "planner-model",
+        "port_id": "tool-call"
+      },
+      "target": {
+        "node_id": "calculator-tool",
+        "port_id": "operation"
+      }
+    },
+    {
+      "id": "tool-to-output",
+      "source": {
+        "node_id": "calculator-tool",
+        "port_id": "calculation"
+      },
+      "target": {
+        "node_id": "structured-output",
+        "port_id": "result"
+      }
+    }
+  ],
+  "model_profiles": [
+    {
+      "id": "deterministic-planner",
+      "localized_metadata": {
+        "name": {
+          "ru-RU": "Детерминированный планировщик",
+          "en-US": "Deterministic Planner"
+        },
+        "description": {
+          "ru-RU": "Локальный fake adapter для воспроизводимых тестов.",
+          "en-US": "Local fake adapter for reproducible tests."
+        }
+      },
+      "required_capabilities": [
+        "text",
+        "structured_output",
+        "tool_calling"
+      ],
+      "routes": [
+        {
+          "adapter": "fake",
+          "model": "calculator-planner-v1"
+        }
+      ],
+      "parameters": {
+        "temperature": 0,
+        "max_output_tokens": 256
+      },
+      "data_policy": {
+        "external_allowed": false,
+        "sensitive_data_allowed": false,
+        "retention_policy": "none",
+        "regions": [
+          "RU"
+        ]
+      },
+      "extensions": {}
+    }
+  ],
+  "tools": [
+    {
+      "id": "builtin-calculator",
+      "version": "0.1.0",
+      "localized_metadata": {
+        "name": {
+          "ru-RU": "Встроенный калькулятор",
+          "en-US": "Built-in Calculator"
+        },
+        "description": {
+          "ru-RU": "Безопасный инструмент без внешних эффектов.",
+          "en-US": "Safe tool with no external side effects."
+        }
+      },
+      "input_schema": {
+        "type": "object",
+        "required": [
+          "operation",
+          "left",
+          "right"
+        ]
+      },
+      "output_schema": {
+        "type": "object",
+        "required": [
+          "value"
+        ]
+      },
+      "side_effect": "none",
+      "idempotency": {
+        "required": false,
+        "key_strategy": "not-applicable"
+      },
+      "approval_policy": "never",
+      "permissions": [
+        "calculator:evaluate"
+      ],
+      "adapter": {
+        "type": "builtin",
+        "ref": "calculator"
+      },
+      "credential_refs": [],
+      "extensions": {}
+    }
+  ],
+  "interface": {
+    "mode": "form",
+    "locales": [
+      "ru-RU",
+      "en-US"
+    ],
+    "default_locale": "ru-RU",
+    "input_fields": [
+      {
+        "id": "question",
+        "label": {
+          "ru-RU": "Арифметическая задача",
+          "en-US": "Arithmetic problem"
+        },
+        "schema": {
+          "type": "string",
+          "minLength": 1
+        },
+        "required": true
+      }
+    ],
+    "result_schema": {
+      "type": "object",
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "value": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "policies": {
+    "data_classification": "internal",
+    "redaction_policy_id": "default-redaction",
+    "retention_policy_id": "local-preview"
+  },
+  "extensions": {}
+}

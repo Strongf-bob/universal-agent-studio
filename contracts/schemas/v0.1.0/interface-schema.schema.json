@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.universal-agent.studio/v0.1.0/interface-schema.schema.json",
+  "title": "InterfaceSchema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mode",
+    "locales",
+    "default_locale",
+    "input_fields",
+    "result_schema"
+  ],
+  "properties": {
+    "mode": {
+      "enum": [
+        "form",
+        "chat",
+        "hybrid"
+      ]
+    },
+    "locales": {
+      "type": "array",
+      "minItems": 2,
+      "uniqueItems": true,
+      "contains": {
+        "const": "ru-RU"
+      },
+      "items": {
+        "enum": [
+          "ru-RU",
+          "en-US"
+        ]
+      }
+    },
+    "default_locale": {
+      "enum": [
+        "ru-RU",
+        "en-US"
+      ]
+    },
+    "input_fields": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/inputField"
+      }
+    },
+    "result_schema": {
+      "type": "object"
+    }
+  },
+  "$defs": {
+    "inputField": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "label",
+        "schema",
+        "required"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "common.schema.json#/$defs/identifier"
+        },
+        "label": {
+          "$ref": "common.schema.json#/$defs/localizedText"
+        },
+        "schema": {
+          "type": "object"
+        },
+        "required": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

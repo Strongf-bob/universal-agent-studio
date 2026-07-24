@@ -24,6 +24,7 @@
 ### Task 1: Close design, security, and frontend provenance documentation
 
 **Files:**
+- Create: `tests/contracts/test_authoring_contracts.py`
 - Modify: `DESIGN.md`
 - Modify: `SECURITY.md`
 - Modify: `README.md`
@@ -304,9 +305,9 @@ git push origin main
 - Produces: schema IDs under `https://schemas.universal-agent.studio/v0.1.0/`; node kinds `input`, `model`, `tool`, `output`; port types expressed as JSON Schema fragments; immutable AgentVersion envelope.
 - Invariants: unique node/edge IDs are enforced by conformance checks where JSON Schema cannot express cross-item uniqueness by property; secrets are represented only by `credential_ref`.
 
-- [ ] **Step 1: Write invalid fixture assertions**
+- [x] **Step 1: Write authoring contract tests and invalid fixture assertions**
 
-Create the three fixtures first. The valid agent graph is:
+Create `tests/contracts/test_authoring_contracts.py` first. It loads all schemas into a `referencing.Registry`, validates the golden fixture against `agent-spec.schema.json`, and asserts that required-field removal is rejected. Then create the three fixtures. The valid agent graph is:
 
 ```text
 input:user_request → model:planner → tool:calculator → output:result
@@ -314,17 +315,17 @@ input:user_request → model:planner → tool:calculator → output:result
 
 It includes RU/EN name and description, a deterministic fake model profile, a typed calculator manifest, and a structured result schema. The secret fixture inserts `api_key: "forbidden"` under model configuration. The dangling-edge fixture references `missing_node`.
 
-- [ ] **Step 2: Run Python validator before schemas exist**
+- [x] **Step 2: Run Python validator before schemas exist**
 
-Run:
+Run the authoring contract test before schemas exist:
 
 ```bash
-uv run pytest tests/contracts/test_contract_examples.py -q
+uv run pytest tests/contracts/test_authoring_contracts.py -q
 ```
 
 Expected: failure because the test/schema files do not exist.
 
-- [ ] **Step 3: Implement authoring schemas**
+- [x] **Step 3: Implement authoring schemas**
 
 Every schema uses:
 
@@ -346,7 +347,7 @@ nodes, edges, model_profiles, tools, interface, policies, extensions
 
 IDs match `^[a-z][a-z0-9_-]{2,63}$`. `schema_version` is exactly `0.1.0`. Extension keys match reverse-DNS/provider namespaces and values are JSON objects.
 
-- [ ] **Step 4: Validate schema meta-schemas**
+- [x] **Step 4: Validate schema meta-schemas**
 
 Run:
 
@@ -356,7 +357,7 @@ uv run python -c 'import json, pathlib; from jsonschema.validators import valida
 
 Expected: `SCHEMAS OK`.
 
-- [ ] **Step 5: Commit and push**
+- [x] **Step 5: Commit and push**
 
 ```bash
 git add contracts/schemas/v0.1.0 contracts/examples/v0.1.0

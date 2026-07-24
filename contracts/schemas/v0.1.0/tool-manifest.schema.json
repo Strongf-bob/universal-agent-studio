@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.universal-agent.studio/v0.1.0/tool-manifest.schema.json",
+  "title": "ToolManifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "version",
+    "localized_metadata",
+    "input_schema",
+    "output_schema",
+    "side_effect",
+    "idempotency",
+    "approval_policy",
+    "permissions",
+    "adapter",
+    "credential_refs",
+    "extensions"
+  ],
+  "properties": {
+    "id": {
+      "$ref": "common.schema.json#/$defs/identifier"
+    },
+    "version": {
+      "$ref": "common.schema.json#/$defs/semver"
+    },
+    "localized_metadata": {
+      "$ref": "common.schema.json#/$defs/localizedMetadata"
+    },
+    "input_schema": {
+      "type": "object"
+    },
+    "output_schema": {
+      "type": "object"
+    },
+    "side_effect": {
+      "enum": [
+        "none",
+        "read",
+        "write",
+        "destructive"
+      ]
+    },
+    "idempotency": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "required",
+        "key_strategy"
+      ],
+      "properties": {
+        "required": {
+          "type": "boolean"
+        },
+        "key_strategy": {
+          "enum": [
+            "not-applicable",
+            "run-and-node",
+            "caller-provided"
+          ]
+        }
+      }
+    },
+    "approval_policy": {
+      "enum": [
+        "never",
+        "configurable",
+        "required"
+      ]
+    },
+    "permissions": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9.-]+:[a-z][a-z0-9.-]+$"
+      }
+    },
+    "adapter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "ref"
+      ],
+      "properties": {
+        "type": {
+          "enum": [
+            "builtin",
+            "http",
+            "openapi",
+            "mcp",
+            "sandbox"
+          ]
+        },
+        "ref": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        }
+      }
+    },
+    "credential_refs": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "$ref": "common.schema.json#/$defs/credentialReference"
+      }
+    },
+    "extensions": {
+      "$ref": "common.schema.json#/$defs/extensions"
+    }
+  }
+}

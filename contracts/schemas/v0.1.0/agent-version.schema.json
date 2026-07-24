@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.universal-agent.studio/v0.1.0/agent-version.schema.json",
+  "title": "AgentVersion",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "version_id",
+    "agent_id",
+    "version_number",
+    "status",
+    "agent_spec",
+    "agent_spec_digest",
+    "dependency_lock",
+    "created_at"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "0.1.0"
+    },
+    "version_id": {
+      "$ref": "common.schema.json#/$defs/identifier"
+    },
+    "agent_id": {
+      "$ref": "common.schema.json#/$defs/identifier"
+    },
+    "version_number": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "status": {
+      "const": "published"
+    },
+    "agent_spec": {
+      "$ref": "agent-spec.schema.json"
+    },
+    "agent_spec_digest": {
+      "$ref": "common.schema.json#/$defs/sha256"
+    },
+    "dependency_lock": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/dependency"
+      }
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "signature": {
+      "$ref": "#/$defs/signature"
+    }
+  },
+  "$defs": {
+    "dependency": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "id",
+        "version",
+        "digest"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "model_adapter",
+            "tool",
+            "asset",
+            "capability_pack"
+          ]
+        },
+        "id": {
+          "$ref": "common.schema.json#/$defs/identifier"
+        },
+        "version": {
+          "$ref": "common.schema.json#/$defs/semver"
+        },
+        "digest": {
+          "$ref": "common.schema.json#/$defs/sha256"
+        }
+      }
+    },
+    "signature": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "algorithm",
+        "key_id",
+        "value"
+      ],
+      "properties": {
+        "algorithm": {
+          "const": "ed25519"
+        },
+        "key_id": {
+          "$ref": "common.schema.json#/$defs/identifier"
+        },
+        "value": {
+          "type": "string",
+          "minLength": 32
+        }
+      }
+    }
+  }
+}

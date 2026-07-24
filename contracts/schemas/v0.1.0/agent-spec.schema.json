@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.universal-agent.studio/v0.1.0/agent-spec.schema.json",
+  "title": "AgentSpec",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "agent_id",
+    "revision",
+    "localized_metadata",
+    "nodes",
+    "edges",
+    "model_profiles",
+    "tools",
+    "interface",
+    "policies",
+    "extensions"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "0.1.0"
+    },
+    "agent_id": {
+      "$ref": "common.schema.json#/$defs/identifier"
+    },
+    "revision": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "localized_metadata": {
+      "$ref": "common.schema.json#/$defs/localizedMetadata"
+    },
+    "nodes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "node-spec.schema.json"
+      }
+    },
+    "edges": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/edge"
+      }
+    },
+    "model_profiles": {
+      "type": "array",
+      "items": {
+        "$ref": "model-profile.schema.json"
+      }
+    },
+    "tools": {
+      "type": "array",
+      "items": {
+        "$ref": "tool-manifest.schema.json"
+      }
+    },
+    "interface": {
+      "$ref": "interface-schema.schema.json"
+    },
+    "policies": {
+      "$ref": "common.schema.json#/$defs/policySet"
+    },
+    "extensions": {
+      "$ref": "common.schema.json#/$defs/extensions"
+    }
+  },
+  "$defs": {
+    "endpoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "node_id",
+        "port_id"
+      ],
+      "properties": {
+        "node_id": {
+          "$ref": "common.schema.json#/$defs/identifier"
+        },
+        "port_id": {
+          "$ref": "common.schema.json#/$defs/identifier"
+        }
+      }
+    },
+    "edge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "source",
+        "target"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "common.schema.json#/$defs/identifier"
+        },
+        "source": {
+          "$ref": "#/$defs/endpoint"
+        },
+        "target": {
+          "$ref": "#/$defs/endpoint"
+        }
+      }
+    }
+  }
+}
