@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.universal-agent.studio/v0.1.0/run-event.schema.json",
+  "title": "RunEvent",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "event_id",
+    "run_id",
+    "sequence",
+    "type",
+    "occurred_at",
+    "correlation_id",
+    "causation_id",
+    "redaction_policy_id",
+    "payload"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "0.1.0"
+    },
+    "event_id": {
+      "$ref": "common.schema.json#/$defs/uuid"
+    },
+    "run_id": {
+      "$ref": "common.schema.json#/$defs/uuid"
+    },
+    "sequence": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "type": {
+      "enum": [
+        "run.started",
+        "node.started",
+        "model.requested",
+        "model.completed",
+        "tool.requested",
+        "tool.completed",
+        "approval.required",
+        "approval.resolved",
+        "node.failed",
+        "node.completed",
+        "run.completed",
+        "run.failed",
+        "run.cancelled"
+      ]
+    },
+    "occurred_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "correlation_id": {
+      "$ref": "common.schema.json#/$defs/uuid"
+    },
+    "causation_id": {
+      "$ref": "common.schema.json#/$defs/uuid"
+    },
+    "node_id": {
+      "$ref": "common.schema.json#/$defs/identifier"
+    },
+    "redaction_policy_id": {
+      "$ref": "common.schema.json#/$defs/identifier"
+    },
+    "payload": {
+      "type": "object"
+    },
+    "error": {
+      "$ref": "error-envelope.schema.json"
+    }
+  }
+}

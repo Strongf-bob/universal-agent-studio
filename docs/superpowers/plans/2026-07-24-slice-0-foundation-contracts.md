@@ -24,6 +24,7 @@
 ### Task 1: Close design, security, and frontend provenance documentation
 
 **Files:**
+- Create: `tests/contracts/test_run_contracts.py`
 - Create: `tests/contracts/test_authoring_contracts.py`
 - Modify: `DESIGN.md`
 - Modify: `SECURITY.md`
@@ -381,11 +382,11 @@ git push origin main
 - Produces: `RunRequest`, event envelope, terminal trace and stable error envelope consumed by Slice 1 API/runtime/web.
 - RunEvent types: `run.started`, `node.started`, `model.requested`, `model.completed`, `tool.requested`, `tool.completed`, `node.completed`, `node.failed`, `run.completed`, `run.failed`.
 
-- [ ] **Step 1: Add example lifecycle**
+- [x] **Step 1: Write run contract tests and add example lifecycle**
 
-The valid trace contains ordered events with UUID `event_id`, one `run_id`, integer sequences starting at 1, UTC timestamps, causation IDs, redacted payloads, exact `agent_version_digest`, resolved fake model provenance, calculator tool provenance, and terminal structured output.
+Create `tests/contracts/test_run_contracts.py` first. It asserts that the request and completed trace validate and that `sequence: 0` is rejected. Run it once to observe failure because the execution schemas/examples do not exist. The valid trace contains ordered events with UUID `event_id`, one `run_id`, integer sequences starting at 1, UTC timestamps, causation IDs, redacted payloads, exact `agent_version_digest`, resolved fake model provenance, calculator tool provenance, and terminal structured output.
 
-- [ ] **Step 2: Implement execution schemas**
+- [x] **Step 2: Implement execution schemas**
 
 `RunRequest` requires:
 
@@ -403,13 +404,13 @@ correlation_id, causation_id, node_id?, payload
 
 `ErrorEnvelope` requires stable `code`, localized-safe `message_key`, `retryable`, optional `node_id`, and redacted `details`.
 
-- [ ] **Step 3: Validate all schemas**
+- [x] **Step 3: Validate all schemas**
 
 Run the meta-schema command from Task 3.
 
 Expected: `SCHEMAS OK`.
 
-- [ ] **Step 4: Commit and push**
+- [x] **Step 4: Commit and push**
 
 ```bash
 git add contracts/schemas/v0.1.0 contracts/examples/v0.1.0

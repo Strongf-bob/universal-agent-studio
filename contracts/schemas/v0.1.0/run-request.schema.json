@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.universal-agent.studio/v0.1.0/run-request.schema.json",
+  "title": "RunRequest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "request_id",
+    "agent_version_id",
+    "agent_version_digest",
+    "idempotency_key",
+    "input",
+    "locale"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "0.1.0"
+    },
+    "request_id": {
+      "$ref": "common.schema.json#/$defs/uuid"
+    },
+    "agent_version_id": {
+      "$ref": "common.schema.json#/$defs/identifier"
+    },
+    "agent_version_digest": {
+      "$ref": "common.schema.json#/$defs/sha256"
+    },
+    "idempotency_key": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9._:-]{16,128}$"
+    },
+    "session_id": {
+      "$ref": "common.schema.json#/$defs/uuid"
+    },
+    "input": {
+      "type": "object"
+    },
+    "locale": {
+      "enum": [
+        "ru-RU",
+        "en-US"
+      ]
+    }
+  }
+}

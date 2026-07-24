@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.universal-agent.studio/v0.1.0/error-envelope.schema.json",
+  "title": "ErrorEnvelope",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "code",
+    "message_key",
+    "retryable",
+    "details"
+  ],
+  "properties": {
+    "code": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]{2,63}$"
+    },
+    "message_key": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_.]{2,127}$"
+    },
+    "retryable": {
+      "type": "boolean"
+    },
+    "node_id": {
+      "$ref": "common.schema.json#/$defs/identifier"
+    },
+    "details": {
+      "type": "object"
+    }
+  }
+}

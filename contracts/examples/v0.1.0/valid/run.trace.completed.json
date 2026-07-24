@@ -1,0 +1,226 @@
+{
+  "schema_version": "0.1.0",
+  "run_id": "22222222-2222-4222-8222-222222222222",
+  "request_id": "11111111-1111-4111-8111-111111111111",
+  "agent_version_id": "calculator-v1",
+  "agent_version_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "status": "completed",
+  "started_at": "2026-07-24T12:00:00Z",
+  "completed_at": "2026-07-24T12:00:00.280Z",
+  "input": {
+    "question": "Сколько будет 19 × 23?"
+  },
+  "output": {
+    "value": 437
+  },
+  "events": [
+    {
+      "schema_version": "0.1.0",
+      "event_id": "00000000-0000-4000-8000-000000000001",
+      "run_id": "22222222-2222-4222-8222-222222222222",
+      "sequence": 1,
+      "type": "run.started",
+      "occurred_at": "2026-07-24T12:00:00Z",
+      "correlation_id": "11111111-1111-4111-8111-111111111111",
+      "causation_id": "11111111-1111-4111-8111-111111111111",
+      "redaction_policy_id": "default-redaction",
+      "payload": {
+        "agent_version_id": "calculator-v1"
+      }
+    },
+    {
+      "schema_version": "0.1.0",
+      "event_id": "00000000-0000-4000-8000-000000000002",
+      "run_id": "22222222-2222-4222-8222-222222222222",
+      "sequence": 2,
+      "type": "node.started",
+      "occurred_at": "2026-07-24T12:00:00.010Z",
+      "correlation_id": "11111111-1111-4111-8111-111111111111",
+      "causation_id": "00000000-0000-4000-8000-000000000001",
+      "node_id": "planner-model",
+      "redaction_policy_id": "default-redaction",
+      "payload": {}
+    },
+    {
+      "schema_version": "0.1.0",
+      "event_id": "00000000-0000-4000-8000-000000000003",
+      "run_id": "22222222-2222-4222-8222-222222222222",
+      "sequence": 3,
+      "type": "model.requested",
+      "occurred_at": "2026-07-24T12:00:00.020Z",
+      "correlation_id": "11111111-1111-4111-8111-111111111111",
+      "causation_id": "00000000-0000-4000-8000-000000000002",
+      "node_id": "planner-model",
+      "redaction_policy_id": "default-redaction",
+      "payload": {
+        "profile_id": "deterministic-planner"
+      }
+    },
+    {
+      "schema_version": "0.1.0",
+      "event_id": "00000000-0000-4000-8000-000000000004",
+      "run_id": "22222222-2222-4222-8222-222222222222",
+      "sequence": 4,
+      "type": "model.completed",
+      "occurred_at": "2026-07-24T12:00:00.110Z",
+      "correlation_id": "11111111-1111-4111-8111-111111111111",
+      "causation_id": "00000000-0000-4000-8000-000000000003",
+      "node_id": "planner-model",
+      "redaction_policy_id": "default-redaction",
+      "payload": {
+        "operation": "multiply",
+        "left": 19,
+        "right": 23
+      }
+    },
+    {
+      "schema_version": "0.1.0",
+      "event_id": "00000000-0000-4000-8000-000000000005",
+      "run_id": "22222222-2222-4222-8222-222222222222",
+      "sequence": 5,
+      "type": "tool.requested",
+      "occurred_at": "2026-07-24T12:00:00.130Z",
+      "correlation_id": "11111111-1111-4111-8111-111111111111",
+      "causation_id": "00000000-0000-4000-8000-000000000004",
+      "node_id": "calculator-tool",
+      "redaction_policy_id": "default-redaction",
+      "payload": {
+        "tool_id": "builtin-calculator"
+      }
+    },
+    {
+      "schema_version": "0.1.0",
+      "event_id": "00000000-0000-4000-8000-000000000006",
+      "run_id": "22222222-2222-4222-8222-222222222222",
+      "sequence": 6,
+      "type": "tool.completed",
+      "occurred_at": "2026-07-24T12:00:00.160Z",
+      "correlation_id": "11111111-1111-4111-8111-111111111111",
+      "causation_id": "00000000-0000-4000-8000-000000000005",
+      "node_id": "calculator-tool",
+      "redaction_policy_id": "default-redaction",
+      "payload": {
+        "value": 437
+      }
+    },
+    {
+      "schema_version": "0.1.0",
+      "event_id": "00000000-0000-4000-8000-000000000007",
+      "run_id": "22222222-2222-4222-8222-222222222222",
+      "sequence": 7,
+      "type": "node.completed",
+      "occurred_at": "2026-07-24T12:00:00.230Z",
+      "correlation_id": "11111111-1111-4111-8111-111111111111",
+      "causation_id": "00000000-0000-4000-8000-000000000006",
+      "node_id": "structured-output",
+      "redaction_policy_id": "default-redaction",
+      "payload": {
+        "value": 437
+      }
+    },
+    {
+      "schema_version": "0.1.0",
+      "event_id": "00000000-0000-4000-8000-000000000008",
+      "run_id": "22222222-2222-4222-8222-222222222222",
+      "sequence": 8,
+      "type": "run.completed",
+      "occurred_at": "2026-07-24T12:00:00.280Z",
+      "correlation_id": "11111111-1111-4111-8111-111111111111",
+      "causation_id": "00000000-0000-4000-8000-000000000007",
+      "redaction_policy_id": "default-redaction",
+      "payload": {
+        "status": "completed"
+      }
+    }
+  ],
+  "node_executions": [
+    {
+      "node_id": "user-input",
+      "status": "completed",
+      "started_at": "2026-07-24T12:00:00Z",
+      "completed_at": "2026-07-24T12:00:00.010Z",
+      "duration_ms": 10,
+      "input": {
+        "question": "Сколько будет 19 × 23?"
+      },
+      "output": {
+        "question": "Сколько будет 19 × 23?"
+      }
+    },
+    {
+      "node_id": "planner-model",
+      "status": "completed",
+      "started_at": "2026-07-24T12:00:00.010Z",
+      "completed_at": "2026-07-24T12:00:00.120Z",
+      "duration_ms": 110,
+      "input": {
+        "question": "Сколько будет 19 × 23?"
+      },
+      "output": {
+        "operation": "multiply",
+        "left": 19,
+        "right": 23
+      }
+    },
+    {
+      "node_id": "calculator-tool",
+      "status": "completed",
+      "started_at": "2026-07-24T12:00:00.130Z",
+      "completed_at": "2026-07-24T12:00:00.170Z",
+      "duration_ms": 40,
+      "input": {
+        "operation": "multiply",
+        "left": 19,
+        "right": 23
+      },
+      "output": {
+        "value": 437
+      }
+    },
+    {
+      "node_id": "structured-output",
+      "status": "completed",
+      "started_at": "2026-07-24T12:00:00.180Z",
+      "completed_at": "2026-07-24T12:00:00.230Z",
+      "duration_ms": 50,
+      "input": {
+        "value": 437
+      },
+      "output": {
+        "value": 437
+      }
+    }
+  ],
+  "provenance": {
+    "model_resolutions": [
+      {
+        "profile_id": "deterministic-planner",
+        "adapter": "fake",
+        "model": "calculator-planner-v1",
+        "parameters": {
+          "temperature": 0,
+          "max_output_tokens": 256
+        },
+        "prompt_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      }
+    ],
+    "tool_resolutions": [
+      {
+        "tool_id": "builtin-calculator",
+        "version": "0.1.0",
+        "digest": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+      }
+    ],
+    "redaction_policy_id": "default-redaction"
+  },
+  "metrics": {
+    "duration_ms": 280,
+    "input_tokens": 8,
+    "output_tokens": 12,
+    "tool_calls": 1,
+    "cost": {
+      "amount": 0,
+      "currency": "USD"
+    }
+  }
+}

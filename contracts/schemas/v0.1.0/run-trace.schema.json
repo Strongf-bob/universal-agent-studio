@@ -1,0 +1,254 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.universal-agent.studio/v0.1.0/run-trace.schema.json",
+  "title": "RunTrace",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "run_id",
+    "request_id",
+    "agent_version_id",
+    "agent_version_digest",
+    "status",
+    "started_at",
+    "completed_at",
+    "input",
+    "output",
+    "events",
+    "node_executions",
+    "provenance",
+    "metrics"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "0.1.0"
+    },
+    "run_id": {
+      "$ref": "common.schema.json#/$defs/uuid"
+    },
+    "request_id": {
+      "$ref": "common.schema.json#/$defs/uuid"
+    },
+    "agent_version_id": {
+      "$ref": "common.schema.json#/$defs/identifier"
+    },
+    "agent_version_digest": {
+      "$ref": "common.schema.json#/$defs/sha256"
+    },
+    "status": {
+      "enum": [
+        "completed",
+        "failed",
+        "cancelled"
+      ]
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "input": {
+      "type": "object"
+    },
+    "output": {
+      "type": "object"
+    },
+    "events": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "$ref": "run-event.schema.json"
+      }
+    },
+    "node_executions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/nodeExecution"
+      }
+    },
+    "provenance": {
+      "$ref": "#/$defs/provenance"
+    },
+    "metrics": {
+      "$ref": "#/$defs/metrics"
+    },
+    "error": {
+      "$ref": "error-envelope.schema.json"
+    }
+  },
+  "$defs": {
+    "nodeExecution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "node_id",
+        "status",
+        "started_at",
+        "completed_at",
+        "duration_ms",
+        "input",
+        "output"
+      ],
+      "properties": {
+        "node_id": {
+          "$ref": "common.schema.json#/$defs/identifier"
+        },
+        "status": {
+          "enum": [
+            "completed",
+            "failed",
+            "cancelled"
+          ]
+        },
+        "started_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "completed_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "duration_ms": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "input": {
+          "type": "object"
+        },
+        "output": {
+          "type": "object"
+        },
+        "error": {
+          "$ref": "error-envelope.schema.json"
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "model_resolutions",
+        "tool_resolutions",
+        "redaction_policy_id"
+      ],
+      "properties": {
+        "model_resolutions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/modelResolution"
+          }
+        },
+        "tool_resolutions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/toolResolution"
+          }
+        },
+        "redaction_policy_id": {
+          "$ref": "common.schema.json#/$defs/identifier"
+        }
+      }
+    },
+    "modelResolution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "profile_id",
+        "adapter",
+        "model",
+        "parameters",
+        "prompt_digest"
+      ],
+      "properties": {
+        "profile_id": {
+          "$ref": "common.schema.json#/$defs/identifier"
+        },
+        "adapter": {
+          "type": "string",
+          "minLength": 2
+        },
+        "model": {
+          "type": "string",
+          "minLength": 1
+        },
+        "parameters": {
+          "type": "object"
+        },
+        "prompt_digest": {
+          "$ref": "common.schema.json#/$defs/sha256"
+        }
+      }
+    },
+    "toolResolution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tool_id",
+        "version",
+        "digest"
+      ],
+      "properties": {
+        "tool_id": {
+          "$ref": "common.schema.json#/$defs/identifier"
+        },
+        "version": {
+          "$ref": "common.schema.json#/$defs/semver"
+        },
+        "digest": {
+          "$ref": "common.schema.json#/$defs/sha256"
+        }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "duration_ms",
+        "input_tokens",
+        "output_tokens",
+        "tool_calls",
+        "cost"
+      ],
+      "properties": {
+        "duration_ms": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "input_tokens": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "output_tokens": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "tool_calls": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "cost": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "amount",
+            "currency"
+          ],
+          "properties": {
+            "amount": {
+              "type": "number",
+              "minimum": 0
+            },
+            "currency": {
+              "type": "string",
+              "pattern": "^[A-Z]{3}$"
+            }
+          }
+        }
+      }
+    }
+  }
+}
