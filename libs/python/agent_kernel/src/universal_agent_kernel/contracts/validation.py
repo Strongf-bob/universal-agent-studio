@@ -33,6 +33,7 @@ TERMINAL_EVENT_TYPES = {
     "run.failed",
 }
 SCHEMA_DEFINITION_BY_FILE = {
+    "agent-draft.schema.json": "AgentDraft",
     "agent-spec.schema.json": "AgentSpec",
     "agent-version.schema.json": "AgentVersion",
     "error-envelope.schema.json": "ErrorEnvelope",
@@ -173,16 +174,36 @@ def find_forbidden_secret_keys(value: Any) -> set[str]:
 
 
 def validate_agent_graph(agent: dict[str, Any]) -> set[str]:
+    return {issue.code for issue in validate_agent_graph_issues(agent)}
+
+
+def _semantic_issue(
+    code: str,
+    json_pointer: str,
+    node_id: str | None = None,
+) -> ValidationIssue:
+    return ValidationIssue(
+        code=code,
+        json_pointer=json_pointer,
+        node_id=node_id,
+        message_key=f"validation.semantic.{code}",
+    )
+
+
+def validate_agent_graph_issues(
+    agent: dict[str, Any],
+) -> list[ValidationIssue]:
+    issues: list[ValidationIssue] = []
     errors: set[str] = set()
     nodes = agent.get("nodes", [])
     node_ids = [node.get("id") for node in nodes]
 
     if len(node_ids) != len(set(node_ids)):
-        errors.add("duplicate_node_id")
+        issues.append(_semantic_issue("duplicate_node_id", "/nodes"))
 
     edge_ids = [edge.get("id") for edge in agent.get("edges", [])]
     if len(edge_ids) != len(set(edge_ids)):
-        errors.add("duplicate_edge_id")
+        issues.append(_semantic_issue("duplicate_edge_id", "/edges"))
 
     model_profile_ids = {
         profile.get("id") for profile in agent.get("model_profiles", [])
@@ -190,23 +211,49 @@ def validate_agent_graph(agent: dict[str, Any]) -> set[str]:
     tool_ids = {tool.get("id") for tool in agent.get("tools", [])}
     nodes_by_id = {node.get("id"): node for node in nodes}
 
-    for node in nodes:
+    for node_index, node in enumerate(nodes):
+        node_id = node.get("id")
+        located_node_id = node_id if isinstance(node_id, str) else None
         input_port_ids = [port.get("id") for port in node.get("input_ports", [])]
         output_port_ids = [port.get("id") for port in node.get("output_ports", [])]
         if len(input_port_ids) != len(set(input_port_ids)):
-            errors.add("duplicate_port_id")
+            issues.append(
+                _semantic_issue(
+                    "duplicate_port_id",
+                    f"/nodes/{node_index}/input_ports",
+                    located_node_id,
+                )
+            )
         if len(output_port_ids) != len(set(output_port_ids)):
-            errors.add("duplicate_port_id")
+            issues.append(
+                _semantic_issue(
+                    "duplicate_port_id",
+                    f"/nodes/{node_index}/output_ports",
+                    located_node_id,
+                )
+            )
 
         model_ref = node.get("model_profile_ref")
         if model_ref is not None and model_ref not in model_profile_ids:
-            errors.add("dangling_model_profile_reference")
+            issues.append(
+                _semantic_issue(
+                    "dangling_model_profile_reference",
+                    f"/nodes/{node_index}/model_profile_ref",
+                    located_node_id,
+                )
+            )
 
         tool_ref = node.get("tool_ref")
         if tool_ref is not None and tool_ref not in tool_ids:
-            errors.add("dangling_tool_reference")
+            issues.append(
+                _semantic_issue(
+                    "dangling_tool_reference",
+                    f"/nodes/{node_index}/tool_ref",
+                    located_node_id,
+                )
+            )
 
-    for edge in agent.get("edges", []):
+    for edge_index, edge in enumerate(agent.get("edges", [])):
         for endpoint_name, port_collection in (
             ("source", "output_ports"),
             ("target", "input_ports"),
@@ -214,14 +261,90 @@ def validate_agent_graph(agent: dict[str, Any]) -> set[str]:
             endpoint = edge.get(endpoint_name, {})
             node = nodes_by_id.get(endpoint.get("node_id"))
             if node is None:
-                errors.add("dangling_node_reference")
+                issues.append(
+                    _semantic_issue(
+                        "dangling_node_reference",
+                        f"/edges/{edge_index}/{endpoint_name}/node_id",
+                    )
+                )
                 continue
 
             port_ids = {port.get("id") for port in node.get(port_collection, [])}
             if endpoint.get("port_id") not in port_ids:
-                errors.add("dangling_port_reference")
+                node_id = endpoint.get("node_id")
+                issues.append(
+                    _semantic_issue(
+                        "dangling_port_reference",
+                        f"/edges/{edge_index}/{endpoint_name}/port_id",
+                        node_id if isinstance(node_id, str) else None,
+                    )
+                )
 
-    return errors
+    issues.extend(_semantic_issue(code, "") for code in sorted(errors))
+    return issues
+
+
+def validate_agent_draft(document: dict[str, Any]) -> ValidationResult:
+    issues = _schema_issues(document, "agent-draft.schema.json")
+    agent_spec = document.get("agent_spec")
+    if isinstance(agent_spec, dict):
+        for issue in validate_agent_spec(agent_spec).issues:
+            issues.append(
+                ValidationIssue(
+                    code=issue.code,
+                    json_pointer=f"/agent_spec{issue.json_pointer}",
+                    node_id=issue.node_id,
+                    message_key=issue.message_key,
+                )
+            )
+        node_ids = {
+            node.get("id")
+            for node in agent_spec.get("nodes", [])
+            if isinstance(node, dict)
+        }
+        seen: set[str] = set()
+        layout = document.get("layout")
+        layout_nodes = (
+            layout.get("nodes", [])
+            if isinstance(layout, dict)
+            else []
+        )
+        for index, item in enumerate(layout_nodes):
+            if not isinstance(item, dict):
+                continue
+            node_id = item.get("node_id")
+            pointer = f"/layout/nodes/{index}/node_id"
+            if isinstance(node_id, str) and node_id in seen:
+                issues.append(
+                    _semantic_issue(
+                        "duplicate_layout_node_id",
+                        pointer,
+                        node_id,
+                    )
+                )
+            elif isinstance(node_id, str) and node_id not in node_ids:
+                issues.append(
+                    _semantic_issue(
+                        "dangling_layout_node_reference",
+                        pointer,
+                        node_id,
+                    )
+                )
+            if isinstance(node_id, str):
+                seen.add(node_id)
+
+    ordered = tuple(
+        sorted(
+            issues,
+            key=lambda issue: (
+                issue.json_pointer,
+                issue.code,
+                issue.node_id or "",
+                issue.message_key,
+            ),
+        )
+    )
+    return ValidationResult(valid=not ordered, issues=ordered)
 
 
 def validate_run_trace(trace: dict[str, Any]) -> set[str]:
@@ -278,9 +401,8 @@ def validate_run_trace(trace: dict[str, Any]) -> set[str]:
 
 def validate_agent_spec(document: dict[str, Any]) -> ValidationResult:
     issues = _schema_issues(document, "agent-spec.schema.json")
-    semantic_codes = find_forbidden_secret_keys(document) | validate_agent_graph(
-        document
-    )
+    issues.extend(validate_agent_graph_issues(document))
+    semantic_codes = find_forbidden_secret_keys(document)
     issues.extend(
         ValidationIssue(
             code=code,
@@ -309,6 +431,11 @@ def validation_codes(document: dict[str, Any], schema_name: str) -> list[str]:
     codes.update(find_forbidden_secret_keys(document))
     if schema_name == "agent-spec.schema.json":
         codes.update(validate_agent_graph(document))
+    elif schema_name == "agent-draft.schema.json":
+        codes.update(
+            issue.code
+            for issue in validate_agent_draft(document).issues
+        )
     elif schema_name == "run-trace.schema.json":
         codes.update(validate_run_trace(document))
     return sorted(codes)

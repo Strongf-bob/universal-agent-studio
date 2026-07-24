@@ -274,6 +274,24 @@ class Metrics(BaseModel):
     tool_calls: int = Field(..., ge=0)
 
 
+class Position(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    node_id: Identifier
+    x: float = Field(..., ge=-100000.0, le=100000.0)
+    y: float = Field(..., ge=-100000.0, le=100000.0)
+
+
+class Viewport(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    x: float = Field(..., ge=-100000.0, le=100000.0)
+    y: float = Field(..., ge=-100000.0, le=100000.0)
+    zoom: float = Field(..., ge=0.1, le=4.0)
+
+
 class Endpoint(BaseModel):
     model_config = ConfigDict(
         extra='forbid',
@@ -369,6 +387,14 @@ class LocalizedMetadata(BaseModel):
     )
     description: LocalizedText
     name: LocalizedText
+
+
+class Layout(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    nodes: list[Position] = Field(..., max_length=256)
+    viewport: Viewport
 
 
 class Edge(BaseModel):
@@ -508,10 +534,26 @@ class AgentVersion(BaseModel):
     version_number: int = Field(..., ge=1)
 
 
+class AgentDraft(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    agent_id: Identifier
+    agent_spec: AgentSpec
+    base_version_id: Identifier
+    digest: Sha256
+    draft_id: Identifier
+    layout: Layout
+    revision: int = Field(..., ge=1)
+    schema_version: Literal['0.1.0']
+    updated_at: AwareDatetime
+
+
 class ContractBundle(BaseModel):
     model_config = ConfigDict(
         extra='forbid',
     )
+    agent_draft: AgentDraft | None = None
     agent_spec: AgentSpec | None = None
     agent_version: AgentVersion | None = None
     error_envelope: ErrorEnvelope | None = None

@@ -5,6 +5,7 @@ from typing import Any, cast
 
 from jsonschema import Draft202012Validator
 from referencing import Registry, Resource
+from universal_agent_kernel.contracts.validation import validate_agent_spec
 
 ROOT = Path(__file__).parents[2]
 SCHEMA_DIR = ROOT / "contracts" / "schemas" / "v0.1.0"
@@ -47,3 +48,22 @@ def test_agentspec_requires_localized_metadata() -> None:
     errors = validation_errors(invalid_agent, "agent-spec.schema.json")
 
     assert any(error.validator == "required" for error in errors)
+
+
+def test_agent_draft_contract_is_registered() -> None:
+    assert (SCHEMA_DIR / "agent-draft.schema.json").is_file()
+
+
+def test_dangling_model_reference_has_a_precise_node_location() -> None:
+    agent = load_json(EXAMPLE_DIR / "valid" / "agent.calculator.ru-en.json")
+    invalid_agent = copy.deepcopy(agent)
+    invalid_agent["nodes"][1]["model_profile_ref"] = "missing-profile"
+
+    issue = next(
+        item
+        for item in validate_agent_spec(invalid_agent).issues
+        if item.code == "dangling_model_profile_reference"
+    )
+
+    assert issue.json_pointer == "/nodes/1/model_profile_ref"
+    assert issue.node_id == "planner-model"

@@ -148,6 +148,33 @@ export function validateAgentGraph(agent: JsonObject): Set<string> {
   return errors;
 }
 
+export function validateAgentDraft(draft: JsonObject): Set<string> {
+  const errors = new Set<string>();
+  const agentSpec = asObject(draft.agent_spec);
+  if (agentSpec === undefined) {
+    return errors;
+  }
+  for (const error of validateAgentGraph(agentSpec)) {
+    errors.add(error);
+  }
+
+  const nodeIds = new Set(
+    asObjects(agentSpec.nodes).map((node) => asString(node.id))
+  );
+  const seen = new Set<string | undefined>();
+  const layout = asObject(draft.layout) ?? {};
+  for (const position of asObjects(layout.nodes)) {
+    const nodeId = asString(position.node_id);
+    if (seen.has(nodeId)) {
+      errors.add("duplicate_layout_node_id");
+    } else if (!nodeIds.has(nodeId)) {
+      errors.add("dangling_layout_node_reference");
+    }
+    seen.add(nodeId);
+  }
+  return errors;
+}
+
 export function validateRunTrace(trace: JsonObject): Set<string> {
   const errors = new Set<string>();
   const events = asObjects(trace.events);
@@ -226,6 +253,10 @@ export function semanticErrorCodes(
 
   if (schemaName === "agent-spec.schema.json") {
     for (const error of validateAgentGraph(instance)) {
+      errors.add(error);
+    }
+  } else if (schemaName === "agent-draft.schema.json") {
+    for (const error of validateAgentDraft(instance)) {
       errors.add(error);
     }
   } else if (schemaName === "run-trace.schema.json") {

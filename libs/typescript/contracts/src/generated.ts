@@ -11,6 +11,7 @@ export type { NodeSpec } from "./node-spec.generated.js";
  */
 
 export interface ContractBundle {
+  agent_draft?: AgentDraft;
   agent_spec?: AgentSpec;
   agent_version?: AgentVersion;
   error_envelope?: ErrorEnvelope;
@@ -21,6 +22,17 @@ export interface ContractBundle {
   run_request?: RunRequest;
   run_trace?: RunTrace;
   tool_manifest?: ToolManifest;
+}
+export interface AgentDraft {
+  agent_id: string;
+  agent_spec: AgentSpec;
+  base_version_id: string;
+  digest: string;
+  draft_id: string;
+  layout: Layout;
+  revision: number;
+  schema_version: "0.1.0";
+  updated_at: string;
 }
 export interface AgentSpec {
   agent_id: string;
@@ -138,6 +150,23 @@ export interface ToolManifest {
 }
 export interface CredentialReference {
   credential_ref: string;
+}
+export interface Layout {
+  /**
+   * @maxItems 256
+   */
+  nodes: Position[];
+  viewport: Viewport;
+}
+export interface Position {
+  node_id: string;
+  x: number;
+  y: number;
+}
+export interface Viewport {
+  x: number;
+  y: number;
+  zoom: number;
 }
 export interface AgentVersion {
   agent_id: string;

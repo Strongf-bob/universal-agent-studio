@@ -1,0 +1,84 @@
+{
+  "schema_version": "0.1.0",
+  "draft_id": "draft-fixture-agent-draft",
+  "agent_id": "draft-fixture-agent",
+  "revision": 1,
+  "base_version_id": "draft-fixture-v1",
+  "digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "agent_spec": {
+    "schema_version": "0.1.0",
+    "agent_id": "draft-fixture-agent",
+    "revision": 1,
+    "localized_metadata": {
+      "name": {
+        "ru-RU": "Черновик агента",
+        "en-US": "Agent draft"
+      },
+      "description": {
+        "ru-RU": "Минимальный пример контракта черновика.",
+        "en-US": "Minimal draft contract example."
+      }
+    },
+    "nodes": [
+      {
+        "id": "source-node",
+        "kind": "input",
+        "type": "core.input",
+        "version": "0.1.0",
+        "localized_metadata": {
+          "name": {
+            "ru-RU": "Вход",
+            "en-US": "Input"
+          },
+          "description": {
+            "ru-RU": "Начальная точка графа.",
+            "en-US": "Graph entry point."
+          }
+        },
+        "config": {},
+        "input_ports": [],
+        "output_ports": [],
+        "timeout_ms": 1000,
+        "retry_policy": {
+          "max_attempts": 1,
+          "backoff": "none"
+        },
+        "extensions": {}
+      }
+    ],
+    "edges": [],
+    "model_profiles": [],
+    "tools": [],
+    "interface": {
+      "mode": "form",
+      "locales": [
+        "ru-RU",
+        "en-US"
+      ],
+      "default_locale": "ru-RU",
+      "input_fields": [],
+      "result_schema": {}
+    },
+    "policies": {
+      "data_classification": "internal",
+      "redaction_policy_id": "default-redaction",
+      "retention_policy_id": "local-preview"
+    },
+    "extensions": {}
+  },
+  "layout": {
+    "nodes": [
+      {
+        "node_id": "source-node",
+        "x": 0,
+        "y": 80
+      }
+    ],
+    "viewport": {
+      "x": 0,
+      "y": 0,
+      "zoom": 1
+    }
+  },
+  "updated_at": "2026-07-24T19:00:00Z"
+}

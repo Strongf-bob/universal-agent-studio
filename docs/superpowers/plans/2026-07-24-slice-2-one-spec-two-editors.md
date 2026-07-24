@@ -86,7 +86,7 @@
 - Produces: precise AgentSpec semantic issues with node-specific JSON Pointers.
 - Consumes: existing canonical AgentSpec and common identifier/digest definitions.
 
-- [ ] **Step 1: Write failing Python and TypeScript conformance tests**
+- [x] **Step 1: Write failing Python and TypeScript conformance tests**
 
 Add assertions that the valid draft passes, a layout node named
 `unknown-node` produces `dangling_layout_node_reference`, and a dangling model
@@ -108,7 +108,7 @@ pnpm test:contracts
 Expected: failure because AgentDraft is not registered and semantic issues do
 not yet have precise pointers.
 
-- [ ] **Step 2: Add the canonical schema**
+- [x] **Step 2: Add the canonical schema**
 
 Define:
 
@@ -147,7 +147,7 @@ Define:
 The `layout` definition permits at most 256 unique node entries with finite
 JSON numbers and a viewport zoom from `0.1` through `4`.
 
-- [ ] **Step 3: Add valid and invalid fixtures**
+- [x] **Step 3: Add valid and invalid fixtures**
 
 Build the valid fixture from the calculator AgentSpec with deterministic
 positions:
@@ -164,7 +164,7 @@ positions:
 The invalid fixture copies it and replaces `structured-output` with
 `unknown-node`. Add both cases to the manifest.
 
-- [ ] **Step 4: Implement cross-language semantic invariants**
+- [x] **Step 4: Implement cross-language semantic invariants**
 
 Python:
 
@@ -195,7 +195,7 @@ Implement the same two codes in `invariants.ts`. Refactor AgentSpec graph
 validation to emit `ValidationIssue` objects for model, tool, node and port
 references rather than a pointerless set of codes.
 
-- [ ] **Step 5: Regenerate and prove parity**
+- [x] **Step 5: Regenerate and prove parity**
 
 Run:
 
@@ -208,7 +208,7 @@ pnpm test:contracts
 
 Expected: all contract tests pass and generated files are clean.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add contracts libs/python/agent_kernel contracts/conformance tests/contracts

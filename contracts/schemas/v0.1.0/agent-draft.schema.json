@@ -1,0 +1,121 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.universal-agent.studio/v0.1.0/agent-draft.schema.json",
+  "title": "AgentDraft",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "draft_id",
+    "agent_id",
+    "revision",
+    "base_version_id",
+    "digest",
+    "agent_spec",
+    "layout",
+    "updated_at"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "0.1.0"
+    },
+    "draft_id": {
+      "$ref": "common.schema.json#/$defs/identifier"
+    },
+    "agent_id": {
+      "$ref": "common.schema.json#/$defs/identifier"
+    },
+    "revision": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "base_version_id": {
+      "$ref": "common.schema.json#/$defs/identifier"
+    },
+    "digest": {
+      "$ref": "common.schema.json#/$defs/sha256"
+    },
+    "agent_spec": {
+      "$ref": "agent-spec.schema.json"
+    },
+    "layout": {
+      "$ref": "#/$defs/layout"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "$defs": {
+    "position": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "node_id",
+        "x",
+        "y"
+      ],
+      "properties": {
+        "node_id": {
+          "$ref": "common.schema.json#/$defs/identifier"
+        },
+        "x": {
+          "type": "number",
+          "minimum": -100000,
+          "maximum": 100000
+        },
+        "y": {
+          "type": "number",
+          "minimum": -100000,
+          "maximum": 100000
+        }
+      }
+    },
+    "viewport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "zoom"
+      ],
+      "properties": {
+        "x": {
+          "type": "number",
+          "minimum": -100000,
+          "maximum": 100000
+        },
+        "y": {
+          "type": "number",
+          "minimum": -100000,
+          "maximum": 100000
+        },
+        "zoom": {
+          "type": "number",
+          "minimum": 0.1,
+          "maximum": 4
+        }
+      }
+    },
+    "layout": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "nodes",
+        "viewport"
+      ],
+      "properties": {
+        "nodes": {
+          "type": "array",
+          "maxItems": 256,
+          "items": {
+            "$ref": "#/$defs/position"
+          }
+        },
+        "viewport": {
+          "$ref": "#/$defs/viewport"
+        }
+      }
+    }
+  }
+}

@@ -19,6 +19,17 @@
       "expected_error_code": "dangling_node_reference"
     },
     {
+      "path": "valid/agent.draft.calculator.json",
+      "schema": "agent-draft.schema.json",
+      "valid": true
+    },
+    {
+      "path": "invalid/agent.draft.dangling-layout-node.json",
+      "schema": "agent-draft.schema.json",
+      "valid": false,
+      "expected_error_code": "dangling_layout_node_reference"
+    },
+    {
       "path": "valid/run.request.json",
       "schema": "run-request.schema.json",
       "valid": true

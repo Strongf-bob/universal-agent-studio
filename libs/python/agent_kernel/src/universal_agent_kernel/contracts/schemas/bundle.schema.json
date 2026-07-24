@@ -1,5 +1,124 @@
 {
   "$defs": {
+    "AgentDraft": {
+      "$defs": {
+        "layout": {
+          "additionalProperties": false,
+          "properties": {
+            "nodes": {
+              "items": {
+                "$ref": "#/$defs/AgentDraft/$defs/position"
+              },
+              "maxItems": 256,
+              "type": "array"
+            },
+            "viewport": {
+              "$ref": "#/$defs/AgentDraft/$defs/viewport"
+            }
+          },
+          "required": [
+            "nodes",
+            "viewport"
+          ],
+          "type": "object"
+        },
+        "position": {
+          "additionalProperties": false,
+          "properties": {
+            "node_id": {
+              "$ref": "#/$defs/Universal Agent Studio common contract definitions/$defs/identifier"
+            },
+            "x": {
+              "maximum": 100000,
+              "minimum": -100000,
+              "type": "number"
+            },
+            "y": {
+              "maximum": 100000,
+              "minimum": -100000,
+              "type": "number"
+            }
+          },
+          "required": [
+            "node_id",
+            "x",
+            "y"
+          ],
+          "type": "object"
+        },
+        "viewport": {
+          "additionalProperties": false,
+          "properties": {
+            "x": {
+              "maximum": 100000,
+              "minimum": -100000,
+              "type": "number"
+            },
+            "y": {
+              "maximum": 100000,
+              "minimum": -100000,
+              "type": "number"
+            },
+            "zoom": {
+              "maximum": 4,
+              "minimum": 0.1,
+              "type": "number"
+            }
+          },
+          "required": [
+            "x",
+            "y",
+            "zoom"
+          ],
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "properties": {
+        "agent_id": {
+          "$ref": "#/$defs/Universal Agent Studio common contract definitions/$defs/identifier"
+        },
+        "agent_spec": {
+          "$ref": "#/$defs/AgentSpec"
+        },
+        "base_version_id": {
+          "$ref": "#/$defs/Universal Agent Studio common contract definitions/$defs/identifier"
+        },
+        "digest": {
+          "$ref": "#/$defs/Universal Agent Studio common contract definitions/$defs/sha256"
+        },
+        "draft_id": {
+          "$ref": "#/$defs/Universal Agent Studio common contract definitions/$defs/identifier"
+        },
+        "layout": {
+          "$ref": "#/$defs/AgentDraft/$defs/layout"
+        },
+        "revision": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "schema_version": {
+          "const": "0.1.0"
+        },
+        "updated_at": {
+          "format": "date-time",
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema_version",
+        "draft_id",
+        "agent_id",
+        "revision",
+        "base_version_id",
+        "digest",
+        "agent_spec",
+        "layout",
+        "updated_at"
+      ],
+      "title": "AgentDraft",
+      "type": "object"
+    },
     "AgentSpec": {
       "$defs": {
         "edge": {
@@ -1188,6 +1307,9 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
   "properties": {
+    "agent_draft": {
+      "$ref": "#/$defs/AgentDraft"
+    },
     "agent_spec": {
       "$ref": "#/$defs/AgentSpec"
     },
