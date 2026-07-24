@@ -402,7 +402,7 @@ git push
 - Consumes: domain IDs, canonical AgentSpec/digests and RunEvent/RunTrace documents.
 - Produces: `RequestScope`, scoped auth/agent/run repositories, async session factory, and migration `0001`.
 
-- [ ] **Step 1: Write failing repository tests**
+- [x] **Step 1: Write failing repository tests**
 
 Tests use a dedicated PostgreSQL test database and assert:
 
@@ -416,7 +416,7 @@ async def test_duplicate_event_retry_returns_existing_event() -> None: ...
 async def test_terminal_trace_finalizes_once() -> None: ...
 ```
 
-- [ ] **Step 2: Verify the tests are red**
+- [x] **Step 2: Verify the tests are red**
 
 Run:
 
@@ -427,7 +427,7 @@ uv run pytest libs/python/platform_store/tests tests/integration/test_migrations
 
 Expected: missing persistence modules or missing `DATABASE_URL`.
 
-- [ ] **Step 3: Implement models, constraints and repositories**
+- [x] **Step 3: Implement models, constraints and repositories**
 
 Create all tables listed in the approved design. Enforce:
 
@@ -444,7 +444,7 @@ Use UTC-aware timestamps, JSONB, explicit foreign keys and `ON DELETE`
 behavior. Repository constructors require `RequestScope`; only bootstrap and
 workspace-deletion services may use an explicit administrative scope.
 
-- [ ] **Step 4: Verify migration and repository behavior**
+- [x] **Step 4: Verify migration and repository behavior**
 
 Run:
 
@@ -457,7 +457,7 @@ uv run mypy libs/python/platform_store
 
 Expected: empty-database migration and all repository tests pass.
 
-- [ ] **Step 5: Commit and push**
+- [x] **Step 5: Commit and push**
 
 ```bash
 git add libs/python/platform_store infra/migrations tests/integration
