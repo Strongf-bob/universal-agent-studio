@@ -1,17 +1,17 @@
 import json
 from pathlib import Path
+from typing import Any, cast
 
 from jsonschema import Draft202012Validator
 from referencing import Registry, Resource
-
 
 ROOT = Path(__file__).parents[2]
 SCHEMA_DIR = ROOT / "contracts" / "schemas" / "v0.1.0"
 EXAMPLE_DIR = ROOT / "contracts" / "examples" / "v0.1.0"
 
 
-def load_json(path: Path) -> dict:
-    return json.loads(path.read_text(encoding="utf-8"))
+def load_json(path: Path) -> dict[str, Any]:
+    return cast(dict[str, Any], json.loads(path.read_text(encoding="utf-8")))
 
 
 def validator_for(schema_name: str) -> Draft202012Validator:

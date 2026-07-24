@@ -1,21 +1,21 @@
 import copy
 import json
 from pathlib import Path
+from typing import Any, cast
 
 from jsonschema import Draft202012Validator
 from referencing import Registry, Resource
-
 
 ROOT = Path(__file__).parents[2]
 SCHEMA_DIR = ROOT / "contracts" / "schemas" / "v0.1.0"
 EXAMPLE_DIR = ROOT / "contracts" / "examples" / "v0.1.0"
 
 
-def load_json(path: Path) -> dict:
-    return json.loads(path.read_text(encoding="utf-8"))
+def load_json(path: Path) -> dict[str, Any]:
+    return cast(dict[str, Any], json.loads(path.read_text(encoding="utf-8")))
 
 
-def schema_registry() -> tuple[Registry, dict[str, dict]]:
+def schema_registry() -> tuple[Registry, dict[str, dict[str, Any]]]:
     schemas = {
         path.name: load_json(path)
         for path in sorted(SCHEMA_DIR.glob("*.schema.json"))
@@ -27,7 +27,7 @@ def schema_registry() -> tuple[Registry, dict[str, dict]]:
     return registry, schemas
 
 
-def validation_errors(instance: dict, schema_name: str) -> list:
+def validation_errors(instance: dict[str, Any], schema_name: str) -> list[Any]:
     registry, schemas = schema_registry()
     validator = Draft202012Validator(schemas[schema_name], registry=registry)
     return sorted(validator.iter_errors(instance), key=lambda error: list(error.path))

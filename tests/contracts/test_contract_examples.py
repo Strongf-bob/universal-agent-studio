@@ -5,7 +5,6 @@ import pytest
 
 from tests.contracts.contract_validation import ContractCase, validate_fixture
 
-
 ROOT = Path(__file__).parents[2]
 EXAMPLE_DIR = ROOT / "contracts" / "examples" / "v0.1.0"
 MANIFEST = json.loads((EXAMPLE_DIR / "manifest.json").read_text(encoding="utf-8"))

@@ -1,0 +1,19 @@
+[build-system]
+requires = ["uv_build>=0.11.32,<0.12.0"]
+build-backend = "uv_build"
+
+[project]
+name = "universal-agent-studio-runtime"
+version = "0.1.0"
+description = "Universal Agent Studio Temporal runtime worker"
+requires-python = ">=3.12,<3.15"
+dependencies = [
+  "pydantic-settings==2.14.2",
+  "temporalio==1.30.0",
+  "universal-agent-kernel",
+  "universal-agent-platform-store",
+]
+
+[tool.uv.sources]
+universal-agent-kernel = { workspace = true }
+universal-agent-platform-store = { workspace = true }

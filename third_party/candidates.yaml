@@ -12,30 +12,30 @@ candidates:
     source: https://github.com/temporalio/sdk-python
     license: MIT
     intended_use: Runtime worker client and workflow SDK
-    status: approved_for_implementation
-    version: null
-    note: Pin exact version before installation.
+    status: installed_for_slice_1
+    version: 1.30.0
+    note: Runtime and control-plane dependency; security owner is the repository maintainer.
   - name: React Flow
     source: https://github.com/xyflow/xyflow
     license: MIT
     intended_use: Replaceable canvas rendering and interaction primitive
-    status: approved_for_slice_2
-    version: null
-    note: Core library only; examples and Pro materials require independent review.
+    status: installed_for_slice_1
+    version: 12.11.2
+    note: Read-only flow projection in Slice 1; core library only, with examples and Pro materials excluded.
   - name: Next.js
     source: https://github.com/vercel/next.js
     license: MIT
     intended_use: Studio and Published App framework
-    status: approved_for_slice_1
-    version: null
-    note: Pin exact version and review security support window before installation.
+    status: installed_for_slice_1
+    version: 16.2.11
+    note: Studio application shell; review release and security notes before upgrades.
   - name: React
     source: https://github.com/facebook/react
     license: MIT
     intended_use: Web user interface runtime
-    status: approved_for_slice_1
-    version: null
-    note: Pin exact version before installation.
+    status: installed_for_slice_1
+    version: 19.2.8
+    note: Studio user interface runtime, paired with the same React DOM version.
   - name: Radix Primitives
     source: https://github.com/radix-ui/primitives
     license: MIT
@@ -47,9 +47,9 @@ candidates:
     source: https://github.com/lucide-icons/lucide
     license: ISC
     intended_use: Candidate consistent SVG icon set
-    status: review_required_for_slice_2
-    version: null
-    note: Preserve license notices and audit any inherited Feather icon obligations.
+    status: installed_for_slice_1
+    version: 1.26.0
+    note: Preserve license notices; only the React icon package is installed.
   - name: CodeMirror
     source: https://codemirror.net/
     license: MIT
@@ -90,8 +90,8 @@ candidates:
     license: Apache-2.0
     intended_use: Static checking for TypeScript contract validators
     status: approved_for_contract_validation
-    version: 7.0.2
-    note: Development/test dependency; pinned in the contract workspace.
+    version: 6.0.3
+    note: Development/test dependency; pinned across TypeScript workspaces because the Next.js ESLint toolchain does not yet support the TypeScript 7 API.
   - name: Ajv
     source: https://github.com/ajv-validator/ajv
     license: MIT
@@ -152,3 +152,178 @@ candidates:
     version: 6.0.9
     commit: 0ebf47130e4866e96fce0953f49152a61190b271
     note: Immutable commit pin; security owner is the repository maintainer.
+  - name: FastAPI
+    source: https://github.com/fastapi/fastapi
+    license: MIT
+    intended_use: Control-plane HTTP API and OpenAPI generation
+    status: installed_for_slice_1
+    version: 0.139.2
+    note: Installed with standard-no-fastapi-cloud-cli extras and pinned per upstream version guidance.
+  - name: SQLAlchemy
+    source: https://github.com/sqlalchemy/sqlalchemy
+    license: MIT
+    intended_use: Async PostgreSQL persistence adapter and typed schema models
+    status: installed_for_slice_1
+    version: 2.0.51
+    note: Asyncio extra only; repository maintainer owns upgrades and migration tests.
+  - name: Alembic
+    source: https://github.com/sqlalchemy/alembic
+    license: MIT
+    intended_use: Product PostgreSQL schema migrations
+    status: installed_for_slice_1
+    version: 1.18.5
+    note: Migration upgrades and clean-database setup are required CI gates.
+  - name: asyncpg
+    source: https://github.com/MagicStack/asyncpg
+    license: Apache-2.0
+    intended_use: Async PostgreSQL driver beneath SQLAlchemy
+    status: installed_for_slice_1
+    version: 0.31.0
+    note: Server-only dependency; never enters the browser bundle.
+  - name: argon2-cffi
+    source: https://github.com/hynek/argon2-cffi
+    license: MIT
+    intended_use: Argon2id hashing for the local owner password
+    status: installed_for_slice_1
+    version: 25.1.0
+    note: Security-sensitive dependency; password and session tests gate upgrades.
+  - name: HTTPX
+    source: https://github.com/encode/httpx
+    license: BSD-3-Clause
+    intended_use: Typed outbound client for the optional OpenAI-compatible adapter
+    status: installed_for_slice_1
+    version: 0.28.1
+    note: Outbound networking remains disabled in deterministic CI.
+  - name: rfc8785
+    source: https://github.com/trailofbits/rfc8785.py
+    license: Apache-2.0
+    intended_use: RFC 8785 canonical JSON bytes for immutable version digests
+    status: installed_for_slice_1
+    version: 0.1.4
+    note: Digest vectors and cross-order tests gate upgrades.
+  - name: pydantic-settings
+    source: https://github.com/pydantic/pydantic-settings
+    license: MIT
+    intended_use: Typed API and worker process configuration
+    status: installed_for_slice_1
+    version: 2.14.2
+    note: Secret values are resolved server-side and excluded from repr/logging.
+  - name: datamodel-code-generator
+    source: https://github.com/koxudaxi/datamodel-code-generator
+    license: MIT
+    intended_use: Deterministic Pydantic type generation from canonical JSON Schema
+    status: installed_for_slice_1_tooling
+    version: 0.70.0
+    note: Development-only generator; generated drift is checked in CI.
+  - name: Ruff
+    source: https://github.com/astral-sh/ruff
+    license: MIT
+    intended_use: Python linting and import validation
+    status: installed_for_slice_1_tooling
+    version: 0.16.0
+    note: Development and CI tool; configuration is repository-owned.
+  - name: mypy
+    source: https://github.com/python/mypy
+    license: MIT
+    intended_use: Strict static checking of Python domain and application packages
+    status: installed_for_slice_1_tooling
+    version: 2.3.0
+    note: Development and CI tool; generated models are excluded from direct checking.
+  - name: pytest-asyncio
+    source: https://github.com/pytest-dev/pytest-asyncio
+    license: Apache-2.0
+    intended_use: Async API, repository and Temporal tests
+    status: installed_for_slice_1_tooling
+    version: 1.4.0
+    note: Development-only pytest plugin with auto mode explicitly configured.
+  - name: types-jsonschema
+    source: https://github.com/python/typeshed
+    license: Apache-2.0
+    intended_use: Static type information for strict checking of JSON Schema contract tests
+    status: installed_for_slice_1_tooling
+    version: 4.26.0.20260518
+    note: Development-only stub package paired with jsonschema 4.26.0.
+  - name: React DOM
+    source: https://github.com/facebook/react
+    license: MIT
+    intended_use: Browser rendering for the Studio Web application
+    status: installed_for_slice_1
+    version: 19.2.8
+    note: Kept at the exact same version as React.
+  - name: next-intl
+    source: https://github.com/amannn/next-intl
+    license: MIT
+    intended_use: RU and EN routing and ICU message formatting
+    status: installed_for_slice_1
+    version: 4.13.4
+    note: Locale completeness and long-string behavior are tested in both locales.
+  - name: Playwright Test
+    source: https://github.com/microsoft/playwright
+    license: Apache-2.0
+    intended_use: Deterministic browser E2E and keyboard-flow testing
+    status: installed_for_slice_1_tooling
+    version: 1.61.1
+    note: Chromium is installed explicitly in CI; browser versions follow this package.
+  - name: Testing Library DOM
+    source: https://github.com/testing-library/dom-testing-library
+    license: MIT
+    intended_use: User-facing DOM assertions for Studio component tests
+    status: installed_for_slice_1_tooling
+    version: 10.4.1
+    note: Development-only dependency.
+  - name: Testing Library React
+    source: https://github.com/testing-library/react-testing-library
+    license: MIT
+    intended_use: React component rendering for Studio tests
+    status: installed_for_slice_1_tooling
+    version: 16.3.2
+    note: Development-only dependency.
+  - name: Testing Library user-event
+    source: https://github.com/testing-library/user-event
+    license: MIT
+    intended_use: Keyboard and pointer interaction simulation in Studio tests
+    status: installed_for_slice_1_tooling
+    version: 14.6.1
+    note: Development-only dependency.
+  - name: Testing Library jest-dom
+    source: https://github.com/testing-library/jest-dom
+    license: MIT
+    intended_use: Accessible DOM matchers for Vitest
+    status: installed_for_slice_1_tooling
+    version: 7.0.0
+    note: Development-only dependency.
+  - name: jsdom
+    source: https://github.com/jsdom/jsdom
+    license: MIT
+    intended_use: Browser-like environment for Studio component tests
+    status: installed_for_slice_1_tooling
+    version: 29.1.1
+    note: Development-only dependency; real browser behavior is covered by Playwright.
+  - name: ESLint
+    source: https://github.com/eslint/eslint
+    license: MIT
+    intended_use: TypeScript and React source linting
+    status: installed_for_slice_1_tooling
+    version: 9.39.5
+    note: Development and CI tool; pinned to the latest major supported by the ESLint plugins bundled with Next.js 16.2.11.
+  - name: eslint-config-next
+    source: https://github.com/vercel/next.js
+    license: MIT
+    intended_use: Next.js and React lint rules
+    status: installed_for_slice_1_tooling
+    version: 16.2.11
+    note: Kept at the exact same version as Next.js.
+  - name: json-schema-to-typescript
+    source: https://github.com/bcherny/json-schema-to-typescript
+    license: MIT
+    intended_use: Deterministic TypeScript type generation from canonical JSON Schema
+    status: installed_for_slice_1_tooling
+    version: 15.0.4
+    note: Development-only generator; generated drift is checked in CI.
+  - name: React type definitions
+    source: https://github.com/DefinitelyTyped/DefinitelyTyped
+    license: MIT
+    intended_use: React and React DOM static types for the Studio
+    status: installed_for_slice_1_tooling
+    version: 19.2.17
+    note: React DOM types are separately pinned at 19.2.3.

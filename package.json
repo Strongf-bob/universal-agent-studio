@@ -7,7 +7,13 @@
     "pnpm": ">=10 <12"
   },
   "scripts": {
+    "dev:local": "node scripts/dev-local.mjs",
+    "local:down": "node scripts/local-down.mjs",
+    "test:python": "uv run pytest -q",
+    "test:web": "pnpm --filter @universal-agent-studio/studio-web test",
+    "test:e2e": "pnpm --filter @universal-agent-studio/studio-web test:e2e",
     "test:contracts": "pnpm --filter @universal-agent-studio/contract-conformance test",
-    "check:contracts": "pnpm --filter @universal-agent-studio/contract-conformance check"
+    "check:contracts": "pnpm --filter @universal-agent-studio/contract-conformance check",
+    "check": "pnpm check:contracts && pnpm --filter @universal-agent-studio/studio-web check && uv run ruff check . && uv run mypy apps workers libs tests"
   }
 }

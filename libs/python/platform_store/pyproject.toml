@@ -1,0 +1,14 @@
+[build-system]
+requires = ["uv_build>=0.11.32,<0.12.0"]
+build-backend = "uv_build"
+
+[project]
+name = "universal-agent-platform-store"
+version = "0.1.0"
+description = "Scoped PostgreSQL persistence adapters for Universal Agent Studio"
+requires-python = ">=3.12,<3.15"
+dependencies = [
+  "alembic==1.18.5",
+  "asyncpg==0.31.0",
+  "sqlalchemy[asyncio]==2.0.51",
+]

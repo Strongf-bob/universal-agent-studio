@@ -6,10 +6,57 @@ dependencies = []
 
 [dependency-groups]
 dev = [
+  "datamodel-code-generator==0.70.0",
   "jsonschema[format-nongpl]==4.26.0",
+  "mypy==2.3.0",
   "pytest==9.1.1",
+  "pytest-asyncio==1.4.0",
+  "ruff==0.16.0",
+  "types-jsonschema==4.26.0.20260518",
+  "universal-agent-kernel",
+  "universal-agent-platform-store",
+  "universal-agent-studio-api",
+  "universal-agent-studio-runtime",
 ]
 
+[tool.uv]
+package = false
+
+[tool.uv.workspace]
+members = [
+  "apps/control-api",
+  "libs/python/agent_kernel",
+  "libs/python/platform_store",
+  "workers/runtime",
+]
+
+[tool.uv.sources]
+universal-agent-kernel = { workspace = true }
+universal-agent-platform-store = { workspace = true }
+universal-agent-studio-api = { workspace = true }
+universal-agent-studio-runtime = { workspace = true }
+
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+testpaths = [
+  "apps/control-api/tests",
+  "libs/python/agent_kernel/tests",
+  "libs/python/platform_store/tests",
+  "tests",
+  "workers/runtime/tests",
+]
 addopts = "-ra"
+asyncio_mode = "auto"
+
+[tool.ruff]
+target-version = "py312"
+line-length = 88
+extend-exclude = ["**/generated.py"]
+
+[tool.ruff.lint]
+select = ["ASYNC", "B", "E", "F", "I", "UP"]
+
+[tool.mypy]
+python_version = "3.14"
+strict = true
+warn_unreachable = true
+exclude = ["generated\\.py$"]

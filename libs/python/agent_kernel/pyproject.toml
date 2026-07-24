@@ -1,0 +1,14 @@
+[build-system]
+requires = ["uv_build>=0.11.32,<0.12.0"]
+build-backend = "uv_build"
+
+[project]
+name = "universal-agent-kernel"
+version = "0.1.0"
+description = "Provider-independent execution kernel for Universal Agent Studio"
+requires-python = ">=3.12,<3.15"
+dependencies = [
+  "httpx==0.28.1",
+  "jsonschema[format-nongpl]==4.26.0",
+  "rfc8785==0.1.4",
+]

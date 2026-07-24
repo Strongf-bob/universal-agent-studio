@@ -2,3 +2,8 @@ packages:
   - "apps/*"
   - "libs/typescript/*"
   - "contracts/conformance"
+allowBuilds:
+  "@parcel/watcher": true
+  "@swc/core": true
+  sharp: true
+  unrs-resolver: true

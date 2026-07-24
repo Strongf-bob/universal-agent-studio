@@ -48,7 +48,7 @@
 - Consumes: Node/Python version boundaries from ADR-0001 and existing lockfiles.
 - Produces: installable workspace packages named `universal-agent-kernel`, `universal-agent-platform-store`, `universal-agent-studio-api`, `universal-agent-studio-runtime`, and `@universal-agent-studio/studio-web`.
 
-- [ ] **Step 1: Write the layout test**
+- [x] **Step 1: Write the layout test**
 
 Create a parametrized repository test that asserts the four Python package
 manifests, Web manifest, source roots and expected root scripts exist:
@@ -68,7 +68,7 @@ def test_slice1_workspace_path_exists(relative_path: str) -> None:
     assert (ROOT / relative_path).is_file()
 ```
 
-- [ ] **Step 2: Verify the test is red**
+- [x] **Step 2: Verify the test is red**
 
 Run:
 
@@ -78,7 +78,7 @@ uv run pytest tests/repository/test_slice1_layout.py -q
 
 Expected: failures listing every missing Slice 1 package.
 
-- [ ] **Step 3: Add exact workspace manifests**
+- [x] **Step 3: Add exact workspace manifests**
 
 Configure `[tool.uv.workspace]` members for the four Python packages and add
 root dev dependencies:
@@ -88,6 +88,7 @@ root dev dependencies:
 "mypy==2.3.0"
 "pytest-asyncio==1.4.0"
 "ruff==0.16.0"
+"types-jsonschema==4.26.0.20260518"
 ```
 
 Pin the application dependencies:
@@ -117,10 +118,15 @@ lucide-react 1.26.0
 @testing-library/user-event 14.6.1
 @testing-library/jest-dom 7.0.0
 jsdom 29.1.1
-eslint 10.7.0
+eslint 9.39.5
 eslint-config-next 16.2.11
 json-schema-to-typescript 15.0.4
+typescript 6.0.3
 ```
+
+TypeScript and ESLint use the latest releases supported by the transitive
+`typescript-eslint` and ESLint plugins in Next.js 16.2.11. TypeScript 7 and
+ESLint 10 fail those upstream compatibility checks.
 
 Add root scripts with these stable names:
 
@@ -138,7 +144,7 @@ Add root scripts with these stable names:
 Record every direct dependency in `third_party/candidates.yaml`, then run
 `uv lock` and `pnpm install`.
 
-- [ ] **Step 4: Verify the workspace**
+- [x] **Step 4: Verify the workspace**
 
 Run:
 
@@ -152,7 +158,7 @@ pnpm --filter @universal-agent-studio/studio-web exec next info
 Expected: layout tests pass, frozen installs make no lockfile changes, and
 Next reports the pinned packages.
 
-- [ ] **Step 5: Commit and push**
+- [x] **Step 5: Commit and push**
 
 ```bash
 git add pyproject.toml uv.lock package.json pnpm-workspace.yaml pnpm-lock.yaml \

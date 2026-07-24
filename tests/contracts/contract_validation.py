@@ -4,11 +4,10 @@ import json
 import re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from jsonschema import Draft202012Validator, FormatChecker
 from referencing import Registry, Resource
-
 
 FORBIDDEN_SECRET_KEYS = {
     "accesstoken",
@@ -52,7 +51,7 @@ class ContractCase:
 
 
 def load_json(path: Path) -> dict[str, Any]:
-    return json.loads(path.read_text(encoding="utf-8"))
+    return cast(dict[str, Any], json.loads(path.read_text(encoding="utf-8")))
 
 
 def load_schema_registry(root: Path) -> tuple[Registry, dict[str, dict[str, Any]]]:
@@ -191,11 +190,16 @@ def validate_run_trace(trace: dict[str, Any]) -> set[str]:
             if current.get("causation_id") != previous.get("event_id"):
                 errors.add("event_causation_invalid")
 
-    expected_terminal_type = {
-        "cancelled": "run.cancelled",
-        "completed": "run.completed",
-        "failed": "run.failed",
-    }.get(trace.get("status"))
+    status = trace.get("status")
+    expected_terminal_type = (
+        {
+            "cancelled": "run.cancelled",
+            "completed": "run.completed",
+            "failed": "run.failed",
+        }.get(status)
+        if isinstance(status, str)
+        else None
+    )
     if events and events[-1].get("type") != expected_terminal_type:
         errors.add("event_lifecycle_invalid")
 
