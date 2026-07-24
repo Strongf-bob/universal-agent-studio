@@ -2,7 +2,12 @@
 
 ## Overview
 
-Universal Agent Studio is a local-first platform that will create, execute, publish and improve AI-agent workflows. The repository contains the executable Local Preview Slice 1: authenticated control API, durable runtime, deterministic tool path, persisted traces and Web UI. Later publishing, RAG, sandbox, eval and autoresearch surfaces remain prospective.
+Universal Agent Studio is a local-first platform that will create, execute,
+publish and improve AI-agent workflows. The repository contains executable
+Local Preview Slices 1–2: authenticated control API, canonical mutable drafts,
+dual-view editing, immutable draft snapshots, durable runtime, deterministic
+tool path, persisted traces and Web UI. Later publishing, RAG, sandbox, eval
+and autoresearch surfaces remain prospective.
 
 Primary protected assets:
 
@@ -37,7 +42,7 @@ Security policy is defined by `SECURITY.md`, architecture boundaries by `ARCHITE
 
 | Boundary | Threat | Required control | First enforced |
 |---|---|---|---|
-| Browser → Control API | forged identity, CSRF, XSS, oversized input | secure session, CSRF defense, CSP, size limits, schema validation | Slice 1 |
+| Browser → Control API | forged identity, CSRF, XSS, oversized or secret-bearing draft input | secure session, Origin/CSRF defense, CSP, 1 MiB limit, schema and semantic validation | Slice 1/2 |
 | Published App/API → Control API | abusive traffic, broken object authorization | scoped principal, rate limit, project-aware authorization | Slice 3 |
 | Control API → Runtime worker | command tampering, duplicate execution | authenticated worker channel, immutable version digest, idempotency key | Slice 1 |
 | Runtime → Model provider | credential or sensitive-data leakage | server-side CredentialReference, policy routing, redaction, fail-closed capability checks | Slice 1/4 |
@@ -64,6 +69,13 @@ An attacker may steal or fixate an owner session, forge a public API key, or alt
 ### AgentSpec and version integrity
 
 A malicious or corrupted draft may reference unknown nodes, insert secret values, weaken a policy or target an incompatible tool/model. Schemas reject unknown fields, publication resolves and locks dependencies, canonical hashing binds the version, and runtime revalidates before execution. Rollback changes only the active-version pointer.
+
+In Slice 2, a stale browser or malicious project may also attempt to overwrite
+a newer draft, read another project draft, smuggle a secret through bulk diff,
+or execute uncommitted semantics. Draft reads and writes derive scope only from
+the authenticated owner, compare `expected_revision`, validate before
+persistence, redact diff values, and bind test runs to an immutable snapshot
+of the exact saved digest. The active version pointer is not changed.
 
 ### Model, RAG and prompt injection
 
@@ -128,4 +140,4 @@ Compromised packages or copied assets may introduce execution, tracking or licen
 - metadata leakage that reveals no private content, identity or infrastructure secret.
 
 Repository: https://github.com/Strongf-bob/universal-agent-studio
-Version: Slice 1 executable spine
+Version: Slice 2 one spec, two editors

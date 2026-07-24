@@ -144,7 +144,7 @@ Routing must fail closed when a selected provider violates the policy.
 
 Critical issues include unauthenticated production code execution, cross-project credential access, bypass of manual publication, or extraction of model/tool secrets at scale. High severity includes project-level data access, durable approval bypass, SSRF into privileged networks, or stored XSS in Studio/Published App. Detailed calibration lives in the threat model.
 
-## 13. Slice 1 implemented controls
+## 13. Slices 1–2 implemented controls
 
 The Local Preview executable spine currently enforces:
 
@@ -161,8 +161,20 @@ The Local Preview executable spine currently enforces:
 - marker-bound destructive reset that refuses unowned or broad directories;
 - loopback-only public Compose ports and isolated product/Temporal volumes;
 - provider URL allowlisting, HTTPS/loopback policy, timeout, redirect denial and response-size bounds.
+- mutable drafts scoped only from the authenticated owner workspace/project;
+- CSRF and Origin enforcement on create, update, diff and draft-run routes;
+- 1 MiB document bounds, generated contract validation and fail-closed
+  rejection of dangling references and secret-like keys;
+- monotonic revision checks that reject stale save or stale diff application
+  without overwriting the committed draft;
+- non-mutating, deterministic and redacted diff preview before Apply;
+- immutable snapshot binding for draft test runs without changing the active
+  version pointer;
+- PostgreSQL persistence with restart recovery and no AgentSpec/secret
+  persistence in local/session storage.
 
 Automated evidence lives in `tests/security`, the Chromium E2E suite and
-[`docs/acceptance/evidence/SLICE_1.md`](docs/acceptance/evidence/SLICE_1.md).
+[`docs/acceptance/evidence/SLICE_1.md`](docs/acceptance/evidence/SLICE_1.md)
+and [`docs/acceptance/evidence/SLICE_2.md`](docs/acceptance/evidence/SLICE_2.md).
 These controls are a Local Preview boundary, not a production deployment
 certification.

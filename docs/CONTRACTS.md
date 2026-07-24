@@ -21,7 +21,7 @@ Generated files не редактируются вручную. Python или Ty
 - Import или edit старой версии создаёт новый draft в текущей schema.
 - Runtime объявляет точный диапазон поддерживаемых schema versions.
 
-## Slice 1 contract set
+## Slices 1–2 contract set
 
 ### Authoring and versioning
 
@@ -140,7 +140,29 @@ CI выполняет те же проверки с frozen lockfiles. Новая
 invariant не принимается без positive и negative fixture и результата в обеих
 реализациях.
 
-## Slice 1 handoff
+## Slice 2 draft contract
+
+`AgentDraft` is now an executable generated contract, not a prospective name.
+Its canonical fields are:
+
+- `agent_spec` — the only runtime-semantic document;
+- `digest` — SHA-256 of canonical AgentSpec JSON;
+- `revision` — optimistic concurrency token;
+- `base_version_id` — immutable source/snapshot lineage;
+- `layout` — presentation-only node coordinates and viewport;
+- `updated_at` — server timestamp.
+
+Python and TypeScript types are generated from the same JSON Schema. Draft
+semantic validation returns stable `code`, `json_pointer`, `node_id` and
+`message_key`. A layout-only update advances `revision` while preserving the
+AgentSpec digest; a semantic update advances both. Test execution resolves the
+saved revision to an immutable AgentVersion snapshot before entering the
+existing `RunRequest`/`RunEvent`/`RunTrace` path.
+
+The authenticated HTTP surface is documented in
+[`SLICE_2_ONE_SPEC_TWO_EDITORS.md`](acceptance/SLICE_2_ONE_SPEC_TWO_EDITORS.md).
+
+## Runtime handoff
 
 Runtime обязан реализовать эти контракты без собственной конкурирующей модели.
 Точный golden path, recovery, idempotency, streaming и security gates описаны

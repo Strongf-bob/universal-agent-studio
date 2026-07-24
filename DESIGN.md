@@ -279,7 +279,7 @@ React Flow nodes и edges — ephemeral view models, полученные из A
 
 Изменение simple settings или canvas отправляет typed command к одному draft. UI не сохраняет параллельный graph document. Ошибка contract validation указывает одновременно JSON path, поле inspector и node.
 
-## 16. Slice 1 screens
+## 16. Implemented Local Preview screens
 
 Slice 1 включает только реальный сквозной UX:
 
@@ -291,6 +291,23 @@ Slice 1 включает только реальный сквозной UX:
 6. **Node Trace Inspector** — status, duration, redacted input/output и provenance.
 
 Editable canvas, AI Builder, RAG и code editor не имитируются заглушками в Slice 1.
+
+Slice 2 добавляет реальный **Build workspace**:
+
+1. **Simple Settings** — локализованные metadata, default locale и model
+   temperature, отображаемые прямо из AgentSpec.
+2. **Execution Graph** — React Flow projection и тот же граф в доступной
+   keyboard table; layout отделён от runtime semantics.
+3. **Node Inspector** — metadata, prompt, model profile, timeout и retry
+   выбранного узла с field/node validation.
+4. **Bulk Editor** — полный JSON-кандидат, server-side validation,
+   deterministic diff и отдельное Apply.
+5. **Test Console** — запуск сохранённой revision как immutable snapshot,
+   текстовая история состояний узлов, результат и ссылка на trace.
+
+На экранах уже проверены desktop, `320px`, эквивалент `200%` browser zoom,
+видимый keyboard focus и `prefers-reduced-motion`. Ни одно представление не
+пишет AgentSpec или секреты в browser storage.
 
 ## 17. Accessibility acceptance
 

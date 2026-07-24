@@ -61,6 +61,9 @@ security acceptance и обязательный CI gate реализованы.
 
 **Цель:** доказать progressive disclosure без второй модели данных.
 
+**Статус:** complete — canonical draft, оба редактора, snapshot execution,
+security/recovery acceptance и обязательный CI gate реализованы.
+
 - simple settings;
 - React Flow canvas;
 - node inspector;
@@ -72,6 +75,13 @@ security acceptance и обязательный CI gate реализованы.
 - preview diff перед AI-generated или bulk changes.
 
 **Control scenario:** изменить один draft через simple form и canvas, получить один и тот же canonical AgentSpec, запустить и увидеть результат.
+
+**Не входит:** изменение topology, node library, AI Builder, RAG, произвольные
+HTTP/code nodes, publishing и multi-user collaboration.
+
+**Выход:** save/reload сохраняет AgentSpec и layout в PostgreSQL; stale и
+invalid writes fail closed; bulk preview не меняет draft до Apply; test run
+исполняет immutable unactivated snapshot и оставляет полный trace.
 
 ## Slice 3 — Publishing and versions
 

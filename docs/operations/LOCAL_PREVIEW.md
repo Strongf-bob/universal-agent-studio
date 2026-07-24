@@ -2,7 +2,7 @@
 
 ## Supported baseline
 
-The tested Slice 1 toolchain is:
+The tested Slices 1–2 toolchain is:
 
 | Component | Version |
 |---|---:|
@@ -74,6 +74,14 @@ Web UI, and stores only an opaque session cookie. The remaining tests prove:
 - RU/EN route preservation;
 - cancellation with a readable partial trace;
 - logout/login and absence of the test password from browser storage.
+- draft creation from the active immutable version;
+- one canonical AgentSpec edited through Simple Settings, canvas/inspector and
+  the keyboard graph table;
+- PostgreSQL save/reload of semantics and layout with revision advancement;
+- node-local invalid-reference feedback and non-mutating bulk diff preview;
+- immutable, unactivated draft snapshot run with node event history and
+  `{"value":437}`;
+- draft identity preservation through trace navigation and RU/EN switching.
 
 The credentials in `apps/studio-web/e2e/constants.ts` are local test data only.
 Do not reuse them outside an isolated preview.
@@ -94,14 +102,25 @@ cancellation acceptance reproducible.
 
 ## Stop, restart and reset
 
-Normal shutdown preserves both named volumes and generated secrets:
+Normal shutdown preserves both named volumes, generated secrets, drafts and
+run traces:
 
 ```bash
 pnpm local:down
 pnpm dev:local
 ```
 
-The active Alembic revision and persisted runs remain available after restart.
+The active Alembic revision, persisted runs and latest committed draft
+revision/digest remain available after restart.
+
+After importing and activating the calculator fixture, the Build workspace is:
+
+```text
+http://localhost:3000/en-US/agents/calculator-agent/build
+```
+
+Every unsafe API call, including direct operator scripts, must send an allowed
+`Origin` and the session CSRF token. The browser does this automatically.
 
 Destructive reset is intentionally guarded:
 

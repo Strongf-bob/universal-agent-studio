@@ -892,7 +892,7 @@ git commit -m "test: prove Slice 2 editing acceptance"
 - Produces: source-grounded operator and GitHub handoff.
 - Consumes: exact observed commands, counts, SHA and Actions URLs.
 
-- [ ] **Step 1: Run the complete local release gate**
+- [x] **Step 1: Run the complete local release gate**
 
 From a clean state:
 
@@ -909,7 +909,7 @@ pnpm local:down
 
 Record exact counts. Do not claim optional BYOK coverage when skipped.
 
-- [ ] **Step 2: Inspect the real UI**
+- [x] **Step 2: Inspect the real UI**
 
 Open desktop and narrow Build screens from the running stack. Verify:
 
@@ -922,19 +922,19 @@ Open desktop and narrow Build screens from the running stack. Verify:
 
 Fix defects and rerun affected tests before documentation.
 
-- [ ] **Step 3: Update source-grounded documentation**
+- [x] **Step 3: Update source-grounded documentation**
 
 Set ROADMAP Slice 2 to complete only after gates pass. Document exact API,
 commands, exclusions and security behavior. Capture a README screenshot only
 from the verified running stack and never depict an unshipped capability.
 
-- [ ] **Step 4: Run README audit**
+- [x] **Step 4: Run README audit**
 
 Invoke `beautify-github-readme` in audit mode because the default branch will
 change. Validate links and every referenced asset. Update only content changed
 by Slice 2.
 
-- [ ] **Step 5: Commit verification evidence**
+- [x] **Step 5: Commit verification evidence**
 
 ```bash
 git add README.md ROADMAP.md DESIGN.md SECURITY.md docs third_party assets/readme

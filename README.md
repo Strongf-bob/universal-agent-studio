@@ -4,16 +4,21 @@
 > приложением для пользователя и раскрывается до версий, графа, событий,
 > trace, моделей, tools и API для инженера.
 
-[![Slice 1 Executable Spine](https://github.com/Strongf-bob/universal-agent-studio/actions/workflows/slice1.yml/badge.svg?branch=main)](https://github.com/Strongf-bob/universal-agent-studio/actions/workflows/slice1.yml)
+[![Slice 1–2 Local Preview](https://github.com/Strongf-bob/universal-agent-studio/actions/workflows/slice1.yml/badge.svg?branch=main)](https://github.com/Strongf-bob/universal-agent-studio/actions/workflows/slice1.yml)
 [![Contract Conformance](https://github.com/Strongf-bob/universal-agent-studio/actions/workflows/contracts.yml/badge.svg?branch=main)](https://github.com/Strongf-bob/universal-agent-studio/actions/workflows/contracts.yml)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-0b8793.svg)](LICENSE)
 [![RU / EN](https://img.shields.io/badge/UI-ru--RU%20%7C%20en--US-172331.svg)](LOCALIZATION.md)
 
 ## Уже работает
 
-Slice 1 — это локальный исполняемый spine, а не макет интерфейса:
+Slices 1–2 — это локальный исполняемый Studio, а не макет интерфейса:
 
 - immutable `AgentVersion` с каноническим digest;
+- PostgreSQL-backed `AgentDraft` с revision и optimistic concurrency;
+- Simple Settings, React Flow canvas, node inspector и keyboard table над
+  одним canonical `AgentSpec`, без второй модели графа;
+- save/load, field/node validation и non-mutating JSON diff preview;
+- Test Console запускает immutable snapshot черновика без активации;
 - видимый Web-путь setup → JSON import → validation → activation;
 - local owner, Argon2id, opaque session, CSRF и project scope;
 - Web + REST API на одном контракте;
@@ -24,6 +29,11 @@ Slice 1 — это локальный исполняемый spine, а не ма
 - `ru-RU` / `en-US`, сохранение текущего run при смене языка;
 - opt-in OpenAI-compatible BYOK adapter за явным origin allowlist;
 - Docker Compose с отдельными PostgreSQL и Temporal volumes.
+
+![Реальный Build workspace: простые настройки, граф и инспектор одного AgentSpec](assets/readme/slice2-editor.png)
+
+Скриншот создан из production build запущенного локального стека. Изменения
+формы, canvas, inspector и JSON preview сходятся в один server-backed draft.
 
 ![Реальный завершённый запуск: события, структурированный результат и trace](assets/readme/slice1-run.png)
 
@@ -48,7 +58,8 @@ pnpm dev:local
 - Temporal UI: <http://localhost:8080>
 
 Первый воспроизводимый walkthrough, включая setup, импорт/активацию fixture,
-run, refresh, locale switch, trace inspection, cancellation и login:
+редактирование draft двумя представлениями, validation/diff preview, draft
+snapshot run, refresh, locale switch, trace inspection, cancellation и login:
 
 ```bash
 pnpm --filter @universal-agent-studio/studio-web exec playwright install chromium
@@ -75,7 +86,12 @@ pnpm local:reset -- --confirm "RESET LOCAL DATA"
 
 ```mermaid
 flowchart LR
-    Spec["Canonical AgentSpec"] --> Version["Immutable AgentVersion + digest"]
+    Spec["Canonical AgentSpec draft"] --> Simple["Simple Settings"]
+    Spec --> Graph["Canvas + Inspector + Keyboard Table"]
+    Simple --> Save["Validated revision + digest"]
+    Graph --> Save
+    Save --> Snapshot["Immutable test snapshot"]
+    Snapshot --> Version["AgentVersion + digest"]
     Version --> API["Control API"]
     API --> Temporal["Temporal workflow"]
     Temporal --> Kernel["Provider-neutral Agent Kernel"]
@@ -87,9 +103,9 @@ flowchart LR
     Version --> Web
 ```
 
-`AgentSpec` — единственный источник истины. Web не хранит вторую модель
-графа, runtime не зависит от конкретного LLM provider, а durable execution
-скрыт за портом ядра.
+`AgentSpec` — единственный источник runtime-семантики. Canvas хранит отдельно
+только layout, Web не сохраняет вторую модель графа, runtime не зависит от
+конкретного LLM provider, а durable execution скрыт за портом ядра.
 
 ## Проверка
 
@@ -108,13 +124,15 @@ BYOK smoke запускается только явно и не входит в 
 
 ## Границы текущего preview
 
-Slice 1 доказывает путь `input → model → tool → output → trace`. Editable
-canvas, draft authoring, RAG, arbitrary HTTP/code nodes, MCP, public
-publishing, multi-user administration, eval campaigns и autoresearch
-начинаются в последующих slices.
+Slices 1–2 доказывают путь `draft → validated snapshot → model → tool →
+output → trace`. Создание/удаление topology, node library, AI Builder, RAG,
+arbitrary HTTP/code nodes, MCP, public publishing, multi-user administration,
+eval campaigns и autoresearch начинаются в последующих slices.
 
-Порядок развития зафиксирован в [ROADMAP.md](ROADMAP.md), а точный release
-gate — в [acceptance-контракте Slice 1](docs/acceptance/SLICE_1_EXECUTABLE_SPINE.md).
+Порядок развития зафиксирован в [ROADMAP.md](ROADMAP.md), а точные release
+gates — в acceptance-контрактах
+[Slice 1](docs/acceptance/SLICE_1_EXECUTABLE_SPINE.md) и
+[Slice 2](docs/acceptance/SLICE_2_ONE_SPEC_TWO_EDITORS.md).
 
 ## Архитектурные и security-документы
 
