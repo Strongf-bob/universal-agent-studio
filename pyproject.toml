@@ -1,0 +1,15 @@
+[project]
+name = "universal-agent-studio-contracts"
+version = "0.1.0"
+requires-python = ">=3.12,<3.15"
+dependencies = []
+
+[dependency-groups]
+dev = [
+  "jsonschema==4.26.0",
+  "pytest==9.1.1",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"

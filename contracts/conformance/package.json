@@ -1,0 +1,15 @@
+{
+  "name": "@universal-agent-studio/contract-conformance",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "check": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "26.1.1",
+    "ajv": "8.20.0",
+    "typescript": "7.0.2",
+    "vitest": "4.1.10"
+  }
+}

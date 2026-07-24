@@ -6,7 +6,7 @@
 
 **Architecture:** JSON Schema 2020-12 in `contracts/schemas/v0.1.0` is the only contract source. Python `jsonschema` and TypeScript/Ajv validate the same fixture manifest, while documentation records security, frontend provenance, and the exact Slice 1 boundary. No runtime, provider SDK, database, Temporal workflow, or visual canvas is implemented in this plan.
 
-**Tech Stack:** Markdown, YAML, JSON Schema 2020-12, Python 3.12–3.14, uv 0.8–0.11, `jsonschema==4.26.0`, `pytest==9.1.1`, Node.js 22–26, pnpm 10–11, TypeScript 7.0.2, Ajv 8.20.0, Vitest 4.1.10.
+**Tech Stack:** Markdown, YAML, JSON Schema 2020-12, Python 3.12–3.14, uv 0.8–0.11, `jsonschema==4.26.0`, `pytest==9.1.1`, Node.js 22–26, pnpm 10–11, TypeScript 7.0.2, `@types/node` 26.1.1, Ajv 8.20.0, Vitest 4.1.10.
 
 ## Global Constraints
 
@@ -140,7 +140,7 @@ git push origin main
 - Consumes: version boundaries from ADR-0001 and dependency policy.
 - Produces: `uv run pytest`, `pnpm test:contracts`, and `pnpm check:contracts` root commands.
 
-- [ ] **Step 1: Install the declared Python package manager**
+- [x] **Step 1: Install the declared Python package manager**
 
 Run:
 
@@ -151,7 +151,7 @@ uv --version
 
 Expected: uv version between 0.8 and 0.11.
 
-- [ ] **Step 2: Add Python project metadata**
+- [x] **Step 2: Add Python project metadata**
 
 Create `.python-version`:
 
@@ -181,7 +181,7 @@ addopts = "-ra"
 
 Run `uv sync` to create `uv.lock`.
 
-- [ ] **Step 3: Add JavaScript workspace metadata**
+- [x] **Step 3: Add JavaScript workspace metadata**
 
 Create root `package.json`:
 
@@ -222,6 +222,7 @@ Create `contracts/conformance/package.json`:
     "check": "tsc --noEmit"
   },
   "devDependencies": {
+    "@types/node": "26.1.1",
     "ajv": "8.20.0",
     "typescript": "7.0.2",
     "vitest": "4.1.10"
@@ -239,7 +240,9 @@ Create `contracts/conformance/tsconfig.json`:
     "moduleResolution": "NodeNext",
     "strict": true,
     "resolveJsonModule": true,
-    "noEmit": true
+    "noEmit": true,
+    "lib": ["ES2022", "ESNext.Disposable"],
+    "types": ["node"]
   },
   "include": ["src/**/*.ts", "tests/**/*.ts", "vitest.config.ts"]
 }
@@ -260,11 +263,11 @@ export default defineConfig({
 
 Run `pnpm install` to create `pnpm-lock.yaml`.
 
-- [ ] **Step 4: Record exact dependencies**
+- [x] **Step 4: Record exact dependencies**
 
 Move the installed package versions, sources, licenses, purpose, security owner and upgrade path into `third_party/candidates.yaml` with status `installed_for_contract_validation`.
 
-- [ ] **Step 5: Verify clean toolchain**
+- [x] **Step 5: Verify clean toolchain**
 
 Run:
 
@@ -275,7 +278,7 @@ pnpm --version
 
 Expected: supported Python and pnpm versions.
 
-- [ ] **Step 6: Commit and push**
+- [x] **Step 6: Commit and push**
 
 ```bash
 git add .python-version pyproject.toml uv.lock package.json pnpm-workspace.yaml pnpm-lock.yaml contracts/conformance .gitignore third_party/candidates.yaml

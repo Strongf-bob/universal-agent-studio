@@ -1,0 +1,13 @@
+{
+  "name": "universal-agent-studio",
+  "private": true,
+  "packageManager": "pnpm@11.7.0",
+  "engines": {
+    "node": ">=22 <27",
+    "pnpm": ">=10 <12"
+  },
+  "scripts": {
+    "test:contracts": "pnpm --filter @universal-agent-studio/contract-conformance test",
+    "check:contracts": "pnpm --filter @universal-agent-studio/contract-conformance check"
+  }
+}

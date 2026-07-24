@@ -57,3 +57,59 @@ candidates:
     status: review_required_for_slice_2
     version: null
     note: Pin individual maintained CodeMirror 6 packages; do not use archived CodeMirror 5.
+  - name: uv
+    source: https://github.com/astral-sh/uv
+    license: Apache-2.0
+    intended_use: Python environment and lockfile management
+    status: approved_for_contract_validation
+    version: 0.11.32
+    note: Developer and CI tool; security owner is the repository maintainer.
+  - name: jsonschema
+    source: https://github.com/python-jsonschema/jsonschema
+    license: MIT
+    intended_use: Python JSON Schema 2020-12 conformance validation
+    status: approved_for_contract_validation
+    version: 4.26.0
+    note: Development/test dependency; upgrade with cross-language fixture comparison.
+  - name: pytest
+    source: https://github.com/pytest-dev/pytest
+    license: MIT
+    intended_use: Python contract conformance tests
+    status: approved_for_contract_validation
+    version: 9.1.1
+    note: Development/test dependency; security owner is the repository maintainer.
+  - name: pnpm
+    source: https://github.com/pnpm/pnpm
+    license: MIT
+    intended_use: JavaScript workspace and lockfile management
+    status: approved_for_contract_validation
+    version: 11.7.0
+    note: Developer and CI tool; Corepack signature/pin reviewed during upgrades.
+  - name: TypeScript
+    source: https://github.com/microsoft/TypeScript
+    license: Apache-2.0
+    intended_use: Static checking for TypeScript contract validators
+    status: approved_for_contract_validation
+    version: 7.0.2
+    note: Development/test dependency; pinned in the contract workspace.
+  - name: Ajv
+    source: https://github.com/ajv-validator/ajv
+    license: MIT
+    intended_use: TypeScript JSON Schema 2020-12 conformance validation
+    status: approved_for_contract_validation
+    version: 8.20.0
+    note: Development/test dependency; options must remain strict.
+  - name: Vitest
+    source: https://github.com/vitest-dev/vitest
+    license: MIT
+    intended_use: TypeScript contract conformance tests
+    status: approved_for_contract_validation
+    version: 4.1.10
+    note: Development/test dependency; security owner is the repository maintainer.
+  - name: Node.js type definitions
+    source: https://github.com/DefinitelyTyped/DefinitelyTyped
+    license: MIT
+    intended_use: Node.js globals and built-in module types for contract tests
+    status: approved_for_contract_validation
+    version: 26.1.1
+    note: Development-only peer required by Vitest; pinned to the supported Node major.
