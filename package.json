@@ -13,7 +13,9 @@
     "test:web": "pnpm --filter @universal-agent-studio/studio-web test",
     "test:e2e": "pnpm --filter @universal-agent-studio/studio-web test:e2e",
     "test:contracts": "pnpm --filter @universal-agent-studio/contract-conformance test",
+    "generate:contracts": "uv run python scripts/generate_contracts.py && node scripts/generate-contracts.mjs",
+    "check:generated": "uv run python scripts/generate_contracts.py --check && node scripts/generate-contracts.mjs --check",
     "check:contracts": "pnpm --filter @universal-agent-studio/contract-conformance check",
-    "check": "pnpm check:contracts && pnpm --filter @universal-agent-studio/studio-web check && uv run ruff check . && uv run mypy apps workers libs tests"
+    "check": "pnpm check:generated && pnpm check:contracts && pnpm --filter @universal-agent-studio/contracts check && pnpm --filter @universal-agent-studio/studio-web check && uv run ruff check . && uv run mypy apps workers libs tests"
   }
 }

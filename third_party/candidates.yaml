@@ -208,6 +208,13 @@ candidates:
     status: installed_for_slice_1
     version: 2.14.2
     note: Secret values are resolved server-side and excluded from repr/logging.
+  - name: Pydantic
+    source: https://github.com/pydantic/pydantic
+    license: MIT
+    intended_use: Runtime validation for generated Python contract models
+    status: installed_for_slice_1
+    version: 2.13.4
+    note: Direct Agent Kernel dependency; generated models and trust-boundary tests gate upgrades.
   - name: datamodel-code-generator
     source: https://github.com/koxudaxi/datamodel-code-generator
     license: MIT

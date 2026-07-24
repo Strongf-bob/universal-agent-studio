@@ -178,8 +178,10 @@ git push
 - Create: `scripts/generate_contracts.py`
 - Create: `libs/typescript/contracts/package.json`
 - Create: `libs/typescript/contracts/src/generated.ts`
+- Create: `libs/typescript/contracts/src/node-spec.generated.ts`
 - Create: `libs/typescript/contracts/src/index.ts`
 - Create: `libs/python/agent_kernel/src/universal_agent_kernel/contracts/generated.py`
+- Create: `libs/python/agent_kernel/src/universal_agent_kernel/contracts/schemas/bundle.schema.json`
 - Create: `libs/python/agent_kernel/src/universal_agent_kernel/contracts/canonical.py`
 - Create: `libs/python/agent_kernel/src/universal_agent_kernel/contracts/validation.py`
 - Create: `libs/python/agent_kernel/tests/test_canonical_contracts.py`
@@ -190,7 +192,7 @@ git push
 - Consumes: `contracts/schemas/v0.1.0`, fixture manifest and RFC 8785.
 - Produces: `canonicalize(document) -> bytes`, `content_digest(document) -> str`, `validate_agent_spec(document) -> ValidationResult`, generated Python models and generated TypeScript interfaces.
 
-- [ ] **Step 1: Write failing canonicalization and validation tests**
+- [x] **Step 1: Write failing canonicalization and validation tests**
 
 Cover:
 
@@ -205,7 +207,7 @@ def test_invalid_agent_reports_json_pointer_and_node_id() -> None: ...
 The locked vector contains one lowercase 64-character SHA-256 value generated
 from the golden AgentSpec.
 
-- [ ] **Step 2: Verify the tests are red**
+- [x] **Step 2: Verify the tests are red**
 
 Run:
 
@@ -215,7 +217,7 @@ uv run pytest libs/python/agent_kernel/tests/test_canonical_contracts.py -q
 
 Expected: import failure for `universal_agent_kernel.contracts.canonical`.
 
-- [ ] **Step 3: Implement generation and canonical services**
+- [x] **Step 3: Implement generation and canonical services**
 
 Use `rfc8785.dumps()` and `hashlib.sha256()`. Parse raw JSON with an
 `object_pairs_hook` that raises `duplicate_json_key`. Reuse the existing
@@ -248,7 +250,7 @@ must write deterministic UTF-8/LF output. Add root scripts:
 }
 ```
 
-- [ ] **Step 4: Verify cross-language output**
+- [x] **Step 4: Verify cross-language output**
 
 Run:
 
@@ -262,7 +264,7 @@ pnpm test:contracts
 
 Expected: generated drift check passes and all old and new contract tests pass.
 
-- [ ] **Step 5: Commit and push**
+- [x] **Step 5: Commit and push**
 
 ```bash
 git add scripts libs/python/agent_kernel libs/typescript/contracts \
