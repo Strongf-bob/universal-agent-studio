@@ -128,4 +128,4 @@ Compromised packages or copied assets may introduce execution, tracking or licen
 - metadata leakage that reveals no private content, identity or infrastructure secret.
 
 Repository: https://github.com/Strongf-bob/universal-agent-studio
-Version: 577014e258c24675a72e39d87bd21e2f85d35167
+Version: Slice 1 executable spine

@@ -111,7 +111,11 @@ export function RunTraceExplorer({
           onSelect={setSelectedNodeId}
         />
       </div>
-      <NodeTraceInspector node={selectedNode} execution={execution} />
+      <NodeTraceInspector
+        node={selectedNode}
+        execution={execution}
+        provenance={trace.provenance}
+      />
     </section>
   );
 }

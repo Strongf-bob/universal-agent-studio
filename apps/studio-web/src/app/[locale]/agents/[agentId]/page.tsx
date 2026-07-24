@@ -26,7 +26,12 @@ export default async function AgentPage({
     );
   } catch (error) {
     if (error instanceof ApiClientError) {
-      redirect(localizedPath(locale, "/login"));
+      redirect(
+        localizedPath(
+          locale,
+          error.code === "authentication_failed" ? "/login" : "/agents/import",
+        ),
+      );
     }
     throw error;
   }

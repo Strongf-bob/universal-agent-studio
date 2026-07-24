@@ -1,6 +1,9 @@
 "use client";
 
-import type {NodeExecution} from "@universal-agent-studio/contracts";
+import type {
+  NodeExecution,
+  RunTrace,
+} from "@universal-agent-studio/contracts";
 import {Braces, Clock3} from "lucide-react";
 import {useTranslations} from "next-intl";
 
@@ -9,6 +12,7 @@ import type {FlowNodeView} from "@/features/runs/ReadOnlyFlow";
 type Props = {
   node: FlowNodeView | null;
   execution: NodeExecution | null;
+  provenance: RunTrace["provenance"];
 };
 
 function TraceValues({
@@ -32,7 +36,7 @@ function TraceValues({
   );
 }
 
-export function NodeTraceInspector({node, execution}: Props) {
+export function NodeTraceInspector({node, execution, provenance}: Props) {
   const t = useTranslations("run.inspector");
   if (!node) {
     return (
@@ -67,12 +71,36 @@ export function NodeTraceInspector({node, execution}: Props) {
       {execution ? (
         <>
           <section>
+            <h4>{t("execution")}</h4>
+            <TraceValues
+              values={{
+                attempt: execution.attempt,
+                started_at: execution.started_at,
+                completed_at: execution.completed_at,
+              }}
+            />
+          </section>
+          <section>
             <h4>{t("input")}</h4>
             <TraceValues values={execution.input} />
           </section>
           <section>
             <h4>{t("output")}</h4>
             <TraceValues values={execution.output} />
+          </section>
+          <section>
+            <h4>{t("provenance")}</h4>
+            <TraceValues
+              values={{
+                redaction_policy_id: provenance.redaction_policy_id,
+                resolutions:
+                  node.kind === "model"
+                    ? provenance.model_resolutions
+                    : node.kind === "tool"
+                      ? provenance.tool_resolutions
+                      : [],
+              }}
+            />
           </section>
           <p className="redactionNote">{t("redactionNote")}</p>
         </>

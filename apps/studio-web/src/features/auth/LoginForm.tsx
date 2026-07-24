@@ -46,7 +46,7 @@ export function LoginForm({locale, login = loginOwner, onComplete}: Props) {
         onComplete();
       } else {
         window.location.assign(
-          localizedPath(locale, "/agents/calculator-agent"),
+          localizedPath(locale, "/agents/import"),
         );
       }
     } catch (error) {

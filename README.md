@@ -14,11 +14,13 @@
 Slice 1 — это локальный исполняемый spine, а не макет интерфейса:
 
 - immutable `AgentVersion` с каноническим digest;
+- видимый Web-путь setup → JSON import → validation → activation;
 - local owner, Argon2id, opaque session, CSRF и project scope;
 - Web + REST API на одном контракте;
 - Temporal workflow, resumable SSE и idempotent run creation;
 - deterministic model → allowlisted calculator → structured output;
-- persisted redacted trace, read-only graph и keyboard table;
+- persisted redacted trace с attempt/timing/provenance, read-only graph и
+  keyboard table;
 - `ru-RU` / `en-US`, сохранение текущего run при смене языка;
 - opt-in OpenAI-compatible BYOK adapter за явным origin allowlist;
 - Docker Compose с отдельными PostgreSQL и Temporal volumes.
@@ -59,8 +61,8 @@ pnpm test:e2e
 pnpm local:down
 ```
 
-Полный reset требует точной явной фразы и удаляет только Compose volumes и
-сгенерированные `.local` secrets:
+Полный reset требует точной явной фразы и ownership marker; он удаляет только
+Compose volumes и принадлежащую проекту `.local` state directory:
 
 ```bash
 pnpm local:reset -- --confirm "RESET LOCAL DATA"

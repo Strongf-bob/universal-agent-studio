@@ -9,7 +9,10 @@ from typing import Any, cast
 from jsonschema import Draft202012Validator, FormatChecker
 
 from universal_agent_kernel.contracts.canonical import content_digest
-from universal_agent_kernel.contracts.validation import validate_agent_spec
+from universal_agent_kernel.contracts.validation import (
+    validate_agent_input,
+    validate_agent_spec,
+)
 from universal_agent_kernel.domain import (
     ExecutionCommand,
     KernelExecutionError,
@@ -112,6 +115,9 @@ class AgentKernel:
         agent = cast(dict[str, Any], dict(command.agent_spec))
         if not validate_agent_spec(agent).valid:
             raise KernelExecutionError("agent_spec_invalid")
+        input_document = cast(dict[str, Any], dict(command.input))
+        if not validate_agent_input(agent, input_document).valid:
+            raise KernelExecutionError("run_input_invalid")
 
         input_node, model_node, tool_node, output_node = _execution_path(agent)
         profiles = cast(list[dict[str, Any]], agent["model_profiles"])
@@ -135,7 +141,7 @@ class AgentKernel:
         )
 
         input_completed_at = ports.clock.now()
-        input_value = dict(command.input)
+        input_value = input_document
         node_executions: list[NodeExecution] = [
             NodeExecution(
                 node_id=cast(str, input_node["id"]),

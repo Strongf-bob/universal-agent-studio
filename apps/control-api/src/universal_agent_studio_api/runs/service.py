@@ -11,6 +11,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from universal_agent_kernel.contracts.canonical import content_digest
+from universal_agent_kernel.contracts.validation import validate_agent_input
 from universal_agent_kernel.domain import ExecutionCommand, RunEvent
 from universal_agent_platform_store.models import (
     Agent,
@@ -428,6 +429,25 @@ class RunService:
             raise ApiError(409, "agent_version_not_active")
         if version.digest != request.agent_version_digest:
             raise ApiError(409, "agent_version_digest_mismatch")
+        input_validation = validate_agent_input(
+            version.agent_spec,
+            request.input,
+        )
+        if not input_validation.valid:
+            raise ApiError(
+                422,
+                "run_input_invalid",
+                details={
+                    "issues": [
+                        {
+                            "code": issue.code,
+                            "json_pointer": issue.json_pointer,
+                            "message_key": issue.message_key,
+                        }
+                        for issue in input_validation.issues
+                    ]
+                },
+            )
 
         request_digest = content_digest(request.model_dump(mode="json"))
         data = RunCreateData(
@@ -448,21 +468,34 @@ class RunService:
         except IdempotencyConflict as error:
             raise ApiError(409, "idempotency_key_reused") from error
 
-        if created:
+        if (
+            run.status == "queued"
+            and run.durable_execution_id is None
+        ):
             command = self._command(run, version)
             try:
                 durable_id = await self.durable_execution.start_run(command)
-                await self.run_persistence.set_durable_execution_id(
-                    scope=scope,
-                    run_id=run.id,
-                    durable_execution_id=durable_id,
-                )
             except Exception as error:
                 await self.run_persistence.finalize_start_failure(
                     scope=scope,
                     run=run,
                     error_code="durable_execution_unavailable",
                 )
+                raise ApiError(
+                    503,
+                    "durable_execution_unavailable",
+                    retryable=True,
+                ) from error
+            try:
+                await self.run_persistence.set_durable_execution_id(
+                    scope=scope,
+                    run_id=run.id,
+                    durable_execution_id=durable_id,
+                )
+            except Exception as error:
+                # Temporal workflow IDs are deterministic and USE_EXISTING is
+                # configured. A client retry can therefore repair this
+                # post-start persistence window without duplicating work.
                 raise ApiError(
                     503,
                     "durable_execution_unavailable",

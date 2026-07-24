@@ -247,6 +247,7 @@ export interface Metrics {
   tool_calls: number;
 }
 export interface NodeExecution {
+  attempt: number;
   completed_at: string;
   duration_ms: number;
   error?: ErrorEnvelope;

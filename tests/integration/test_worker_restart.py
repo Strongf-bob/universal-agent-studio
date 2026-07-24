@@ -72,7 +72,11 @@ async def test_worker_restart_does_not_repeat_logical_tool_invocation() -> None:
             environment.client,
             task_queue=TASK_QUEUE,
             workflows=[AgentRunWorkflow],
-            activities=[activities.execute_run, activities.finalize_cancelled_run],
+            activities=[
+                activities.execute_run,
+                activities.finalize_cancelled_run,
+                activities.finalize_failed_run,
+            ],
         )
         first_worker_task = asyncio.create_task(first_worker.run())
         durable_id = await adapter.start_run(execution_command())
@@ -87,7 +91,11 @@ async def test_worker_restart_does_not_repeat_logical_tool_invocation() -> None:
             environment.client,
             task_queue=TASK_QUEUE,
             workflows=[AgentRunWorkflow],
-            activities=[activities.execute_run, activities.finalize_cancelled_run],
+            activities=[
+                activities.execute_run,
+                activities.finalize_cancelled_run,
+                activities.finalize_failed_run,
+            ],
         ):
             trace = await environment.client.get_workflow_handle(durable_id).result()
 

@@ -111,10 +111,12 @@ class NodeExecution:
     duration_ms: int
     input: Mapping[str, object]
     output: Mapping[str, object]
+    attempt: int = 1
 
     def to_document(self) -> dict[str, object]:
         return {
             "node_id": self.node_id,
+            "attempt": self.attempt,
             "status": self.status,
             "started_at": _timestamp(self.started_at),
             "completed_at": _timestamp(self.completed_at),

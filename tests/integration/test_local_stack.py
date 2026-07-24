@@ -50,7 +50,9 @@ def test_launcher_creates_distinct_owner_only_secret_files(
     )
     session_key = tmp_path / "secrets" / "session-hash.key"
     signing_key = tmp_path / "secrets" / "execution-signing.key"
+    marker = tmp_path / ".uas-local-state-owner"
 
+    assert marker.read_text(encoding="utf-8") == f"{ROOT}\n"
     assert session_key.is_file()
     assert signing_key.is_file()
     assert session_key.read_bytes() != signing_key.read_bytes()
@@ -79,10 +81,24 @@ def test_launcher_reports_missing_docker_without_exposing_secrets(
     assert "Docker" in result.stderr
 
 
-def test_reset_requires_exact_confirmation() -> None:
+def test_reset_requires_exact_confirmation(tmp_path: Path) -> None:
+    state_directory = tmp_path / "state"
+    environment = {
+        **os.environ,
+        "UAS_LOCAL_STATE_DIR": str(state_directory),
+    }
+    subprocess.run(
+        [_node(), str(DEV_LOCAL), "--prepare-only"],
+        cwd=ROOT,
+        env=environment,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
     rejected = subprocess.run(
         [_node(), str(RESET_LOCAL), "--dry-run"],
         cwd=ROOT,
+        env=environment,
         capture_output=True,
         text=True,
     )
@@ -95,6 +111,7 @@ def test_reset_requires_exact_confirmation() -> None:
             "RESET LOCAL DATA",
         ],
         cwd=ROOT,
+        env=environment,
         capture_output=True,
         text=True,
     )
@@ -102,6 +119,27 @@ def test_reset_requires_exact_confirmation() -> None:
     assert rejected.returncode != 0
     assert accepted.returncode == 0
     assert "would remove" in accepted.stdout.lower()
+
+
+def test_launcher_refuses_to_adopt_a_non_empty_unowned_directory(
+    tmp_path: Path,
+) -> None:
+    unrelated = tmp_path / "unrelated"
+    unrelated.mkdir()
+    protected = unrelated / "keep.txt"
+    protected.write_text("do not delete", encoding="utf-8")
+
+    result = subprocess.run(
+        [_node(), str(DEV_LOCAL), "--prepare-only"],
+        cwd=ROOT,
+        env={**os.environ, "UAS_LOCAL_STATE_DIR": str(unrelated)},
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode != 0
+    assert "Refusing to adopt" in result.stderr
+    assert protected.read_text(encoding="utf-8") == "do not delete"
 
 
 def test_compose_config_is_valid_when_docker_is_available(

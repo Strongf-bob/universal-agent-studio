@@ -123,6 +123,38 @@ def _schema_issues(
     return issues
 
 
+def validate_agent_input(
+    agent_spec: dict[str, Any],
+    input_document: dict[str, Any],
+) -> ValidationResult:
+    """Validate a run input against the active AgentSpec form interface."""
+    interface = cast(dict[str, Any], agent_spec["interface"])
+    fields = cast(list[dict[str, Any]], interface["input_fields"])
+    schema = {
+        "type": "object",
+        "properties": {
+            str(field["id"]): cast(dict[str, Any], field["schema"])
+            for field in fields
+        },
+        "required": [
+            str(field["id"])
+            for field in fields
+            if field.get("required") is True
+        ],
+        "additionalProperties": False,
+    }
+    issues = tuple(
+        ValidationIssue(
+            code="input_validation_failed",
+            json_pointer=_json_pointer(list(error.absolute_path)),
+            node_id=None,
+            message_key=f"validation.input.{error.validator}",
+        )
+        for error in Draft202012Validator(schema).iter_errors(input_document)
+    )
+    return ValidationResult(valid=not issues, issues=issues)
+
+
 def find_forbidden_secret_keys(value: Any) -> set[str]:
     errors: set[str] = set()
 

@@ -1,5 +1,4 @@
 import {expect, test as setup} from "@playwright/test";
-import {readFile} from "node:fs/promises";
 import path from "node:path";
 
 import {ownerName, ownerPassword} from "./constants";
@@ -24,6 +23,7 @@ setup("create the local owner and activate the golden AgentSpec", async ({page})
     );
     await page.getByRole("button", {name: "Sign in"}).click();
     expect((await loginResponse).status()).toBe(201);
+    await expect(page).toHaveURL(/\/en-US\/agents\/import$/);
   } else {
     await page.goto("/en-US/setup");
     await page.getByLabel("Owner name").fill(ownerName);
@@ -36,49 +36,16 @@ setup("create the local owner and activate the golden AgentSpec", async ({page})
     );
     await page.getByRole("button", {name: "Create owner"}).click();
     expect((await bootstrapResponse).status()).toBe(201);
+    await expect(page).toHaveURL(/\/en-US\/agents\/import$/);
   }
 
-  const session = await page.request.get("/api/v1/session");
-  expect(session.ok()).toBeTruthy();
-  const csrf = ((await session.json()) as {csrf_token: string}).csrf_token;
-  const fixture = JSON.parse(await readFile(fixtureFile, "utf8")) as object;
-  const imported = await page.request.post("/api/v1/agent-versions/import", {
-    data: fixture,
-    headers: {
-      Origin: "http://localhost:3000",
-      "X-CSRF-Token": csrf,
-    },
-  });
-  expect([200, 201]).toContain(imported.status());
-  const version = (await imported.json()) as {
-    version_id: string;
-    digest: string;
-    validation: {valid: boolean};
-  };
-  expect(version.validation.valid).toBe(true);
-  expect(version.digest).toMatch(/^[0-9a-f]{64}$/);
-
-  const active = await page.request.get(
-    "/api/v1/agents/calculator-agent/active-version",
-  );
-  if (active.status() === 404) {
-    const activated = await page.request.post(
-      "/api/v1/agents/calculator-agent/active-version",
-      {
-        data: {
-          version_id: version.version_id,
-          expected_previous_version_id: null,
-        },
-        headers: {
-          Origin: "http://localhost:3000",
-          "X-CSRF-Token": csrf,
-        },
-      },
-    );
-    expect(activated.ok()).toBeTruthy();
-  } else {
-    expect(active.ok()).toBeTruthy();
-  }
+  await page.getByLabel("AgentSpec JSON file").setInputFiles(fixtureFile);
+  await page.getByRole("button", {name: "Import and validate"}).click();
+  await expect(page.getByText("Valid AgentSpec")).toBeVisible();
+  await expect(page.getByText("calculator-agent-v1")).toBeVisible();
+  await expect(page.locator(".monoValue")).toHaveText(/^[0-9a-f]{64}$/);
+  await page.getByRole("button", {name: "Activate version"}).click();
+  await expect(page).toHaveURL(/\/en-US\/agents\/calculator-agent$/);
 
   await page.context().storageState({path: authFile});
 });

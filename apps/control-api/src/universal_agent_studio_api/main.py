@@ -16,6 +16,7 @@ from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoin
 from starlette.types import ASGIApp
 from temporalio.client import Client
 from universal_agent_platform_store.session import (
+    check_database_connectivity,
     create_engine,
     create_session_factory,
 )
@@ -160,6 +161,8 @@ def create_app(
             return
 
         engine = create_engine(resolved_settings.database_url.get_secret_value())
+        await check_database_connectivity(engine)
+        app.state.database_engine = engine
         session_factory = create_session_factory(engine)
         app.state.auth_service = AuthService(
             SqlAuthStore(session_factory),
@@ -196,6 +199,7 @@ def create_app(
         lifespan=lifespan,
     )
     app.state.ready = auth_store is not None
+    app.state.database_engine = None
     app.state.settings = resolved_settings
     if auth_store is not None:
         app.state.auth_service = AuthService(auth_store, resolved_settings)
@@ -247,6 +251,15 @@ def create_app(
     async def health_ready() -> Response:
         if not bool(app.state.ready):
             return JSONResponse({"status": "starting"}, status_code=503)
+        database_engine = app.state.database_engine
+        if database_engine is not None:
+            try:
+                await check_database_connectivity(database_engine)
+            except Exception:
+                return JSONResponse(
+                    {"status": "not_ready"},
+                    status_code=503,
+                )
         return JSONResponse({"status": "ready"})
 
     return app

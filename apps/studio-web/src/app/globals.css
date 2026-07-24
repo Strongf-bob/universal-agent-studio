@@ -415,6 +415,46 @@ h1 {
   box-shadow: var(--shadow-md);
 }
 
+.importJourney,
+.importResult {
+  display: grid;
+  gap: 1rem;
+}
+
+.importResult {
+  margin-top: 1.25rem;
+  padding: 1rem;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--surface-raised) 88%, transparent);
+}
+
+.importResultStatus {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.importResultStatus > svg {
+  color: var(--success);
+}
+
+.importResultStatus div {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.importResultStatus span {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.monoValue {
+  overflow-wrap: anywhere;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+}
+
 .formStack {
   display: grid;
   gap: var(--space-6);

@@ -52,7 +52,11 @@ async def run_worker(settings: RuntimeSettings | None = None) -> None:
         client,
         task_queue=resolved.runtime_task_queue,
         workflows=[AgentRunWorkflow],
-        activities=[activities.execute_run, activities.finalize_cancelled_run],
+        activities=[
+            activities.execute_run,
+            activities.finalize_cancelled_run,
+            activities.finalize_failed_run,
+        ],
     )
     try:
         resolved.readiness_file.touch(mode=0o600)

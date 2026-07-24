@@ -38,7 +38,11 @@ async def test_temporal_adapter_completes_a_real_workflow() -> None:
             environment.client,
             task_queue=TASK_QUEUE,
             workflows=[AgentRunWorkflow],
-            activities=[activities.execute_run, activities.finalize_cancelled_run],
+            activities=[
+                activities.execute_run,
+                activities.finalize_cancelled_run,
+                activities.finalize_failed_run,
+            ],
         ):
             durable_id = await adapter.start_run(command)
             result = await environment.client.get_workflow_handle(durable_id).result()

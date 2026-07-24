@@ -5,11 +5,12 @@ import {
   existsSync,
   mkdirSync,
   openSync,
+  readdirSync,
   readFileSync,
   writeFileSync,
 } from "node:fs";
 import {homedir} from "node:os";
-import {dirname, join, parse, resolve} from "node:path";
+import {dirname, join, parse, relative, resolve} from "node:path";
 import {spawnSync} from "node:child_process";
 import {fileURLToPath} from "node:url";
 
@@ -26,6 +27,8 @@ export const composeFile = join(
 export const stateDirectory = resolve(
   process.env.UAS_LOCAL_STATE_DIR ?? join(repositoryRoot, ".local"),
 );
+const defaultStateDirectory = join(repositoryRoot, ".local");
+const ownershipMarker = join(stateDirectory, ".uas-local-state-owner");
 
 const secretDefinitions = {
   UAS_DATABASE_PASSWORD_FILE: "database-password",
@@ -33,7 +36,11 @@ const secretDefinitions = {
   UAS_SESSION_HASH_KEY_FILE: "session-hash.key",
 };
 
-export function assertSafeStateDirectory() {
+function markerContents() {
+  return `${repositoryRoot}\n`;
+}
+
+export function assertSafeStateDirectory({requireMarker = false} = {}) {
   const forbidden = new Set([
     parse(stateDirectory).root,
     resolve(homedir()),
@@ -41,6 +48,33 @@ export function assertSafeStateDirectory() {
   ]);
   if (forbidden.has(stateDirectory)) {
     throw new Error(`Unsafe local state directory: ${stateDirectory}`);
+  }
+  const repositoryFromState = relative(stateDirectory, repositoryRoot);
+  if (
+    repositoryFromState !== "" &&
+    !repositoryFromState.startsWith("..")
+  ) {
+    throw new Error(
+      `Local state directory cannot contain the repository: ${stateDirectory}`,
+    );
+  }
+  if (existsSync(ownershipMarker)) {
+    if (readFileSync(ownershipMarker, "utf8") !== markerContents()) {
+      throw new Error(`Local state ownership marker is invalid: ${stateDirectory}`);
+    }
+    return;
+  }
+  if (requireMarker) {
+    throw new Error(`Local state ownership marker is missing: ${stateDirectory}`);
+  }
+  if (
+    stateDirectory !== defaultStateDirectory &&
+    existsSync(stateDirectory) &&
+    readdirSync(stateDirectory).length > 0
+  ) {
+    throw new Error(
+      `Refusing to adopt a non-empty local state directory: ${stateDirectory}`,
+    );
   }
 }
 
@@ -66,6 +100,12 @@ function writeSecret(path) {
 export function prepareSecrets() {
   assertSafeStateDirectory();
   const secretsDirectory = join(stateDirectory, "secrets");
+  mkdirSync(stateDirectory, {recursive: true, mode: 0o700});
+  writeFileSync(ownershipMarker, markerContents(), {
+    encoding: "utf8",
+    mode: 0o600,
+  });
+  chmodSync(ownershipMarker, 0o600);
   mkdirSync(secretsDirectory, {recursive: true, mode: 0o700});
   chmodSync(secretsDirectory, 0o700);
   const environment = {};

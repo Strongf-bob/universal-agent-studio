@@ -20,7 +20,7 @@
   },
   "auth": {
     "setup": {
-      "eyebrow": "Step 1 of 1 · Local setup",
+      "eyebrow": "Step 1 of 2 · Local setup",
       "title": "Create the Studio owner",
       "description": "One local owner manages agents, versions, and runs. No external account is required.",
       "localeLabel": "Interface language",
@@ -31,7 +31,7 @@
       "confirmLabel": "Confirm password",
       "submit": "Create owner",
       "submitting": "Creating owner…",
-      "success": "Owner created. Opening the agent…",
+      "success": "Owner created. Opening AgentSpec import…",
       "loginLinkLead": "Already created the owner?",
       "loginLink": "Sign in",
       "validation": {
@@ -58,6 +58,23 @@
         "passwordRequired": "Enter the password."
       }
     }
+  },
+  "agentImport": {
+    "eyebrow": "Step 2 of 2 · Agent version",
+    "title": "Import and activate an AgentSpec",
+    "description": "Choose a JSON AgentSpec. Studio validates it, stores an immutable version, and shows the exact digest before activation.",
+    "security": "Imports are schema-validated locally. Credentials are references, never embedded values.",
+    "fileLabel": "AgentSpec JSON file",
+    "fileHint": "For the Slice 1 demo, use contracts/examples/v0.1.0/valid/agent.calculator.ru-en.json.",
+    "import": "Import and validate",
+    "importing": "Validating…",
+    "valid": "Valid AgentSpec",
+    "created": "A new immutable version was created.",
+    "reused": "The identical immutable version already exists.",
+    "version": "Version",
+    "digest": "Canonical digest",
+    "activate": "Activate version",
+    "activating": "Activating…"
   },
   "runner": {
     "eyebrow": "Published app · Deterministic preview",
@@ -173,8 +190,10 @@
       "eyebrow": "Node trace",
       "selectNode": "Select a node to inspect its trace.",
       "duration": "{duration} ms",
+      "execution": "Execution",
       "input": "Input",
       "output": "Output",
+      "provenance": "Provenance",
       "notExecuted": "This node has no stored execution yet.",
       "redactionNote": "Only values processed by the redaction policy are shown.",
       "statuses": {
@@ -195,6 +214,10 @@
     "csrf_validation_failed": "Your session is stale. Refresh and try again.",
     "rate_limit_exceeded": "Too many attempts. Wait and try again.",
     "request_validation_failed": "Check the fields and try again.",
+    "run_input_invalid": "The input does not match this agent interface.",
+    "agent_file_required": "Choose an AgentSpec JSON file.",
+    "agent_spec_invalid": "The AgentSpec is invalid. Review its schema and node references.",
+    "active_version_changed": "The active version changed. Refresh and try again.",
     "network_error": "The local API is unreachable. Check that Studio is running.",
     "unknown": "The action could not be completed. Try again."
   }

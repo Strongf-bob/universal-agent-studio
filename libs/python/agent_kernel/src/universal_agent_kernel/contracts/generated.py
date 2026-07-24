@@ -384,6 +384,7 @@ class NodeExecution(BaseModel):
     model_config = ConfigDict(
         extra='forbid',
     )
+    attempt: int = Field(..., ge=1)
     completed_at: AwareDatetime
     duration_ms: int = Field(..., ge=0)
     error: ErrorEnvelope | None = None

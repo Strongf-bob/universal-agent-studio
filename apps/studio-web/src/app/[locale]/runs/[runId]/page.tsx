@@ -30,7 +30,7 @@ export default async function RunPage({
   } catch (error) {
     if (
       error instanceof ApiClientError &&
-      error.code === "authentication_required"
+      error.code === "authentication_failed"
     ) {
       redirect(localizedPath(locale, "/login"));
     }

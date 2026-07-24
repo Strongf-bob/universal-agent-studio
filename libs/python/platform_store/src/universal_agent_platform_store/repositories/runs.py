@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
+import hashlib
 from datetime import datetime
 from typing import Any
 from uuid import UUID, uuid4
 
-from sqlalchemy import select
+from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from universal_agent_platform_store.models import (
@@ -57,6 +58,18 @@ class RunRepository(ScopedRepository):
         input_document: dict[str, Any],
         locale: str,
     ) -> tuple[Run, bool]:
+        lock_material = (
+            f"{self.workspace_id}:{self.project_id}:{idempotency_key}"
+        ).encode()
+        lock_key = int.from_bytes(
+            hashlib.sha256(lock_material).digest()[:8],
+            byteorder="big",
+            signed=True,
+        )
+        await self.session.execute(
+            text("SELECT pg_advisory_xact_lock(:lock_key)"),
+            {"lock_key": lock_key},
+        )
         existing_request = await self.session.scalar(
             select(RunRequest).where(
                 RunRequest.workspace_id == self.workspace_id,
@@ -146,6 +159,21 @@ class RunRepository(ScopedRepository):
             document=document,
         )
         self.session.add(record)
+        if document.get("type") == "run.started":
+            run = await self.session.scalar(
+                select(Run)
+                .where(
+                    Run.id == run_id,
+                    Run.workspace_id == self.workspace_id,
+                    Run.project_id == self.project_id,
+                )
+                .with_for_update()
+            )
+            if run is None:
+                raise RuntimeError("run_not_found")
+            if run.status == "queued":
+                run.status = "running"
+                run.started_at = record.occurred_at
         await self.session.flush()
         return record, True
 

@@ -72,7 +72,11 @@ async def test_run_service_persists_real_temporal_events_and_trace(
             environment.client,
             task_queue=TASK_QUEUE,
             workflows=[AgentRunWorkflow],
-            activities=[activities.execute_run, activities.finalize_cancelled_run],
+            activities=[
+                activities.execute_run,
+                activities.finalize_cancelled_run,
+                activities.finalize_failed_run,
+            ],
         ):
             created = await service.create_run(
                 CreateRunRequest(

@@ -65,7 +65,11 @@ async def test_product_signal_creates_terminal_cancelled_trace() -> None:
             environment.client,
             task_queue=TASK_QUEUE,
             workflows=[AgentRunWorkflow],
-            activities=[activities.execute_run, activities.finalize_cancelled_run],
+            activities=[
+                activities.execute_run,
+                activities.finalize_cancelled_run,
+                activities.finalize_failed_run,
+            ],
         ):
             durable_id = await adapter.start_run(execution_command())
             await asyncio.wait_for(persistence.tool_started.wait(), timeout=5)

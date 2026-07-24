@@ -1,12 +1,13 @@
 from __future__ import annotations
 
+import asyncio
 import json
 from pathlib import Path
 from typing import Any, cast
 from uuid import UUID, uuid4
 
 import pytest
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 from universal_agent_kernel.contracts.canonical import content_digest
 from universal_agent_platform_store.repositories.agents import AgentRepository
 from universal_agent_platform_store.repositories.runs import (
@@ -96,6 +97,40 @@ async def test_idempotency_different_body_conflicts(
 
 
 @pytest.mark.asyncio
+async def test_concurrent_identical_requests_reuse_one_run(
+    database_engine: AsyncEngine,
+    database_session: AsyncSession,
+    request_scope: RequestScope,
+) -> None:
+    agent_version_id = await version_id(database_session, request_scope)
+    await database_session.commit()
+
+    async def create() -> tuple[UUID, bool]:
+        async with AsyncSession(
+            database_engine,
+            expire_on_commit=False,
+        ) as session:
+            run, created = await RunRepository(
+                session,
+                request_scope,
+            ).create_idempotent(
+                request_id=uuid4(),
+                idempotency_key="local-concurrent-idempotency-0001",
+                request_digest="9" * 64,
+                agent_version_id=agent_version_id,
+                input_document={"question": "19 * 23"},
+                locale="en-US",
+            )
+            await session.commit()
+            return run.id, created
+
+    first, second = await asyncio.gather(create(), create())
+
+    assert first[0] == second[0]
+    assert sorted([first[1], second[1]]) == [False, True]
+
+
+@pytest.mark.asyncio
 async def test_duplicate_event_retry_returns_existing_event(
     database_session: AsyncSession,
     request_scope: RequestScope,
@@ -121,10 +156,13 @@ async def test_duplicate_event_retry_returns_existing_event(
 
     first, first_created = await repository.append_event(run.id, document)
     second, second_created = await repository.append_event(run.id, document)
+    await database_session.refresh(run)
 
     assert first_created is True
     assert second_created is False
     assert second.id == first.id
+    assert run.status == "running"
+    assert run.started_at is not None
 
 
 @pytest.mark.asyncio

@@ -89,7 +89,7 @@ export function OwnerSetupForm({
         onComplete();
       } else {
         window.location.assign(
-          localizedPath(preferredLocale, "/agents/calculator-agent"),
+          localizedPath(preferredLocale, "/agents/import"),
         );
       }
     } catch (error) {

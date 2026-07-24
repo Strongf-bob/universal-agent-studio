@@ -136,6 +136,7 @@
   "node_executions": [
     {
       "node_id": "user-input",
+      "attempt": 1,
       "status": "completed",
       "started_at": "2026-07-24T12:00:00Z",
       "completed_at": "2026-07-24T12:00:00.010Z",
@@ -149,6 +150,7 @@
     },
     {
       "node_id": "planner-model",
+      "attempt": 1,
       "status": "completed",
       "started_at": "2026-07-24T12:00:00.010Z",
       "completed_at": "2026-07-24T12:00:00.120Z",
@@ -164,6 +166,7 @@
     },
     {
       "node_id": "calculator-tool",
+      "attempt": 1,
       "status": "completed",
       "started_at": "2026-07-24T12:00:00.130Z",
       "completed_at": "2026-07-24T12:00:00.170Z",
@@ -179,6 +182,7 @@
     },
     {
       "node_id": "structured-output",
+      "attempt": 1,
       "status": "completed",
       "started_at": "2026-07-24T12:00:00.180Z",
       "completed_at": "2026-07-24T12:00:00.230Z",

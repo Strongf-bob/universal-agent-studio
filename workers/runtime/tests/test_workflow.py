@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from copy import deepcopy
+from dataclasses import replace
+from typing import Any, cast
 from uuid import uuid5
 
 import pytest
@@ -34,7 +36,11 @@ async def test_workflow_executes_golden_run_with_stable_events() -> None:
             environment.client,
             task_queue=TASK_QUEUE,
             workflows=[AgentRunWorkflow],
-            activities=[activities.execute_run, activities.finalize_cancelled_run],
+            activities=[
+                activities.execute_run,
+                activities.finalize_cancelled_run,
+                activities.finalize_failed_run,
+            ],
         ):
             result = await environment.client.execute_workflow(
                 AgentRunWorkflow.run,
@@ -108,3 +114,47 @@ async def test_worker_rejects_untrusted_execution_envelopes(
 
     assert persistence.persistence_calls == 0
     assert persistence.logical_tool_invocations == 0
+
+
+@pytest.mark.asyncio
+async def test_permanent_activity_failure_creates_a_terminal_failed_trace() -> None:
+    persistence = MemoryRuntimePersistence()
+    activities = RunExecutionActivities(
+        signing_key=SIGNING_KEY,
+        persistence=persistence,
+    )
+    command = execution_command()
+    invalid_spec = deepcopy(dict(command.agent_spec))
+    invalid_spec["nodes"] = [
+        node
+        for node in cast(list[dict[str, Any]], invalid_spec["nodes"])
+        if node["kind"] != "tool"
+    ]
+    envelope = sign_execution_command(
+        replace(command, agent_spec=invalid_spec),
+        SIGNING_KEY,
+    )
+
+    async with await WorkflowEnvironment.start_time_skipping() as environment:
+        async with Worker(
+            environment.client,
+            task_queue=f"{TASK_QUEUE}-failure",
+            workflows=[AgentRunWorkflow],
+            activities=[
+                activities.execute_run,
+                activities.finalize_cancelled_run,
+                activities.finalize_failed_run,
+            ],
+        ):
+            result = await environment.client.execute_workflow(
+                AgentRunWorkflow.run,
+                envelope,
+                id=f"uas-run-failure-{RUN_ID}",
+                task_queue=f"{TASK_QUEUE}-failure",
+            )
+
+    assert result["status"] == "failed"
+    assert result["events"][-1]["type"] == "run.failed"
+    assert result["error"]["code"] == "execution_failed"
+    assert persistence.trace is not None
+    assert persistence.trace["status"] == "failed"

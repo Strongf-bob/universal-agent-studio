@@ -24,7 +24,7 @@ if (confirmation !== "RESET LOCAL DATA") {
 }
 
 try {
-  assertSafeStateDirectory();
+  assertSafeStateDirectory({requireMarker: true});
   if (dryRun) {
     process.stdout.write(
       `Dry run: would remove Compose volumes and ${stateDirectory}.\n`,

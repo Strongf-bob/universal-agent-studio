@@ -35,6 +35,7 @@ class MemoryRunPersistence:
         self.idempotency: dict[tuple[UUID, UUID, str], tuple[str, UUID]] = {}
         self.events: dict[UUID, list[dict[str, Any]]] = {}
         self.traces: dict[UUID, dict[str, Any]] = {}
+        self.fail_durable_id_write = False
 
     async def create_idempotent(
         self,
@@ -76,6 +77,8 @@ class MemoryRunPersistence:
         run_id: UUID,
         durable_execution_id: str,
     ) -> None:
+        if self.fail_durable_id_write:
+            raise RuntimeError("database_write_failed")
         run = await self.get_run(scope=scope, run_id=run_id)
         assert run is not None
         self._replace(run, durable_execution_id=durable_execution_id)
@@ -302,6 +305,32 @@ async def test_run_rejects_inactive_or_digest_mismatched_version(
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "invalid_input",
+    [
+        {},
+        {"question": ""},
+        {"question": 437},
+        {"question": "19 × 23", "unexpected": True},
+    ],
+)
+async def test_run_rejects_input_outside_the_active_agent_interface(
+    run_client: AsyncClient,
+    invalid_input: dict[str, Any],
+) -> None:
+    csrf, version = await _bootstrap_and_activate(run_client)
+
+    response = await run_client.post(
+        "/api/v1/runs",
+        json={**_run_request(version), "input": invalid_input},
+        headers={"X-CSRF-Token": csrf},
+    )
+
+    assert response.status_code == 422
+    assert response.json()["code"] == "run_input_invalid"
+
+
+@pytest.mark.asyncio
 async def test_run_read_cancel_and_trace_state(
     run_client: AsyncClient,
     durable_execution: FakeDurableExecution,
@@ -348,6 +377,37 @@ async def test_durable_start_failure_is_safely_finalized(
     assert response.status_code == 503
     assert response.json()["code"] == "durable_execution_unavailable"
     assert next(iter(run_persistence.runs.values())).status == "failed"
+
+
+@pytest.mark.asyncio
+async def test_retry_resumes_dispatch_after_durable_id_write_crash(
+    run_client: AsyncClient,
+    durable_execution: FakeDurableExecution,
+    run_persistence: MemoryRunPersistence,
+) -> None:
+    csrf, version = await _bootstrap_and_activate(run_client)
+    body = _run_request(version)
+    run_persistence.fail_durable_id_write = True
+
+    interrupted = await run_client.post(
+        "/api/v1/runs",
+        json=body,
+        headers={"X-CSRF-Token": csrf},
+    )
+    assert interrupted.status_code == 503
+    assert next(iter(run_persistence.runs.values())).status == "queued"
+
+    run_persistence.fail_durable_id_write = False
+    resumed = await run_client.post(
+        "/api/v1/runs",
+        json=body,
+        headers={"X-CSRF-Token": csrf},
+    )
+
+    assert resumed.status_code == 200
+    assert resumed.json()["reused"] is True
+    assert len(durable_execution.commands) == 2
+    assert next(iter(run_persistence.runs.values())).durable_execution_id
 
 
 @pytest.mark.asyncio

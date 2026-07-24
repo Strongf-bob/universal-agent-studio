@@ -794,6 +794,10 @@
         "nodeExecution": {
           "additionalProperties": false,
           "properties": {
+            "attempt": {
+              "minimum": 1,
+              "type": "integer"
+            },
             "completed_at": {
               "format": "date-time",
               "type": "string"
@@ -828,6 +832,7 @@
           },
           "required": [
             "node_id",
+            "attempt",
             "status",
             "started_at",
             "completed_at",

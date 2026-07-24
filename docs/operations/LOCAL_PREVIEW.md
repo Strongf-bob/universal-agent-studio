@@ -62,9 +62,9 @@ pnpm test:e2e
 ```
 
 On a clean stack the bootstrap project creates a local test owner through the
-Web setup form, imports and activates the canonical calculator fixture through
-the authenticated API, and stores only an opaque session cookie. The remaining
-tests prove:
+Web setup form, selects the canonical calculator JSON in the visible import
+screen, inspects its validation status and digest, activates it through the
+Web UI, and stores only an opaque session cookie. The remaining tests prove:
 
 - immutable version and digest visibility;
 - `19 × 23 → {"value":437}`;
@@ -110,8 +110,10 @@ pnpm local:reset -- --confirm "RESET LOCAL DATA"
 ```
 
 It removes only the `universal-agent-studio` Compose resources, their two named
-volumes and the ignored `.local` state directory. It does not modify source
-fixtures or tracked repository files.
+volumes and the ignored `.local` state directory after verifying its
+repository-specific ownership marker. Non-empty unowned directories and any
+directory containing the repository are rejected. Source fixtures and tracked
+repository files are never reset targets.
 
 ## Health and diagnostics
 

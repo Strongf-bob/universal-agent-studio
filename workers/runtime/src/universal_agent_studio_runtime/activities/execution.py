@@ -126,6 +126,27 @@ class RunExecutionActivities:
         self,
         activity_input: dict[str, Any],
     ) -> dict[str, Any]:
+        return await self._finalize_terminal_run(
+            activity_input,
+            status="cancelled",
+        )
+
+    @activity.defn(name="finalize_failed_run")
+    async def finalize_failed_run(
+        self,
+        activity_input: dict[str, Any],
+    ) -> dict[str, Any]:
+        return await self._finalize_terminal_run(
+            activity_input,
+            status="failed",
+        )
+
+    async def _finalize_terminal_run(
+        self,
+        activity_input: dict[str, Any],
+        *,
+        status: str,
+    ) -> dict[str, Any]:
         command = self._trusted_command(activity_input)
         started_at_value = activity_input.get("started_at")
         if not isinstance(started_at_value, str):
@@ -157,40 +178,45 @@ class RunExecutionActivities:
             events.append(started_event)
 
         last = events[-1]
-        if last["type"] == "run.cancelled":
-            cancelled_event = last
+        terminal_type = f"run.{status}"
+        if last["type"] == terminal_type:
+            terminal_event = last
         else:
             sequence = int(last["sequence"]) + 1
-            cancelled_event = RunEvent(
+            terminal_event = RunEvent(
                 event_id=uuid5(
                     command.run_id,
-                    f"event:{sequence}:run.cancelled:",
+                    f"event:{sequence}:{terminal_type}:",
                 ),
                 run_id=command.run_id,
                 sequence=sequence,
-                type="run.cancelled",
+                type=cast(Any, terminal_type),
                 occurred_at=started_at + timedelta(milliseconds=sequence * 10),
                 correlation_id=command.request_id,
                 causation_id=UUID(str(last["event_id"])),
                 node_id=None,
                 redaction_policy_id="default-redaction",
-                payload={"status": "cancelled"},
+                payload=(
+                    {"status": "cancelled"}
+                    if status == "cancelled"
+                    else {"code": "execution_failed"}
+                ),
             ).to_document()
             await self.persistence.append_event(
                 scope=scope,
                 run_id=command.run_id,
-                document=cancelled_event,
+                document=terminal_event,
             )
-            events.append(cancelled_event)
+            events.append(terminal_event)
 
-        completed_at = str(cancelled_event["occurred_at"])
+        completed_at = str(terminal_event["occurred_at"])
         trace: dict[str, Any] = {
             "schema_version": "0.1.0",
             "run_id": str(command.run_id),
             "request_id": str(command.request_id),
             "agent_version_id": command.agent_version_id,
             "agent_version_digest": command.agent_version_digest,
-            "status": "cancelled",
+            "status": status,
             "started_at": _timestamp(started_at),
             "completed_at": completed_at,
             "input": DefaultRedactionPolicy().redact(dict(command.input)),
@@ -216,6 +242,13 @@ class RunExecutionActivities:
                 "cost": {"amount": 0, "currency": "USD"},
             },
         }
+        if status == "failed":
+            trace["error"] = {
+                "code": "execution_failed",
+                "message_key": "errors.execution_failed",
+                "retryable": False,
+                "details": {},
+            }
         await self.persistence.finalize_trace(
             scope=scope,
             run_id=command.run_id,

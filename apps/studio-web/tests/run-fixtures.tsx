@@ -86,6 +86,7 @@ export const completedTrace = {
   node_executions: [
     {
       node_id: "calculator-tool",
+      attempt: 1,
       status: "completed",
       started_at: "2026-07-24T12:00:00.100Z",
       completed_at: "2026-07-24T12:00:00.200Z",
@@ -96,7 +97,13 @@ export const completedTrace = {
   ],
   provenance: {
     model_resolutions: [],
-    tool_resolutions: [],
+    tool_resolutions: [
+      {
+        tool_id: "builtin.calculator",
+        version: "1.0.0",
+        digest: "b".repeat(64),
+      },
+    ],
     redaction_policy_id: "default-redaction",
   },
   metrics: {

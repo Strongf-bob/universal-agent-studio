@@ -22,6 +22,11 @@ test("golden run survives refresh and exposes result, graph and trace", async ({
 
   await page.getByRole("button", {name: "Inspect Calculator"}).click();
   await expect(page.getByRole("heading", {name: "Calculator"})).toBeVisible();
+  await expect(
+    page.getByRole("heading", {name: "Execution", exact: true}),
+  ).toBeVisible();
+  await expect(page.getByText("attempt", {exact: true})).toBeVisible();
+  await expect(page.getByText("builtin-calculator")).toBeVisible();
   await expect(page.getByText("Only values processed by the redaction policy")).toBeVisible();
 });
 

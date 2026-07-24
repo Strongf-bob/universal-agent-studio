@@ -8,6 +8,7 @@ from typing import Any, cast
 
 from temporalio import workflow
 from temporalio.common import RetryPolicy
+from temporalio.exceptions import ActivityError
 from temporalio.workflow import ActivityCancellationType
 
 
@@ -53,7 +54,10 @@ class AgentRunWorkflow:
         )
         if execution in done:
             cancellation.cancel()
-            return cast(dict[str, Any], await execution)
+            try:
+                return cast(dict[str, Any], await execution)
+            except ActivityError:
+                return await self._finalize_failed(activity_input)
 
         execution.cancel()
         try:
@@ -70,6 +74,21 @@ class AgentRunWorkflow:
             dict[str, Any],
             await workflow.execute_activity(
                 "finalize_cancelled_run",
+                activity_input,
+                result_type=dict,
+                start_to_close_timeout=timedelta(seconds=30),
+                retry_policy=RetryPolicy(maximum_attempts=3),
+            ),
+        )
+
+    async def _finalize_failed(
+        self,
+        activity_input: dict[str, Any],
+    ) -> dict[str, Any]:
+        return cast(
+            dict[str, Any],
+            await workflow.execute_activity(
+                "finalize_failed_run",
                 activity_input,
                 result_type=dict,
                 start_to_close_timeout=timedelta(seconds=30),

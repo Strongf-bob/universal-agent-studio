@@ -151,11 +151,14 @@ The Local Preview executable spine currently enforces:
 - Argon2id owner password hashing and keyed hashes for opaque session/CSRF values;
 - `HttpOnly`, `SameSite=Lax` session cookies and CSRF validation on unsafe routes;
 - strict host/origin checks, request-size bounds and narrow rate limits;
+- browser CSP, frame denial, no-referrer policy and MIME-sniffing denial;
+- active AgentSpec input-schema validation at API and runtime boundaries;
 - workspace/project scope derived from the authenticated owner;
 - immutable AgentVersion digests and signed execution envelopes;
 - first-party calculator allowlisting with no arbitrary HTTP or code execution;
 - redaction before persisted events/traces;
 - file-mounted random local secrets with owner-only permissions;
+- marker-bound destructive reset that refuses unowned or broad directories;
 - loopback-only public Compose ports and isolated product/Temporal volumes;
 - provider URL allowlisting, HTTPS/loopback policy, timeout, redirect denial and response-size bounds.
 

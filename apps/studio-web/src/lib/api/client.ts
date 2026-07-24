@@ -26,6 +26,19 @@ export type AgentVersionSummary = {
   agent_spec?: AgentSpec;
 };
 
+export type AgentVersionImportResult = AgentVersionSummary & {
+  validation: {
+    valid: boolean;
+    issues: Array<{
+      code: string;
+      json_pointer: string;
+      node_id: string | null;
+      message_key: string;
+    }>;
+  };
+  reused: boolean;
+};
+
 export type CreatedRun = {
   run_id: string;
   request_id: string;
@@ -147,6 +160,61 @@ export async function loginOwner(input: {
 
 export function getSession(): Promise<SessionResponse> {
   return requestJson<SessionResponse>("/api/v1/session");
+}
+
+export async function importAgentVersion(
+  file: File,
+): Promise<AgentVersionImportResult> {
+  const session = await getSession();
+  return requestJson<AgentVersionImportResult>(
+    "/api/v1/agent-versions/import",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRF-Token": session.csrf_token,
+      },
+      body: await file.text(),
+    },
+  );
+}
+
+export async function activateAgentVersion(
+  agentId: string,
+  versionId: string,
+): Promise<void> {
+  let expectedPreviousVersionId: string | null = null;
+  try {
+    const active = await requestJson<AgentVersionSummary>(
+      `/api/v1/agents/${encodeURIComponent(agentId)}/active-version`,
+    );
+    if (active.version_id === versionId) {
+      return;
+    }
+    expectedPreviousVersionId = active.version_id;
+  } catch (error) {
+    if (
+      !(error instanceof ApiClientError) ||
+      error.code !== "agent_version_not_active"
+    ) {
+      throw error;
+    }
+  }
+  const session = await getSession();
+  await requestJson(
+    `/api/v1/agents/${encodeURIComponent(agentId)}/active-version`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRF-Token": session.csrf_token,
+      },
+      body: JSON.stringify({
+        version_id: versionId,
+        expected_previous_version_id: expectedPreviousVersionId,
+      }),
+    },
+  );
 }
 
 export async function logoutOwner(): Promise<void> {
