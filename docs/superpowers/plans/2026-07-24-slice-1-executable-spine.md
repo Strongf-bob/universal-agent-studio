@@ -294,7 +294,7 @@ git push
 - Consumes: validated immutable AgentSpec and generated contract types.
 - Produces: `AgentKernel.execute(ExecutionCommand, ExecutionPorts) -> RunOutcome`, `ModelGatewayPort`, `ToolGatewayPort`, `RunEventSink`, `TraceStore`, and the built-in fake/calculator adapters.
 
-- [ ] **Step 1: Write failing port and golden-flow tests**
+- [x] **Step 1: Write failing port and golden-flow tests**
 
 Define the required immutable command:
 
@@ -317,7 +317,7 @@ event IDs, output-schema validation, no provider classes in domain values,
 calculator rejection of unknown operations/non-finite numbers, and recursive
 redaction of secret aliases.
 
-- [ ] **Step 2: Verify the tests are red**
+- [x] **Step 2: Verify the tests are red**
 
 Run:
 
@@ -330,7 +330,7 @@ uv run pytest libs/python/agent_kernel/tests/test_fake_model.py \
 
 Expected: missing kernel modules.
 
-- [ ] **Step 3: Implement the narrow golden interpreter**
+- [x] **Step 3: Implement the narrow golden interpreter**
 
 The interpreter accepts the four node kinds present in the golden fixture:
 `input`, `model`, `tool`, `output`. It resolves references, validates every
@@ -358,7 +358,7 @@ OPERATIONS = {
 
 No expression parser, `eval`, file or network API is permitted.
 
-- [ ] **Step 4: Verify kernel behavior and import boundaries**
+- [x] **Step 4: Verify kernel behavior and import boundaries**
 
 Run:
 
@@ -371,7 +371,7 @@ rg -n "fastapi|sqlalchemy|temporalio|openai" libs/python/agent_kernel/src
 
 Expected: tests/type/lint pass and the boundary search returns no imports.
 
-- [ ] **Step 5: Commit and push**
+- [x] **Step 5: Commit and push**
 
 ```bash
 git add libs/python/agent_kernel
