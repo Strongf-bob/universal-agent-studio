@@ -1,0 +1,24 @@
+schema_version: "1.0"
+reviewed_at: "2026-07-24"
+candidates:
+  - name: Temporal Server
+    source: https://github.com/temporalio/temporal
+    license: MIT
+    intended_use: Durable execution service behind DurableExecutionPort
+    status: approved_for_implementation
+    version: null
+    note: Pin exact version and image digest before installation.
+  - name: Temporal Python SDK
+    source: https://github.com/temporalio/sdk-python
+    license: MIT
+    intended_use: Runtime worker client and workflow SDK
+    status: approved_for_implementation
+    version: null
+    note: Pin exact version before installation.
+  - name: React Flow
+    source: https://github.com/xyflow/xyflow
+    license: MIT
+    intended_use: Replaceable canvas rendering and interaction primitive
+    status: approved_for_slice_2
+    version: null
+    note: Core library only; examples and Pro materials require independent review.
