@@ -566,13 +566,13 @@ git push
 - Consumes: authenticated RequestScope, canonical validation/digest and AgentRepository.
 - Produces: `POST /api/v1/agent-versions/import`, activation endpoint, version read endpoint and stable validation issues.
 
-- [ ] **Step 1: Write failing import/activation tests**
+- [x] **Step 1: Write failing import/activation tests**
 
 Cover golden import, digest equality to locked vector, identical reimport,
 invalid schema, dangling edge, secret alias, duplicate JSON key, over-size
 payload, active pointer optimistic conflict and cross-project version denial.
 
-- [ ] **Step 2: Verify the tests are red**
+- [x] **Step 2: Verify the tests are red**
 
 Run:
 
@@ -583,7 +583,7 @@ uv run pytest apps/control-api/tests/test_agent_versions.py \
 
 Expected: 404 or missing router/service.
 
-- [ ] **Step 3: Implement transactional version operations**
+- [x] **Step 3: Implement transactional version operations**
 
 The import endpoint accepts raw JSON bytes so duplicate keys and byte limits
 are checked before model binding. Return:
@@ -601,7 +601,7 @@ are checked before model binding. Return:
 
 Activation accepts `version_id` and `expected_previous_version_id`.
 
-- [ ] **Step 4: Verify contract and isolation behavior**
+- [x] **Step 4: Verify contract and isolation behavior**
 
 Run:
 
@@ -613,7 +613,7 @@ uv run pytest tests/contracts libs/python/agent_kernel/tests -q
 
 Expected: API and canonical contract tests pass.
 
-- [ ] **Step 5: Commit and push**
+- [x] **Step 5: Commit and push**
 
 ```bash
 git add apps/control-api tests/integration

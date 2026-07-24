@@ -42,6 +42,14 @@ class AgentRepository(ScopedRepository):
         provenance: dict[str, Any] | None = None,
     ) -> tuple[AgentVersion, bool]:
         agent_key = str(agent_spec["agent_id"])
+        lock_key = f"{self.workspace_id}:{self.project_id}:{agent_key}"
+        await self.session.scalar(
+            select(
+                func.pg_advisory_xact_lock(
+                    func.hashtextextended(lock_key, 0)
+                )
+            )
+        )
         agent = await self.session.scalar(
             select(Agent).where(
                 Agent.workspace_id == self.workspace_id,

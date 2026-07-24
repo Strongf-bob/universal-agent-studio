@@ -7,6 +7,12 @@ from uuid import UUID, uuid4
 import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
+from universal_agent_platform_store.repositories.agents import (
+    ActiveVersionConflict,
+    AgentVersionNotFound,
+)
+from universal_agent_platform_store.scope import RequestScope
+from universal_agent_studio_api.agents.models import StoredAgentVersion
 from universal_agent_studio_api.auth.models import OwnerIdentity, SessionIdentity
 from universal_agent_studio_api.main import create_app
 from universal_agent_studio_api.settings import Settings
@@ -109,15 +115,88 @@ class MemoryAuthStore:
         self.sessions.clear()
 
 
+class MemoryAgentVersionPersistence:
+    def __init__(self) -> None:
+        self.versions: dict[
+            tuple[UUID, UUID, UUID],
+            StoredAgentVersion,
+        ] = {}
+        self.by_digest: dict[
+            tuple[UUID, UUID, str, str],
+            UUID,
+        ] = {}
+        self.active: dict[tuple[UUID, UUID, str], UUID] = {}
+
+    async def import_version(
+        self,
+        *,
+        scope: RequestScope,
+        agent_spec: dict[str, object],
+        digest: str,
+    ) -> tuple[StoredAgentVersion, bool]:
+        workspace_id, project_id = scope.tenant_ids()
+        agent_id = str(agent_spec["agent_id"])
+        digest_key = (workspace_id, project_id, agent_id, digest)
+        existing_id = self.by_digest.get(digest_key)
+        if existing_id is not None:
+            return self.versions[(workspace_id, project_id, existing_id)], False
+        version = StoredAgentVersion(
+            id=uuid4(),
+            agent_id=agent_id,
+            schema_version=str(agent_spec["schema_version"]),
+            digest=digest,
+            agent_spec=agent_spec,
+        )
+        self.versions[(workspace_id, project_id, version.id)] = version
+        self.by_digest[digest_key] = version.id
+        return version, True
+
+    async def get_version(
+        self,
+        *,
+        scope: RequestScope,
+        version_id: UUID,
+    ) -> StoredAgentVersion | None:
+        workspace_id, project_id = scope.tenant_ids()
+        return self.versions.get((workspace_id, project_id, version_id))
+
+    async def activate(
+        self,
+        *,
+        scope: RequestScope,
+        agent_id: str,
+        version_id: UUID,
+        expected_previous_version_id: UUID | None,
+    ) -> UUID:
+        workspace_id, project_id = scope.tenant_ids()
+        version = self.versions.get((workspace_id, project_id, version_id))
+        if version is None or version.agent_id != agent_id:
+            raise AgentVersionNotFound("agent_version_not_found")
+        active_key = (workspace_id, project_id, agent_id)
+        if self.active.get(active_key) != expected_previous_version_id:
+            raise ActiveVersionConflict("active_version_changed")
+        self.active[active_key] = version_id
+        return version_id
+
+
 @pytest.fixture
 def auth_store() -> MemoryAuthStore:
     return MemoryAuthStore()
 
 
+@pytest.fixture
+def agent_persistence() -> MemoryAgentVersionPersistence:
+    return MemoryAgentVersionPersistence()
+
+
 @pytest_asyncio.fixture
-async def client(auth_store: MemoryAuthStore) -> AsyncIterator[AsyncClient]:
+async def client(
+    auth_store: MemoryAuthStore,
+    agent_persistence: MemoryAgentVersionPersistence,
+) -> AsyncIterator[AsyncClient]:
     app = create_app(
         auth_store=auth_store,
+        agent_persistence=agent_persistence,
         settings=Settings(
             allowed_hosts=["testserver", "localhost"],
             allowed_origins=["http://testserver", "http://localhost:3000"],

@@ -19,7 +19,12 @@ from universal_agent_platform_store.session import (
     create_session_factory,
 )
 
-from universal_agent_studio_api.api import bootstrap, session, workspace
+from universal_agent_studio_api.agents.models import AgentVersionPersistence
+from universal_agent_studio_api.agents.service import (
+    AgentVersionService,
+    SqlAgentVersionPersistence,
+)
+from universal_agent_studio_api.api import agent_versions, bootstrap, session, workspace
 from universal_agent_studio_api.auth.models import AuthStore
 from universal_agent_studio_api.auth.service import AuthService
 from universal_agent_studio_api.auth.store import SqlAuthStore
@@ -101,6 +106,7 @@ class RequestGuardsMiddleware(BaseHTTPMiddleware):
 def create_app(
     *,
     auth_store: AuthStore | None = None,
+    agent_persistence: AgentVersionPersistence | None = None,
     settings: Settings | None = None,
 ) -> FastAPI:
     resolved_settings = settings or Settings()
@@ -112,13 +118,23 @@ def create_app(
                 auth_store,
                 resolved_settings,
             )
+            if agent_persistence is not None:
+                app.state.agent_version_service = AgentVersionService(
+                    agent_persistence,
+                    max_document_bytes=resolved_settings.max_request_bytes,
+                )
             yield
             return
 
         engine = create_engine(resolved_settings.database_url.get_secret_value())
+        session_factory = create_session_factory(engine)
         app.state.auth_service = AuthService(
-            SqlAuthStore(create_session_factory(engine)),
+            SqlAuthStore(session_factory),
             resolved_settings,
+        )
+        app.state.agent_version_service = AgentVersionService(
+            SqlAgentVersionPersistence.from_factory(session_factory),
+            max_document_bytes=resolved_settings.max_request_bytes,
         )
         try:
             yield
@@ -133,6 +149,11 @@ def create_app(
     app.state.settings = resolved_settings
     if auth_store is not None:
         app.state.auth_service = AuthService(auth_store, resolved_settings)
+    if agent_persistence is not None:
+        app.state.agent_version_service = AgentVersionService(
+            agent_persistence,
+            max_document_bytes=resolved_settings.max_request_bytes,
+        )
 
     app.add_middleware(
         TrustedHostMiddleware,
@@ -157,6 +178,7 @@ def create_app(
     app.include_router(bootstrap.router)
     app.include_router(session.router)
     app.include_router(workspace.router)
+    app.include_router(agent_versions.router)
 
     @app.get("/healthz", include_in_schema=False)
     async def health() -> dict[str, str]:
