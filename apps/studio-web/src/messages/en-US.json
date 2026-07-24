@@ -1,0 +1,96 @@
+{
+  "common": {
+    "brand": "Universal Agent Studio",
+    "brandShort": "UAS",
+    "skipToContent": "Skip to content",
+    "language": "Language",
+    "russian": "Русский",
+    "english": "English",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "localWorkspace": "Local workspace",
+    "securityNote": "Your data and keys stay under your control.",
+    "loading": "Loading…"
+  },
+  "nav": {
+    "agent": "Agent",
+    "runs": "Runs",
+    "statusReady": "Local runtime ready"
+  },
+  "auth": {
+    "setup": {
+      "eyebrow": "Step 1 of 1 · Local setup",
+      "title": "Create the Studio owner",
+      "description": "One local owner manages agents, versions, and runs. No external account is required.",
+      "localeLabel": "Interface language",
+      "loginLabel": "Owner name",
+      "loginHint": "At least 3 characters: lowercase Latin letters, numbers, dot, dash, or underscore.",
+      "passwordLabel": "Password",
+      "passwordHint": "At least 12 characters. Only an Argon2id hash is stored.",
+      "confirmLabel": "Confirm password",
+      "submit": "Create owner",
+      "submitting": "Creating owner…",
+      "success": "Owner created. Opening the agent…",
+      "loginLinkLead": "Already created the owner?",
+      "loginLink": "Sign in",
+      "validation": {
+        "loginRequired": "Enter the owner name.",
+        "loginInvalid": "Use at least 3 supported characters.",
+        "passwordRequired": "Enter a password.",
+        "passwordShort": "The password must contain at least 12 characters.",
+        "confirmationRequired": "Confirm the password.",
+        "passwordMismatch": "The passwords do not match."
+      }
+    },
+    "login": {
+      "eyebrow": "Local access",
+      "title": "Welcome back",
+      "description": "Sign in to your local Universal Agent Studio workspace.",
+      "loginLabel": "Owner name",
+      "passwordLabel": "Password",
+      "submit": "Sign in",
+      "submitting": "Checking credentials…",
+      "setupLinkLead": "Studio is not configured yet?",
+      "setupLink": "Create owner",
+      "validation": {
+        "loginRequired": "Enter the owner name.",
+        "passwordRequired": "Enter the password."
+      }
+    }
+  },
+  "runner": {
+    "eyebrow": "Published app · Deterministic preview",
+    "title": "Calculator agent",
+    "description": "Verify the complete agent path: typed input, planner model, safe tool, and structured result.",
+    "activeVersion": "Active version",
+    "digest": "AgentSpec digest",
+    "immutable": "Immutable version",
+    "inputLabel": "Arithmetic problem",
+    "inputHint": "In this slice, the fake model reproducibly turns the control question into a calculator call.",
+    "goldenQuestion": "What is 19 × 23?",
+    "run": "Run",
+    "running": "Creating run…",
+    "readyTitle": "What will happen",
+    "readySteps": {
+      "model": "The model creates a typed operation.",
+      "tool": "The calculator performs an allowlisted computation.",
+      "trace": "Events and the redacted trace are stored locally."
+    },
+    "supportCode": "Support code: {requestId}",
+    "validation": {
+      "questionRequired": "Enter an arithmetic problem."
+    }
+  },
+  "errors": {
+    "authentication_failed": "Sign-in failed. Check the owner name and password.",
+    "bootstrap_already_completed": "The owner already exists. Go to sign in.",
+    "durable_execution_unavailable": "The run service is temporarily unavailable. Try again.",
+    "agent_version_not_active": "The active agent version is unavailable. Refresh the page.",
+    "agent_version_digest_mismatch": "The agent version changed. Refresh before running it.",
+    "csrf_validation_failed": "Your session is stale. Refresh and try again.",
+    "rate_limit_exceeded": "Too many attempts. Wait and try again.",
+    "request_validation_failed": "Check the fields and try again.",
+    "network_error": "The local API is unreachable. Check that Studio is running.",
+    "unknown": "The action could not be completed. Try again."
+  }
+}

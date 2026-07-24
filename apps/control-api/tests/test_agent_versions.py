@@ -194,6 +194,9 @@ async def test_activation_requires_the_expected_previous_version(
         },
         headers={"X-CSRF-Token": csrf_token},
     )
+    fetched = await client.get(
+        "/api/v1/agents/calculator-agent/active-version"
+    )
 
     assert activated.status_code == 200
     assert activated.json()["active_version_id"] == first.json()["version_id"]
@@ -201,3 +204,7 @@ async def test_activation_requires_the_expected_previous_version(
     assert conflict.json()["code"] == "active_version_changed"
     assert changed.status_code == 200
     assert changed.json()["active_version_id"] == second.json()["version_id"]
+    assert fetched.status_code == 200
+    assert fetched.json()["version_id"] == second.json()["version_id"]
+    assert fetched.json()["digest"] == second.json()["digest"]
+    assert fetched.json()["agent_spec"] == second_document

@@ -201,6 +201,18 @@ class MemoryAgentVersionPersistence:
         active_key = (workspace_id, project_id, version.agent_id)
         return version if self.active.get(active_key) == version_id else None
 
+    async def get_active_for_agent(
+        self,
+        *,
+        scope: RequestScope,
+        agent_id: str,
+    ) -> StoredAgentVersion | None:
+        workspace_id, project_id = scope.tenant_ids()
+        version_id = self.active.get((workspace_id, project_id, agent_id))
+        if version_id is None:
+            return None
+        return self.versions.get((workspace_id, project_id, version_id))
+
 
 @pytest.fixture
 def auth_store() -> MemoryAuthStore:

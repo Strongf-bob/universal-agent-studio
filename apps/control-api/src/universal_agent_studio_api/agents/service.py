@@ -141,6 +141,22 @@ class SqlAgentVersionPersistence:
             )
         return stored
 
+    async def get_active_for_agent(
+        self,
+        *,
+        scope: RequestScope,
+        agent_id: str,
+    ) -> StoredAgentVersion | None:
+        async with self._transaction() as session:
+            version = await AgentRepository(
+                session,
+                scope,
+            ).get_active_version(agent_id)
+            if version is None:
+                return None
+            stored = self._stored(version, agent_id)
+        return stored
+
     async def activate(
         self,
         *,
@@ -261,6 +277,25 @@ class AgentVersionService:
         )
         if stored is None:
             raise ApiError(404, "agent_version_not_found")
+        return AgentVersionView(
+            version_id=stored.public_id,
+            agent_id=stored.agent_id,
+            schema_version=stored.schema_version,
+            digest=stored.digest,
+            agent_spec=stored.agent_spec,
+        )
+
+    async def get_active_agent_version(
+        self,
+        agent_id: str,
+        scope: RequestScope,
+    ) -> AgentVersionView:
+        stored = await self.persistence.get_active_for_agent(
+            scope=scope,
+            agent_id=agent_id,
+        )
+        if stored is None:
+            raise ApiError(404, "agent_version_not_active")
         return AgentVersionView(
             version_id=stored.public_id,
             agent_id=stored.agent_id,

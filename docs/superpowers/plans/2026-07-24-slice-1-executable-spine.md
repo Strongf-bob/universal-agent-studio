@@ -793,13 +793,13 @@ git push
 - Consumes: bootstrap/session/version/run APIs and TypeScript contract package.
 - Produces: owner setup/login/runner routes, semantic design tokens and locale routing.
 
-- [ ] **Step 1: Write failing component and interaction tests**
+- [x] **Step 1: Write failing component and interaction tests**
 
 Test visible labels, password errors, disabled/loading/success states, focus on
 the first invalid field, locale copy, active version digest, golden question,
 single primary Run action and safe translated API errors.
 
-- [ ] **Step 2: Verify the tests are red**
+- [x] **Step 2: Verify the tests are red**
 
 Run:
 
@@ -810,7 +810,7 @@ pnpm --filter @universal-agent-studio/studio-web test -- \
 
 Expected: missing pages/components.
 
-- [ ] **Step 3: Implement the workbench shell and forms**
+- [x] **Step 3: Implement the workbench shell and forms**
 
 Define semantic CSS tokens for both themes and the approved spacing/radius/
 motion/focus scales. Use Server Components for route data and Client
@@ -820,7 +820,7 @@ appear outside message files.
 API client sends credentials, CSRF and correlation headers and maps stable
 error codes to localized recovery copy.
 
-- [ ] **Step 4: Verify UI quality**
+- [x] **Step 4: Verify UI quality**
 
 Run:
 
@@ -832,7 +832,7 @@ pnpm --filter @universal-agent-studio/studio-web build
 
 Expected: component tests, lint, typecheck and production build pass.
 
-- [ ] **Step 5: Commit and push**
+- [x] **Step 5: Commit and push**
 
 ```bash
 git add apps/studio-web libs/typescript/contracts package.json pnpm-lock.yaml

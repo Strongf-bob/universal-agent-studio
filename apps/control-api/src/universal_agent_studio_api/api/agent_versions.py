@@ -89,3 +89,21 @@ async def activate_agent_version(
         expected_previous_version_id=body.expected_previous_version_id,
         scope=_scope(authenticated),
     )
+
+
+@router.get(
+    "/agents/{agent_id}/active-version",
+    response_model=AgentVersionView,
+)
+async def get_active_agent_version(
+    agent_id: str,
+    authenticated: Annotated[
+        AuthenticatedOwner,
+        Depends(authenticated_owner),
+    ],
+    service: Annotated[AgentVersionService, Depends(agent_version_service)],
+) -> AgentVersionView:
+    return await service.get_active_agent_version(
+        agent_id,
+        _scope(authenticated),
+    )
