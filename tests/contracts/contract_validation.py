@@ -1,20 +1,30 @@
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from jsonschema import Draft202012Validator
+from jsonschema import Draft202012Validator, FormatChecker
 from referencing import Registry, Resource
 
 
 FORBIDDEN_SECRET_KEYS = {
-    "access_token",
-    "api_key",
+    "accesstoken",
+    "apikey",
+    "authorization",
+    "authtoken",
+    "bearer",
+    "bearertoken",
+    "clientsecret",
     "password",
-    "private_key",
+    "passphrase",
+    "privatekey",
+    "refreshtoken",
     "secret",
+    "secretkey",
+    "sessiontoken",
     "token",
 }
 TERMINAL_EVENT_TYPES = {
@@ -63,7 +73,11 @@ def validate_fixture(case: ContractCase, root: Path) -> list[str]:
         root / "contracts" / "examples" / "v0.1.0" / case.path
     )
     registry, schemas = load_schema_registry(root)
-    validator = Draft202012Validator(schemas[case.schema], registry=registry)
+    validator = Draft202012Validator(
+        schemas[case.schema],
+        registry=registry,
+        format_checker=FormatChecker(),
+    )
 
     errors: set[str] = set()
     if list(validator.iter_errors(instance)):
@@ -84,7 +98,8 @@ def find_forbidden_secret_keys(value: Any) -> set[str]:
 
     if isinstance(value, dict):
         for key, child in value.items():
-            normalized_key = key.lower().replace("-", "_")
+            snake_key = re.sub(r"([a-z0-9])([A-Z])", r"\1_\2", key)
+            normalized_key = re.sub(r"[^a-z0-9]", "", snake_key.lower())
             if normalized_key in FORBIDDEN_SECRET_KEYS:
                 errors.add("secret_key_forbidden")
             errors.update(find_forbidden_secret_keys(child))

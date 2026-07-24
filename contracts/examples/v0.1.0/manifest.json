@@ -35,7 +35,19 @@
       "expected_error_code": "schema_validation_failed"
     },
     {
+      "path": "invalid/run.event.invalid-date.json",
+      "schema": "run-event.schema.json",
+      "valid": false,
+      "expected_error_code": "schema_validation_failed"
+    },
+    {
       "path": "invalid/run.event.secret.json",
+      "schema": "run-event.schema.json",
+      "valid": false,
+      "expected_error_code": "secret_key_forbidden"
+    },
+    {
+      "path": "invalid/run.event.secret-alias.json",
       "schema": "run-event.schema.json",
       "valid": false,
       "expected_error_code": "secret_key_forbidden"

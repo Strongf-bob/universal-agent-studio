@@ -1,11 +1,20 @@
 export type JsonObject = Record<string, unknown>;
 
 const FORBIDDEN_SECRET_KEYS = new Set([
-  "access_token",
-  "api_key",
+  "accesstoken",
+  "apikey",
+  "authorization",
+  "authtoken",
+  "bearer",
+  "bearertoken",
+  "clientsecret",
   "password",
-  "private_key",
+  "passphrase",
+  "privatekey",
+  "refreshtoken",
   "secret",
+  "secretkey",
+  "sessiontoken",
   "token"
 ]);
 
@@ -54,7 +63,10 @@ export function findForbiddenSecretKeys(value: unknown): Set<string> {
   }
 
   for (const [key, child] of Object.entries(object)) {
-    const normalizedKey = key.toLowerCase().replaceAll("-", "_");
+    const normalizedKey = key
+      .replace(/([a-z0-9])([A-Z])/g, "$1_$2")
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, "");
     if (FORBIDDEN_SECRET_KEYS.has(normalizedKey)) {
       errors.add("secret_key_forbidden");
     }

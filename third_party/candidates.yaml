@@ -67,10 +67,10 @@ candidates:
   - name: jsonschema
     source: https://github.com/python-jsonschema/jsonschema
     license: MIT
-    intended_use: Python JSON Schema 2020-12 conformance validation
+    intended_use: Python JSON Schema 2020-12 and standard format conformance validation
     status: approved_for_contract_validation
     version: 4.26.0
-    note: Development/test dependency; upgrade with cross-language fixture comparison.
+    note: Development/test dependency with format-nongpl extra; upgrade with cross-language fixture comparison.
   - name: pytest
     source: https://github.com/pytest-dev/pytest
     license: MIT
@@ -99,6 +99,13 @@ candidates:
     status: approved_for_contract_validation
     version: 8.20.0
     note: Development/test dependency; options must remain strict.
+  - name: ajv-formats
+    source: https://github.com/ajv-validator/ajv-formats
+    license: MIT
+    intended_use: Enforce JSON Schema date-time and other standard formats in TypeScript conformance tests
+    status: approved_for_contract_validation
+    version: 3.0.1
+    note: Development/test dependency; keep paired with the pinned Ajv version.
   - name: Vitest
     source: https://github.com/vitest-dev/vitest
     license: MIT

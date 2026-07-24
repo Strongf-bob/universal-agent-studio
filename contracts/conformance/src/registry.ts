@@ -2,10 +2,12 @@ import {
   readFileSync,
   readdirSync
 } from "node:fs";
+import { createRequire } from "node:module";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { Ajv2020 } from "ajv/dist/2020.js";
+import type { FormatsPlugin } from "ajv-formats";
 
 import {
   type JsonObject,
@@ -39,6 +41,8 @@ const EXAMPLE_DIR = join(
   "v0.1.0"
 );
 const SCHEMA_BASE = "https://schemas.universal-agent.studio/v0.1.0/";
+const require = createRequire(import.meta.url);
+const addFormats = require("ajv-formats") as FormatsPlugin;
 
 function readJson(path: string): JsonObject {
   return JSON.parse(readFileSync(path, "utf8")) as JsonObject;
@@ -47,9 +51,9 @@ function readJson(path: string): JsonObject {
 function createValidator(): Ajv2020 {
   const ajv = new Ajv2020({
     allErrors: true,
-    strict: true,
-    validateFormats: false
+    strict: true
   });
+  addFormats(ajv);
 
   for (const filename of readdirSync(SCHEMA_DIR)
     .filter((value) => value.endsWith(".schema.json"))
