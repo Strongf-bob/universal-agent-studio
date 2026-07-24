@@ -81,6 +81,110 @@
       "questionRequired": "Enter an arithmetic problem."
     }
   },
+  "run": {
+    "eyebrow": "Durable execution · Live journal",
+    "title": "Agent run",
+    "description": "Events arrive from the local runtime, while the final trace is stored as reproducible execution evidence.",
+    "runId": "Run ID",
+    "versionUnavailable": "The version specification is unavailable.",
+    "cancelError": "Cancellation could not be requested. The event stream is still active; try again.",
+    "statuses": {
+      "queued": "Queued",
+      "running": "Running",
+      "completed": "Completed",
+      "failed": "Failed",
+      "cancelled": "Cancelled"
+    },
+    "timeline": {
+      "eyebrow": "Progress",
+      "title": "Run events",
+      "cancel": "Cancel run",
+      "cancelling": "Cancelling…",
+      "connection": {
+        "connecting": "Connecting to the event stream…",
+        "live": "Events are arriving live",
+        "reconnecting": "Reconnecting from the last event…",
+        "complete": "Event stream complete",
+        "error": "The event stream could not be restored"
+      },
+      "nodeEvent": "Node {nodeId} · event {sequence}",
+      "runEvent": "Event {sequence}",
+      "events": {
+        "runStarted": "Run started",
+        "nodeStarted": "Node started",
+        "modelRequested": "Model requested",
+        "modelCompleted": "Model response completed",
+        "toolRequested": "Tool requested",
+        "toolCompleted": "Tool completed",
+        "approvalRequired": "Approval required",
+        "approvalResolved": "Approval resolved",
+        "nodeFailed": "Node failed",
+        "nodeCompleted": "Node completed",
+        "runCompleted": "Run completed",
+        "runFailed": "Run failed",
+        "runCancelled": "Run cancelled"
+      }
+    },
+    "result": {
+      "eyebrow": "Result",
+      "pending": "The result will appear when the run completes.",
+      "loading": "Loading the stored trace…",
+      "unavailable": "The trace is not available yet. Refresh the page.",
+      "output": "Structured output",
+      "duration": "Duration",
+      "durationValue": "{duration} ms",
+      "toolCalls": "Tool calls",
+      "cost": "Cost",
+      "statuses": {
+        "completed": "Execution completed",
+        "failed": "Execution failed",
+        "cancelled": "Execution cancelled"
+      }
+    },
+    "trace": {
+      "eyebrow": "Immutable AgentSpec + stored trace",
+      "title": "How the agent completed the task",
+      "description": "The graph supports visual review, while the table mirrors it for keyboards and narrow screens."
+    },
+    "flow": {
+      "tableLabel": "Agent execution nodes",
+      "node": "Node",
+      "kind": "Kind",
+      "status": "Status",
+      "actions": "Actions",
+      "details": "Details",
+      "inspect": "Inspect {label}",
+      "kinds": {
+        "input": "Input",
+        "model": "Model",
+        "tool": "Tool",
+        "output": "Output"
+      },
+      "statuses": {
+        "pending": "Pending",
+        "running": "Running",
+        "completed": "Completed",
+        "failed": "Failed",
+        "cancelled": "Cancelled"
+      }
+    },
+    "inspector": {
+      "eyebrow": "Node trace",
+      "selectNode": "Select a node to inspect its trace.",
+      "duration": "{duration} ms",
+      "input": "Input",
+      "output": "Output",
+      "notExecuted": "This node has no stored execution yet.",
+      "redactionNote": "Only values processed by the redaction policy are shown.",
+      "statuses": {
+        "pending": "Pending",
+        "running": "Running",
+        "completed": "Completed",
+        "failed": "Failed",
+        "cancelled": "Cancelled"
+      }
+    }
+  },
   "errors": {
     "authentication_failed": "Sign-in failed. Check the owner name and password.",
     "bootstrap_already_completed": "The owner already exists. Go to sign in.",

@@ -860,14 +860,14 @@ git push
 - Consumes: RunEvent SSE, AgentVersion and RunTrace.
 - Produces: deduplicating/resuming event hook, progress/cancel/result UI, React Flow projection and keyboard table alternative.
 
-- [ ] **Step 1: Write failing streaming and accessibility tests**
+- [x] **Step 1: Write failing streaming and accessibility tests**
 
 Test duplicate `event_id` removal, reconnect from last sequence, refresh
 hydration, reconnect banner, cancellation, terminal result, selected node
 trace, redacted values, accessible graph table, live region, focus order,
 reduced motion and both locale message sets.
 
-- [ ] **Step 2: Verify the tests are red**
+- [x] **Step 2: Verify the tests are red**
 
 Run:
 
@@ -878,7 +878,7 @@ pnpm --filter @universal-agent-studio/studio-web test -- \
 
 Expected: missing run features.
 
-- [ ] **Step 3: Implement run state and projections**
+- [x] **Step 3: Implement run state and projections**
 
 `useRunEvents` seeds from stored events, opens EventSource-compatible fetch
 stream with credentials, stores last sequence in component state, and
@@ -898,7 +898,7 @@ type FlowNodeView = {
 
 The table renders the same projection and is the primary narrow-screen view.
 
-- [ ] **Step 4: Verify run UI and production build**
+- [x] **Step 4: Verify run UI and production build**
 
 Run:
 
@@ -910,7 +910,7 @@ pnpm --filter @universal-agent-studio/studio-web build
 
 Expected: all Web tests and build pass.
 
-- [ ] **Step 5: Commit and push**
+- [x] **Step 5: Commit and push**
 
 ```bash
 git add apps/studio-web

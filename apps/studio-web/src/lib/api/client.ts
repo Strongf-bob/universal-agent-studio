@@ -1,3 +1,8 @@
+import type {
+  AgentSpec,
+  RunTrace,
+} from "@universal-agent-studio/contracts";
+
 export type ErrorEnvelope = {
   code: string;
   message_key: string;
@@ -18,7 +23,7 @@ export type AgentVersionSummary = {
   agent_id: string;
   schema_version: string;
   digest: string;
-  agent_spec?: Record<string, unknown>;
+  agent_spec?: AgentSpec;
 };
 
 export type CreatedRun = {
@@ -26,6 +31,19 @@ export type CreatedRun = {
   request_id: string;
   status: "queued" | "running" | "completed" | "failed" | "cancelled";
   reused: boolean;
+};
+
+export type RunSummary = {
+  run_id: string;
+  request_id: string;
+  agent_version_id: string;
+  agent_version_digest: string;
+  status: "queued" | "running" | "completed" | "failed" | "cancelled";
+  locale: "ru-RU" | "en-US";
+  input: Record<string, unknown>;
+  output: Record<string, unknown> | null;
+  durable_execution_id: string | null;
+  cancel_requested: boolean;
 };
 
 export class ApiClientError extends Error {
@@ -56,6 +74,35 @@ async function requestJson<T>(
   } catch {
     throw new ApiClientError("network_error", null, true);
   }
+  if (!response.ok) {
+    let envelope: ErrorEnvelope | null = null;
+    try {
+      envelope = (await response.json()) as ErrorEnvelope;
+    } catch {
+      envelope = null;
+    }
+    throw new ApiClientError(
+      envelope?.code ?? "unknown",
+      response.headers.get("X-Request-ID"),
+      envelope?.retryable ?? false,
+    );
+  }
+  return (await response.json()) as T;
+}
+
+async function serverRequestJson<T>(
+  path: string,
+  cookieHeader: string,
+): Promise<T> {
+  const baseUrl =
+    process.env.CONTROL_API_INTERNAL_URL ?? "http://control-api:8000";
+  const response = await fetch(`${baseUrl}${path}`, {
+    headers: {
+      Accept: "application/json",
+      Cookie: cookieHeader,
+    },
+    cache: "no-store",
+  });
   if (!response.ok) {
     let envelope: ErrorEnvelope | null = null;
     try {
@@ -128,24 +175,47 @@ export async function getActiveAgentVersion(
   agentId: string,
   cookieHeader: string,
 ): Promise<AgentVersionSummary> {
-  const baseUrl =
-    process.env.CONTROL_API_INTERNAL_URL ?? "http://control-api:8000";
-  const response = await fetch(
-    `${baseUrl}/api/v1/agents/${encodeURIComponent(agentId)}/active-version`,
+  return serverRequestJson<AgentVersionSummary>(
+    `/api/v1/agents/${encodeURIComponent(agentId)}/active-version`,
+    cookieHeader,
+  );
+}
+
+export function getRunForServer(
+  runId: string,
+  cookieHeader: string,
+): Promise<RunSummary> {
+  return serverRequestJson<RunSummary>(
+    `/api/v1/runs/${encodeURIComponent(runId)}`,
+    cookieHeader,
+  );
+}
+
+export function getAgentVersionForServer(
+  versionId: string,
+  cookieHeader: string,
+): Promise<AgentVersionSummary> {
+  return serverRequestJson<AgentVersionSummary>(
+    `/api/v1/agent-versions/${encodeURIComponent(versionId)}`,
+    cookieHeader,
+  );
+}
+
+export function getRunTrace(runId: string): Promise<RunTrace> {
+  return requestJson<RunTrace>(
+    `/api/v1/runs/${encodeURIComponent(runId)}/trace`,
+  );
+}
+
+export async function cancelRun(
+  runId: string,
+): Promise<{run_id: string; status: "requested" | "already_terminal"}> {
+  const session = await getSession();
+  return requestJson(
+    `/api/v1/runs/${encodeURIComponent(runId)}/cancel`,
     {
-      headers: {
-        Accept: "application/json",
-        Cookie: cookieHeader,
-      },
-      cache: "no-store",
+      method: "POST",
+      headers: {"X-CSRF-Token": session.csrf_token},
     },
   );
-  if (!response.ok) {
-    throw new ApiClientError(
-      "agent_version_not_active",
-      response.headers.get("X-Request-ID"),
-      false,
-    );
-  }
-  return (await response.json()) as AgentVersionSummary;
 }

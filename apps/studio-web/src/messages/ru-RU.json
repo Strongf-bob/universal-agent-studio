@@ -81,6 +81,110 @@
       "questionRequired": "Введите арифметическую задачу."
     }
   },
+  "run": {
+    "eyebrow": "Durable execution · Живой журнал",
+    "title": "Выполнение агента",
+    "description": "События поступают из локального runtime, а итоговый trace сохраняется как воспроизводимое доказательство выполнения.",
+    "runId": "Run ID",
+    "versionUnavailable": "Спецификация версии недоступна.",
+    "cancelError": "Не удалось запросить отмену. Поток событий продолжает работать; попробуйте ещё раз.",
+    "statuses": {
+      "queued": "В очереди",
+      "running": "Выполняется",
+      "completed": "Завершён",
+      "failed": "Ошибка",
+      "cancelled": "Отменён"
+    },
+    "timeline": {
+      "eyebrow": "Прогресс",
+      "title": "События запуска",
+      "cancel": "Отменить запуск",
+      "cancelling": "Отменяем…",
+      "connection": {
+        "connecting": "Подключаемся к потоку событий…",
+        "live": "События поступают в реальном времени",
+        "reconnecting": "Переподключаемся с последнего события…",
+        "complete": "Поток событий завершён",
+        "error": "Не удалось восстановить поток событий"
+      },
+      "nodeEvent": "Узел {nodeId} · событие {sequence}",
+      "runEvent": "Событие {sequence}",
+      "events": {
+        "runStarted": "Запуск начат",
+        "nodeStarted": "Узел запущен",
+        "modelRequested": "Запрос к модели",
+        "modelCompleted": "Модель завершила ответ",
+        "toolRequested": "Инструмент вызван",
+        "toolCompleted": "Инструмент завершён",
+        "approvalRequired": "Требуется подтверждение",
+        "approvalResolved": "Подтверждение получено",
+        "nodeFailed": "Ошибка узла",
+        "nodeCompleted": "Узел завершён",
+        "runCompleted": "Запуск завершён",
+        "runFailed": "Запуск завершился ошибкой",
+        "runCancelled": "Запуск отменён"
+      }
+    },
+    "result": {
+      "eyebrow": "Результат",
+      "pending": "Результат появится после завершения запуска.",
+      "loading": "Загружаем сохранённый trace…",
+      "unavailable": "Trace пока недоступен. Обновите страницу.",
+      "output": "Структурированный вывод",
+      "duration": "Длительность",
+      "durationValue": "{duration} мс",
+      "toolCalls": "Вызовы инструментов",
+      "cost": "Стоимость",
+      "statuses": {
+        "completed": "Выполнение завершено",
+        "failed": "Выполнение завершилось ошибкой",
+        "cancelled": "Выполнение отменено"
+      }
+    },
+    "trace": {
+      "eyebrow": "Неизменяемый AgentSpec + сохранённый trace",
+      "title": "Как агент выполнил задачу",
+      "description": "Граф доступен для обзора, а таблица повторяет его структуру для клавиатуры и узких экранов."
+    },
+    "flow": {
+      "tableLabel": "Узлы выполнения агента",
+      "node": "Узел",
+      "kind": "Тип",
+      "status": "Статус",
+      "actions": "Действия",
+      "details": "Детали",
+      "inspect": "Открыть детали: {label}",
+      "kinds": {
+        "input": "Ввод",
+        "model": "Модель",
+        "tool": "Инструмент",
+        "output": "Вывод"
+      },
+      "statuses": {
+        "pending": "Ожидает",
+        "running": "Выполняется",
+        "completed": "Завершён",
+        "failed": "Ошибка",
+        "cancelled": "Отменён"
+      }
+    },
+    "inspector": {
+      "eyebrow": "Trace узла",
+      "selectNode": "Выберите узел, чтобы увидеть его trace.",
+      "duration": "{duration} мс",
+      "input": "Вход",
+      "output": "Выход",
+      "notExecuted": "Для этого узла ещё нет сохранённого выполнения.",
+      "redactionNote": "Показаны только значения после политики редактирования.",
+      "statuses": {
+        "pending": "Ожидает",
+        "running": "Выполняется",
+        "completed": "Завершён",
+        "failed": "Ошибка",
+        "cancelled": "Отменён"
+      }
+    }
+  },
   "errors": {
     "authentication_failed": "Не удалось войти. Проверьте имя владельца и пароль.",
     "bootstrap_already_completed": "Владелец уже создан. Перейдите ко входу.",
