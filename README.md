@@ -4,7 +4,7 @@
 
 ## Статус
 
-Проект находится на стадии **Foundation / Slice 0**. Production-кода пока нет: сначала фиксируются архитектурные решения, канонические контракты и исполняемые acceptance-сценарии.
+Проект находится на стадии **Foundation / Slice 0 (verification)**. Production-кода пока нет: архитектурные решения и канонические контракты уже зафиксированы, а их Python/TypeScript conformance проверяется локально и в CI.
 
 Первый deployment target — локальная single-workspace установка с BYOK. После прохождения локальных acceptance gates та же сборка переносится на частный сервер.
 
@@ -34,6 +34,21 @@
 
 Полная декомпозиция и границы каждого slice описаны в [ROADMAP.md](ROADMAP.md).
 
+## Проверка контрактов
+
+```bash
+uv sync --frozen
+pnpm install --frozen-lockfile
+uv run pytest tests/contracts -q
+pnpm check:contracts
+pnpm test:contracts
+```
+
+Обе реализации валидируют один manifest с valid и invalid fixtures из
+[`contracts/examples/v0.1.0`](contracts/examples/v0.1.0/). Первый runnable
+сценарий заранее определён в
+[acceptance-контракте Slice 1](docs/acceptance/SLICE_1_EXECUTABLE_SPINE.md).
+
 ## Основные документы
 
 - [PRODUCT.md](PRODUCT.md) — спецификация продукта.
@@ -48,6 +63,7 @@
 - [docs/DECISIONS.md](docs/DECISIONS.md) — принятые исходные решения.
 - [docs/ARCHITECTURAL_INVARIANTS.md](docs/ARCHITECTURAL_INVARIANTS.md) — правила, которые нельзя нарушать реализацией.
 - [docs/CONTRACTS.md](docs/CONTRACTS.md) — стратегия канонических схем.
+- [contracts/schemas/v0.1.0/](contracts/schemas/v0.1.0/) — исполняемые JSON Schema 2020-12.
 - [docs/THREAT_MODEL.md](docs/THREAT_MODEL.md) — trust boundaries, attacker stories и severity.
 - [docs/FRONTEND_SOURCES.md](docs/FRONTEND_SOURCES.md) — происхождение и границы frontend-компонентов.
 - [docs/adr/](docs/adr/) — architecture decision records.

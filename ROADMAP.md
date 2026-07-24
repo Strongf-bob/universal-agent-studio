@@ -14,6 +14,9 @@
 
 **Цель:** сделать начало реализации однозначным.
 
+**Статус:** verification — contracts и fixtures реализованы; локальные gates
+пройдены, ожидается подтверждение CI.
+
 - архитектурные invariants и trust boundaries;
 - ADR-0001…ADR-0007;
 - каноническая стратегия JSON Schema;
@@ -23,7 +26,10 @@
 - dependency/license registry format;
 - acceptance contract Slice 1.
 
-**Выход:** владелец одобрил design spec; блокирующие ADR приняты; схемы и acceptance examples не содержат незакрытых placeholders.
+**Выход:** владелец одобрил design spec; блокирующие ADR приняты; схемы и
+acceptance examples не содержат незакрытых placeholders. Точный исполняемый
+сценарий закреплён в
+[`docs/acceptance/SLICE_1_EXECUTABLE_SPINE.md`](docs/acceptance/SLICE_1_EXECUTABLE_SPINE.md).
 
 ## Slice 1 — Local executable spine
 

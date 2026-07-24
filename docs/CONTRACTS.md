@@ -101,3 +101,48 @@ Adapter валидирует extension. Product-level modules не ветвят�
 - canonical serialization fixture;
 - Python/TypeScript round-trip;
 - forward/backward compatibility expectation.
+
+## Implemented Slice 0 surface
+
+Версия `v0.1.0` находится в
+[`contracts/schemas/v0.1.0`](../contracts/schemas/v0.1.0/) и включает:
+
+- authoring: `AgentSpec`, `NodeSpec`, `ModelProfile`, `ToolManifest`,
+  `InterfaceSchema`, `AgentVersion`;
+- execution: `RunRequest`, `RunEvent`, `RunTrace`, `ErrorEnvelope`;
+- общие identifiers, locale, digest и extension definitions.
+
+JSON Schema проверяет структуру документа. Инварианты, которым нужна
+междокументная или графовая проверка, реализованы отдельно и одинаково
+проверяются Python и TypeScript:
+
+- уникальность node/edge identifiers и отсутствие dangling edges;
+- отсутствие secret-like keys вне credential references;
+- строгая последовательность событий;
+- корректные causation references;
+- единственное терминальное событие и согласованное состояние run;
+- наличие redaction policy.
+
+Единый список примеров находится в
+[`contracts/examples/v0.1.0/manifest.json`](../contracts/examples/v0.1.0/manifest.json).
+Каждый consumer обязан получить ожидаемый результат для каждой записи
+manifest.
+
+## Local conformance commands
+
+```bash
+uv run pytest tests/contracts -q
+pnpm check:contracts
+pnpm test:contracts
+```
+
+CI выполняет те же проверки с frozen lockfiles. Новая schema или semantic
+invariant не принимается без positive и negative fixture и результата в обеих
+реализациях.
+
+## Slice 1 handoff
+
+Runtime обязан реализовать эти контракты без собственной конкурирующей модели.
+Точный golden path, recovery, idempotency, streaming и security gates описаны
+в
+[`docs/acceptance/SLICE_1_EXECUTABLE_SPINE.md`](acceptance/SLICE_1_EXECUTABLE_SPINE.md).

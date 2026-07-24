@@ -1,0 +1,56 @@
+name: Contract Conformance
+
+"on":
+  push:
+    branches:
+      - main
+      - "agent/**"
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  contracts:
+    name: Python and TypeScript contracts
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          version: "0.11.32"
+          enable-cache: true
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
+        with:
+          version: "11.7.0"
+          run_install: false
+
+      - name: Install Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "26"
+          cache: pnpm
+
+      - name: Install Python dependencies
+        run: uv sync --frozen
+
+      - name: Install JavaScript dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Validate Python conformance
+        run: uv run pytest tests/contracts -q
+
+      - name: Type-check TypeScript validators
+        run: pnpm check:contracts
+
+      - name: Validate TypeScript conformance
+        run: pnpm test:contracts

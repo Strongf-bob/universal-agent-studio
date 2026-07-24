@@ -16,7 +16,10 @@
 - Provider-specific configuration may appear only under `extensions.<provider_namespace>`.
 - RunEvent delivery is at-least-once; `event_id` deduplicates and `sequence` resumes a stream.
 - User-visible requirements and examples cover both `ru-RU` and `en-US`.
-- Every coherent task ends with verification, a commit on `main`, a push, and a README audit when documented behavior changes.
+- Every coherent task ends with verification, a commit on the isolated
+  `agent/slice-0-foundation` branch, a push, and a README audit when documented
+  behavior changes. The verified branch is merged to `main` only at the
+  publication boundary.
 - Third-party software is not installed until source, exact version, license, purpose, and upgrade owner are recorded.
 
 ---
@@ -530,17 +533,18 @@ git push origin main
 **Interfaces:**
 - Produces: CI gate and the exact black-box contract for planning Slice 1.
 
-- [ ] **Step 1: Add GitHub Actions contract gate**
+- [x] **Step 1: Add GitHub Actions contract gate**
 
 Create:
 
 ```yaml
 name: Contract Conformance
 
-on:
+"on":
   push:
-    branches: [main]
+    branches: [main, "agent/**"]
   pull_request:
+    branches: [main]
 
 permissions:
   contents: read
@@ -549,14 +553,14 @@ jobs:
   contracts:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
         with:
           version: "0.11.32"
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
         with:
           version: "11.7.0"
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: "26"
           cache: pnpm
@@ -569,7 +573,7 @@ jobs:
 
 Record GitHub Actions sources, exact major/version policy and licenses in the dependency registry.
 
-- [ ] **Step 2: Write Slice 1 executable acceptance contract**
+- [x] **Step 2: Write Slice 1 executable acceptance contract**
 
 `docs/acceptance/SLICE_1_EXECUTABLE_SPINE.md` must define:
 
@@ -591,7 +595,7 @@ Record GitHub Actions sources, exact major/version policy and licenses in the de
 
 Mark Slice 0 complete only after local verification and passing remote CI. Update README status to `Slice 0 complete / Slice 1 planning`. Link schemas, acceptance contract, threat model and frontend sources.
 
-- [ ] **Step 4: Run full local verification**
+- [x] **Step 4: Run full local verification**
 
 Run:
 
@@ -612,7 +616,7 @@ Expected: every command passes.
 ```bash
 git add .github/workflows/contracts.yml docs/acceptance/SLICE_1_EXECUTABLE_SPINE.md docs/CONTRACTS.md ROADMAP.md README.md third_party/candidates.yaml
 git commit -m "ci: enforce Slice 0 contract gates"
-git push origin main
+git push origin agent/slice-0-foundation
 ```
 
 - [ ] **Step 6: Verify remote state**
@@ -620,12 +624,12 @@ git push origin main
 Run:
 
 ```bash
-gh run list --workflow contracts.yml --branch main --limit 1
+gh run list --workflow contracts.yml --branch agent/slice-0-foundation --limit 1
 gh run watch --exit-status
 git status --short --branch
 ```
 
-Expected: latest workflow succeeds and local `main` matches `origin/main`.
+Expected: latest workflow succeeds and the working branch matches its remote.
 
 ## Self-review
 

@@ -113,3 +113,35 @@ candidates:
     status: approved_for_contract_validation
     version: 26.1.1
     note: Development-only peer required by Vitest; pinned to the supported Node major.
+  - name: actions/checkout
+    source: https://github.com/actions/checkout
+    license: MIT
+    intended_use: Fetch repository content in GitHub Actions
+    status: approved_for_ci
+    version: 7.0.1
+    commit: 3d3c42e5aac5ba805825da76410c181273ba90b1
+    note: Immutable commit pin; security owner is the repository maintainer.
+  - name: actions/setup-node
+    source: https://github.com/actions/setup-node
+    license: MIT
+    intended_use: Install the pinned Node.js toolchain and enable pnpm caching in CI
+    status: approved_for_ci
+    version: 7.0.0
+    commit: 820762786026740c76f36085b0efc47a31fe5020
+    note: Immutable commit pin; security owner is the repository maintainer.
+  - name: astral-sh/setup-uv
+    source: https://github.com/astral-sh/setup-uv
+    license: MIT
+    intended_use: Install the pinned uv toolchain and enable its cache in CI
+    status: approved_for_ci
+    version: 9.0.0
+    commit: c771a70e6277c0a99b617c7a806ffedaca235ff9
+    note: Immutable commit pin; security owner is the repository maintainer.
+  - name: pnpm/action-setup
+    source: https://github.com/pnpm/action-setup
+    license: MIT
+    intended_use: Install the pinned pnpm toolchain in CI
+    status: approved_for_ci
+    version: 6.0.9
+    commit: 0ebf47130e4866e96fce0953f49152a61190b271
+    note: Immutable commit pin; security owner is the repository maintainer.
