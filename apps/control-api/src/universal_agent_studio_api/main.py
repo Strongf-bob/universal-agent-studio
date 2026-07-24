@@ -14,6 +14,7 @@ from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse, Response
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.types import ASGIApp
+from temporalio.client import Client
 from universal_agent_platform_store.session import (
     create_engine,
     create_session_factory,
@@ -24,11 +25,26 @@ from universal_agent_studio_api.agents.service import (
     AgentVersionService,
     SqlAgentVersionPersistence,
 )
-from universal_agent_studio_api.api import agent_versions, bootstrap, session, workspace
+from universal_agent_studio_api.api import (
+    agent_versions,
+    bootstrap,
+    runs,
+    session,
+    workspace,
+)
 from universal_agent_studio_api.auth.models import AuthStore
 from universal_agent_studio_api.auth.service import AuthService
 from universal_agent_studio_api.auth.store import SqlAuthStore
 from universal_agent_studio_api.errors import error_document, install_exception_handlers
+from universal_agent_studio_api.runs.durable import DurableExecutionPort
+from universal_agent_studio_api.runs.service import (
+    RunPersistence,
+    RunService,
+    SqlRunPersistence,
+)
+from universal_agent_studio_api.runs.temporal_adapter import (
+    TemporalDurableExecutionAdapter,
+)
 from universal_agent_studio_api.settings import Settings
 
 
@@ -43,6 +59,8 @@ class RequestGuardsMiddleware(BaseHTTPMiddleware):
         if request.method != "POST" or request.url.path not in {
             "/api/v1/bootstrap/owner",
             "/api/v1/session",
+            "/api/v1/agent-versions/import",
+            "/api/v1/runs",
         }:
             return False
         client_host = request.client.host if request.client is not None else "unknown"
@@ -90,9 +108,7 @@ class RequestGuardsMiddleware(BaseHTTPMiddleware):
                     ),
                     status_code=429,
                     headers={
-                        "Retry-After": str(
-                            self.settings.auth_rate_window_seconds
-                        )
+                        "Retry-After": str(self.settings.auth_rate_window_seconds)
                     },
                 )
             if len(await request.body()) > self.settings.max_request_bytes:
@@ -107,9 +123,15 @@ def create_app(
     *,
     auth_store: AuthStore | None = None,
     agent_persistence: AgentVersionPersistence | None = None,
+    run_persistence: RunPersistence | None = None,
+    durable_execution: DurableExecutionPort | None = None,
     settings: Settings | None = None,
 ) -> FastAPI:
     resolved_settings = settings or Settings()
+    if (run_persistence is None) != (durable_execution is None):
+        raise ValueError("run_persistence_and_durable_execution_required")
+    if run_persistence is not None and agent_persistence is None:
+        raise ValueError("agent_persistence_required_for_runs")
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
@@ -123,6 +145,13 @@ def create_app(
                     agent_persistence,
                     max_document_bytes=resolved_settings.max_request_bytes,
                 )
+            if run_persistence is not None and durable_execution is not None:
+                assert agent_persistence is not None
+                app.state.run_service = RunService(
+                    run_persistence=run_persistence,
+                    agent_persistence=agent_persistence,
+                    durable_execution=durable_execution,
+                )
             yield
             return
 
@@ -132,9 +161,23 @@ def create_app(
             SqlAuthStore(session_factory),
             resolved_settings,
         )
+        agent_version_persistence = SqlAgentVersionPersistence.from_factory(
+            session_factory
+        )
         app.state.agent_version_service = AgentVersionService(
-            SqlAgentVersionPersistence.from_factory(session_factory),
+            agent_version_persistence,
             max_document_bytes=resolved_settings.max_request_bytes,
+        )
+        temporal_client = await Client.connect(resolved_settings.temporal_address)
+        signing_key = resolved_settings.execution_signing_key_file.read_bytes().strip()
+        app.state.run_service = RunService(
+            run_persistence=SqlRunPersistence(session_factory),
+            agent_persistence=agent_version_persistence,
+            durable_execution=TemporalDurableExecutionAdapter(
+                temporal_client,
+                signing_key=signing_key,
+                task_queue=resolved_settings.runtime_task_queue,
+            ),
         )
         try:
             yield
@@ -153,6 +196,13 @@ def create_app(
         app.state.agent_version_service = AgentVersionService(
             agent_persistence,
             max_document_bytes=resolved_settings.max_request_bytes,
+        )
+    if run_persistence is not None and durable_execution is not None:
+        assert agent_persistence is not None
+        app.state.run_service = RunService(
+            run_persistence=run_persistence,
+            agent_persistence=agent_persistence,
+            durable_execution=durable_execution,
         )
 
     app.add_middleware(
@@ -179,6 +229,7 @@ def create_app(
     app.include_router(session.router)
     app.include_router(workspace.router)
     app.include_router(agent_versions.router)
+    app.include_router(runs.router)
 
     @app.get("/healthz", include_in_schema=False)
     async def health() -> dict[str, str]:

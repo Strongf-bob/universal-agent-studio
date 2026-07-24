@@ -186,3 +186,20 @@ class AgentRepository(ScopedRepository):
                 )
             ),
         )
+
+    async def get_active_version_by_public_id(
+        self,
+        version_id: str,
+    ) -> AgentVersion | None:
+        version = await self.get_version_by_public_id(version_id)
+        if version is None:
+            return None
+        active = await self.session.scalar(
+            select(AgentActiveVersion).where(
+                AgentActiveVersion.workspace_id == self.workspace_id,
+                AgentActiveVersion.project_id == self.project_id,
+                AgentActiveVersion.agent_id == version.agent_id,
+                AgentActiveVersion.version_id == version.id,
+            )
+        )
+        return version if active is not None else None

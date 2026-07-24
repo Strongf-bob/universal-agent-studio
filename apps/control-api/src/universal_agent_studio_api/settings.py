@@ -1,5 +1,7 @@
 """Environment-backed control-plane settings."""
 
+from pathlib import Path
+
 from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -25,3 +27,9 @@ class Settings(BaseSettings):
     max_request_bytes: int = Field(default=1_048_576, ge=1024, le=10_485_760)
     auth_rate_limit: int = Field(default=10, ge=1, le=1000)
     auth_rate_window_seconds: int = Field(default=60, ge=1, le=3600)
+    temporal_address: str = "temporal:7233"
+    runtime_task_queue: str = "uas-runtime-v1"
+    execution_signing_key_file: Path = Path("/run/secrets/uas_execution_signing_key")
+    sse_poll_interval_seconds: float = Field(default=0.25, gt=0, le=5)
+    sse_heartbeat_seconds: float = Field(default=15, gt=0, le=60)
+    sse_max_polls: int = Field(default=1200, ge=1, le=100_000)

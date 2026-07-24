@@ -122,6 +122,25 @@ class SqlAgentVersionPersistence:
             stored = self._stored(version, agent_id)
         return stored
 
+    async def get_active_version(
+        self,
+        *,
+        scope: RequestScope,
+        version_id: str,
+    ) -> StoredAgentVersion | None:
+        async with self._transaction() as session:
+            version = await AgentRepository(
+                session,
+                scope,
+            ).get_active_version_by_public_id(version_id)
+            if version is None:
+                return None
+            stored = self._stored(
+                version,
+                str(version.agent_spec["agent_id"]),
+            )
+        return stored
+
     async def activate(
         self,
         *,

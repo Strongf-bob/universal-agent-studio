@@ -84,6 +84,13 @@ class AgentVersionPersistence(Protocol):
         version_id: str,
     ) -> StoredAgentVersion | None: ...
 
+    async def get_active_version(
+        self,
+        *,
+        scope: RequestScope,
+        version_id: str,
+    ) -> StoredAgentVersion | None: ...
+
     async def activate(
         self,
         *,

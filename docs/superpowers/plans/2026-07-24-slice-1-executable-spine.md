@@ -717,14 +717,14 @@ git push
 - Consumes: AgentVersion service, RunRepository and DurableExecutionPort.
 - Produces: required `/api/v1/runs` endpoints, SSE resume and canonical run/trace responses.
 
-- [ ] **Step 1: Write failing run API tests**
+- [x] **Step 1: Write failing run API tests**
 
 Test immediate `run_id`, same-body idempotency, different-body 409, inactive
 or digest-mismatched version rejection, cancellation, trace-before-terminal
 state, terminal trace, cross-project denial, `Last-Event-ID`, heartbeat and
 terminal stream closure.
 
-- [ ] **Step 2: Verify the tests are red**
+- [x] **Step 2: Verify the tests are red**
 
 Run:
 
@@ -736,7 +736,7 @@ uv run pytest apps/control-api/tests/test_runs_api.py \
 
 Expected: run routes return 404.
 
-- [ ] **Step 3: Implement run orchestration and streaming**
+- [x] **Step 3: Implement run orchestration and streaming**
 
 Persist request/run before calling `start_run`. If durable start fails,
 finalize a safe failed run. SSE queries `sequence > Last-Event-ID`, emits:
@@ -750,7 +750,7 @@ data: <canonical RunEvent JSON>
 Send `: heartbeat` comments while waiting and close after terminal delivery.
 Bound polling and disconnect checks prevent unbounded tasks.
 
-- [ ] **Step 4: Verify Web/API contract equivalence**
+- [x] **Step 4: Verify Web/API contract equivalence**
 
 Run:
 
@@ -761,7 +761,7 @@ uv run python -c 'from universal_agent_studio_api.main import create_app; app=cr
 
 Expected: run API tests pass and OpenAPI contains all required paths.
 
-- [ ] **Step 5: Commit and push**
+- [x] **Step 5: Commit and push**
 
 ```bash
 git add apps/control-api tests/integration
