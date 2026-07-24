@@ -3,7 +3,7 @@
 ## Candidate
 
 - Scope: `One spec, two editors`
-- Implementation head verified before documentation: `741c852`
+- Implementation and review head verified before documentation: `6752549`
 - Environment: macOS, Docker Compose v2, Chromium, loopback-only Local Preview
 - External LLM/network dependency: none
 - Optional BYOK smoke: not configured and not claimed
@@ -16,15 +16,14 @@ Run from a clean Git worktree on 2026-07-24:
 |---|---|
 | `pnpm check` | generated files, contracts, ESLint, TypeScript, Ruff passed; mypy: 108 source files |
 | `pnpm test:contracts` | 1 file, 12 tests passed |
-| `pnpm test:web` | 12 files, 32 tests passed |
-| `TEST_DATABASE_URL=… uv run pytest -q` | 130 passed, 3 skipped |
+| `pnpm test:web` | 12 files, 35 tests passed |
+| `TEST_DATABASE_URL=… uv run pytest -q` | 134 passed, 1 explicit BYOK skip |
 | `COMPOSE_PROJECT_NAME=uas-slice2 pnpm dev:local` | all five long-running services healthy; migration exited successfully |
-| `COMPOSE_PROJECT_NAME=uas-slice2 pnpm test:e2e` | 9 Chromium tests passed |
+| `COMPOSE_PROJECT_NAME=uas-slice2 pnpm test:e2e` | 10 Chromium tests passed |
 | `uv run pytest tests/security tests/integration -q` against the running stack | 32 passed |
 
-The three full-suite skips were the explicit BYOK smoke plus the two tests
-that require a running full stack. Those two stack-dependent tests then passed
-in the dedicated 32-test security/integration run.
+The only full-suite skip was the opt-in BYOK smoke. Stack-dependent security
+tests ran against the isolated `uas-slice2` Compose project and passed.
 
 ## User-journey proof
 
@@ -39,15 +38,22 @@ Chromium proves:
 7. run the saved revision as an immutable snapshot;
 8. retain `Running` and `Completed` node history and return `{"value":437}`;
 9. open the persisted trace and switch RU/EN without changing run or draft
-   identity.
+   identity;
+10. invoke fit-to-view explicitly, persist the exact React Flow viewport and
+    restore it on refresh without marking the untouched draft dirty.
 
-The narrow scenario selects and moves a node with the keyboard and proves the
-edited prompt is absent from local/session storage.
+The narrow scenario traverses the real responsive editor tabs with arrow keys,
+selects and moves a node with the keyboard, and proves the edited prompt is
+absent from local/session storage.
 
 ## Security and recovery proof
 
 - A foreign project cannot read or update the owner draft.
 - Stale revisions and invalid documents fail closed.
+- Malformed nested AgentSpec values return stable `422` validation instead of
+  reaching a server error.
+- Draft snapshot creation shares the write-route rate limit, and dirty drafts
+  cannot be run under a stale saved-revision label.
 - A generated secret-like value is absent from API/diff responses, the saved
   draft, PostgreSQL draft/trace documents, Compose logs and browser assets.
 - Generated local infrastructure secrets are absent from Compose
@@ -70,6 +76,11 @@ zoom on a 1280px viewport.
   remains the graph editor;
 - keyboard focus uses a visible solid outline;
 - `prefers-reduced-motion: reduce` is honored.
+- saved graph pan/zoom is authoritative on load; fit-to-view is an explicit
+  localized button rather than a mount-time side effect.
+
+The final independent code review reported no remaining Critical or Important
+issues and marked the slice ready to merge.
 
 The real verified screenshot is
 [`assets/readme/slice2-editor.png`](../../../assets/readme/slice2-editor.png).

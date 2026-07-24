@@ -941,7 +941,7 @@ git add README.md ROADMAP.md DESIGN.md SECURITY.md docs third_party assets/readm
 git commit -m "docs: record Slice 2 verification evidence"
 ```
 
-- [ ] **Step 6: Perform final review**
+- [x] **Step 6: Perform final review**
 
 Invoke `requesting-code-review`. Resolve every Critical and Important finding,
 then rerun the complete release gate on the final commit.
