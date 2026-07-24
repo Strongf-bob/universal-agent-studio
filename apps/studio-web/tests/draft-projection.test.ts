@@ -3,12 +3,14 @@ import {resolve} from "node:path";
 
 import type {
   AgentDraft,
+  AgentSpec,
   RunEvent,
 } from "@universal-agent-studio/contracts";
 import {expect, test} from "vitest";
 
 import {
   projectDraftToFlow,
+  projectRunHistory,
   runStatusByNode,
 } from "@/features/drafts/projection";
 
@@ -22,6 +24,18 @@ function draftFixture(): AgentDraft {
       "utf8",
     ),
   ) as AgentDraft;
+}
+
+function agentSpecFixture(): AgentSpec {
+  return JSON.parse(
+    readFileSync(
+      resolve(
+        process.cwd(),
+        "../../contracts/examples/v0.1.0/valid/agent.calculator.ru-en.json",
+      ),
+      "utf8",
+    ),
+  ) as AgentSpec;
 }
 
 function event(
@@ -100,6 +114,27 @@ test("maps persisted run events to textual node states", () => {
 
   expect(running.get("source-node")).toBe("running");
   expect(completed.get("source-node")).toBe("completed");
+});
+
+test("maps runtime model and tool event vocabulary to terminal states", () => {
+  const agentSpec = agentSpecFixture();
+  const events = [
+    event("node.started", 1, "planner-model"),
+    event("model.requested", 2, "planner-model"),
+    event("model.completed", 3, "planner-model"),
+    event("tool.requested", 4, "calculator-tool"),
+    event("tool.completed", 5, "calculator-tool"),
+  ];
+  const statuses = runStatusByNode(agentSpec, events);
+
+  expect(statuses.get("planner-model")).toBe("completed");
+  expect(statuses.get("calculator-tool")).toBe("completed");
+  expect(projectRunHistory(agentSpec, events)).toEqual([
+    {sequence: 1, nodeId: "planner-model", status: "running"},
+    {sequence: 3, nodeId: "planner-model", status: "completed"},
+    {sequence: 4, nodeId: "calculator-tool", status: "running"},
+    {sequence: 5, nodeId: "calculator-tool", status: "completed"},
+  ]);
 });
 
 test("marks validation issues on their projected node", () => {

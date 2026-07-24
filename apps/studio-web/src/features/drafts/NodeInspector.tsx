@@ -84,24 +84,16 @@ export function NodeInspector({
               issues={byPointer}
               onEdit={onEdit}
             />
-            <div className="fieldGroup">
-              <label htmlFor="node-model-profile">
-                {t("inspector.modelProfile")}
-              </label>
-              <select
-                id="node-model-profile"
-                value={node.model_profile_ref ?? ""}
-                onChange={(event) =>
-                  onEdit(`${prefix}/model_profile_ref`, event.target.value)
-                }
-              >
-                {agentSpec.model_profiles.map((profile) => (
-                  <option key={profile.id} value={profile.id}>
-                    {profile.localized_metadata.name[locale]}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <ModelProfileField
+              node={node}
+              prefix={prefix}
+              profiles={agentSpec.model_profiles.map((profile) => ({
+                id: profile.id,
+                label: profile.localized_metadata.name[locale],
+              }))}
+              issues={byPointer}
+              onEdit={onEdit}
+            />
           </>
         ) : null}
         <div className="fieldGroup">
@@ -135,6 +127,48 @@ export function NodeInspector({
         </div>
       </div>
     </aside>
+  );
+}
+
+function ModelProfileField({
+  issues,
+  node,
+  onEdit,
+  prefix,
+  profiles,
+}: {
+  issues: Map<string, DraftValidationIssue[]>;
+  node: NodeSpec;
+  onEdit: (pointer: string, value: unknown) => void;
+  prefix: string;
+  profiles: Array<{id: string; label: string}>;
+}) {
+  const t = useTranslations("draft.inspector");
+  const pointer = `${prefix}/model_profile_ref`;
+  const fieldIssues = issues.get(pointer) ?? [];
+  return (
+    <div className="fieldGroup">
+      <label htmlFor="node-model-profile">{t("modelProfile")}</label>
+      <input
+        id="node-model-profile"
+        aria-describedby={
+          fieldIssues.length ? "node-model-profile-error" : undefined
+        }
+        aria-invalid={fieldIssues.length > 0}
+        list="node-model-profiles"
+        type="text"
+        value={node.model_profile_ref ?? ""}
+        onChange={(event) => onEdit(pointer, event.target.value)}
+      />
+      <datalist id="node-model-profiles">
+        {profiles.map((profile) => (
+          <option key={profile.id} value={profile.id}>
+            {profile.label}
+          </option>
+        ))}
+      </datalist>
+      <FieldErrors id="node-model-profile-error" issues={fieldIssues} />
+    </div>
   );
 }
 

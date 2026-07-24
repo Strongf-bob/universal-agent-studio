@@ -30,6 +30,58 @@ export type DraftFlowProjection = {
   edges: DraftFlowEdge[];
 };
 
+export type DraftRunHistoryEntry = {
+  sequence: number;
+  nodeId: string;
+  status: Exclude<DraftRunStatus, "pending" | "cancelled">;
+};
+
+export function projectRunHistory(
+  agentSpec: AgentSpec,
+  events: RunEvent[],
+): DraftRunHistoryEntry[] {
+  const nodeIds = new Set(agentSpec.nodes.map((node) => node.id));
+  const history: DraftRunHistoryEntry[] = [];
+
+  for (const event of [...events].sort(
+    (left, right) => left.sequence - right.sequence,
+  )) {
+    if (!event.node_id || !nodeIds.has(event.node_id)) {
+      continue;
+    }
+    let status: DraftRunHistoryEntry["status"] | null = null;
+    if (
+      event.type === "node.started" ||
+      event.type === "model.requested" ||
+      event.type === "tool.requested"
+    ) {
+      status = "running";
+    } else if (
+      event.type === "node.completed" ||
+      event.type === "model.completed" ||
+      event.type === "tool.completed"
+    ) {
+      status = "completed";
+    } else if (event.type === "node.failed") {
+      status = "failed";
+    }
+    if (!status) {
+      continue;
+    }
+    const previous = history.at(-1);
+    if (previous?.nodeId === event.node_id && previous.status === status) {
+      continue;
+    }
+    history.push({
+      sequence: event.sequence,
+      nodeId: event.node_id,
+      status,
+    });
+  }
+
+  return history;
+}
+
 export function runStatusByNode(
   agentSpec: AgentSpec,
   events: RunEvent[],
@@ -41,9 +93,17 @@ export function runStatusByNode(
     (left, right) => left.sequence - right.sequence,
   )) {
     if (event.node_id) {
-      if (event.type === "node.started") {
+      if (
+        event.type === "node.started" ||
+        event.type === "model.requested" ||
+        event.type === "tool.requested"
+      ) {
         statuses.set(event.node_id, "running");
-      } else if (event.type === "node.completed") {
+      } else if (
+        event.type === "node.completed" ||
+        event.type === "model.completed" ||
+        event.type === "tool.completed"
+      ) {
         statuses.set(event.node_id, "completed");
       } else if (event.type === "node.failed") {
         statuses.set(event.node_id, "failed");

@@ -312,6 +312,8 @@
       "starting": "Creating test run…",
       "error": "Enter an input and save a valid revision before running.",
       "empty": "No draft test has been started in this session.",
+      "history": "Node event history",
+      "historyLabel": "Draft run node history",
       "output": "Structured output",
       "trace": "Open full trace",
       "connection": {

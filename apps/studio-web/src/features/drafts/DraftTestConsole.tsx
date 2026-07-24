@@ -14,6 +14,7 @@ import {
   type RunEventConnector,
   useRunEvents,
 } from "@/features/runs/useRunEvents";
+import {projectRunHistory} from "@/features/drafts/projection";
 import {
   type CreatedRun,
   createDraftTestRun,
@@ -121,6 +122,7 @@ export function DraftTestConsole({
       ) : null}
       {runId ? (
         <DraftRunStream
+          agentSpec={agentSpec}
           connect={connect}
           loadTrace={loadTrace}
           locale={locale}
@@ -135,12 +137,14 @@ export function DraftTestConsole({
 }
 
 function DraftRunStream({
+  agentSpec,
   connect,
   loadTrace,
   locale,
   runId,
   onEvent,
 }: {
+  agentSpec: AgentSpec;
   connect?: RunEventConnector;
   loadTrace: typeof getRunTrace;
   locale: Locale;
@@ -148,8 +152,17 @@ function DraftRunStream({
   onEvent: (event: RunEvent) => void;
 }) {
   const t = useTranslations("draft.test");
+  const statusT = useTranslations("draft.graph.statuses");
   const stream = useRunEvents({runId, connect});
   const [trace, setTrace] = useState<RunTrace | null>(null);
+  const nodeLabels = new Map(
+    agentSpec.nodes.map((node) => [
+      node.id,
+      node.localized_metadata.name[locale] ??
+        node.localized_metadata.name["en-US"],
+    ]),
+  );
+  const history = projectRunHistory(agentSpec, stream.events);
 
   useEffect(() => {
     for (const event of stream.events) {
@@ -180,9 +193,37 @@ function DraftRunStream({
         </span>
         <code>{runId}</code>
       </div>
+      {history.length > 0 ? (
+        <>
+          <p className="metaLabel">{t("history")}</p>
+          <ol
+            className="testRunHistory"
+            aria-label={t("historyLabel")}
+            role="log"
+          >
+            {history.map((entry) => {
+              const label = nodeLabels.get(entry.nodeId) ?? entry.nodeId;
+              const status = statusT(entry.status);
+              return (
+                <li
+                  aria-label={`${label} · ${status}`}
+                  key={`${entry.sequence}-${entry.nodeId}-${entry.status}`}
+                >
+                  <span>{label}</span>
+                  <span aria-hidden>·</span>
+                  <strong>{status}</strong>
+                </li>
+              );
+            })}
+          </ol>
+        </>
+      ) : null}
       {trace?.output ? (
         <>
           <p className="metaLabel">{t("output")}</p>
+          <code className="testCompactOutput">
+            {JSON.stringify(trace.output)}
+          </code>
           <pre>{JSON.stringify(trace.output, null, 2)}</pre>
           <Link href={localizedPath(locale, `/runs/${runId}`)}>
             {t("trace")}

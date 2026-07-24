@@ -813,7 +813,7 @@ git commit -m "feat: build the dual-view draft workspace"
 - Produces: deterministic visible Slice 2 release gate.
 - Consumes: clean local stack, golden calculator fixture and existing setup owner.
 
-- [ ] **Step 1: Write the failing browser control scenario**
+- [x] **Step 1: Write the failing browser control scenario**
 
 The E2E:
 
@@ -833,7 +833,7 @@ The E2E:
 
 Add a keyboard-only narrow-viewport variant for table selection and movement.
 
-- [ ] **Step 2: Add recovery and secret tests**
+- [x] **Step 2: Add recovery and secret tests**
 
 Integration test stops/restarts only the Web process and proves GET returns the
 same PostgreSQL revision. Security tests scan:
@@ -846,14 +846,14 @@ same PostgreSQL revision. Security tests scan:
 
 for generated secret literals.
 
-- [ ] **Step 3: Extend CI gate**
+- [x] **Step 3: Extend CI gate**
 
 Rename the workflow display name to `Slice 1–2 Local Preview` while keeping the
 file stable. Its existing `pnpm check`, unit, image build, stack, E2E and
 security/integration commands automatically include Slice 2. Increase timeout
 only if observed runtime exceeds 80% of the current bound.
 
-- [ ] **Step 4: Run focused acceptance**
+- [x] **Step 4: Run focused acceptance**
 
 ```bash
 pnpm dev:local
@@ -864,7 +864,7 @@ pnpm local:down
 
 Expected: all pass; shutdown preserves volumes.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/studio-web/e2e tests .github/workflows/slice1.yml

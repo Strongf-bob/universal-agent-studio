@@ -1,4 +1,5 @@
 import {expect, test as setup} from "@playwright/test";
+import {readFileSync} from "node:fs";
 import path from "node:path";
 
 import {ownerName, ownerPassword} from "./constants";
@@ -46,6 +47,55 @@ setup("create the local owner and activate the golden AgentSpec", async ({page})
   await expect(page.locator(".monoValue")).toHaveText(/^[0-9a-f]{64}$/);
   await page.getByRole("button", {name: "Activate version"}).click();
   await expect(page).toHaveURL(/\/en-US\/agents\/calculator-agent$/);
+
+  const agentSpec = JSON.parse(readFileSync(fixtureFile, "utf8")) as {
+    nodes: Array<{id: string}>;
+  };
+  const resetStatus = await page.evaluate(async (specification) => {
+    const session = await fetch("/api/v1/session", {
+      credentials: "include",
+    });
+    const {csrf_token: csrfToken} = (await session.json()) as {
+      csrf_token: string;
+    };
+    const created = await fetch(
+      "/api/v1/agents/calculator-agent/draft",
+      {
+        method: "POST",
+        credentials: "include",
+        headers: {"X-CSRF-Token": csrfToken},
+      },
+    );
+    if (!created.ok) {
+      return created.status;
+    }
+    const current = (await created.json()) as {revision: number};
+    const reset = await fetch(
+      "/api/v1/agents/calculator-agent/draft",
+      {
+        method: "PUT",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRF-Token": csrfToken,
+        },
+        body: JSON.stringify({
+          expected_revision: current.revision,
+          agent_spec: specification,
+          layout: {
+            nodes: specification.nodes.map((node, index) => ({
+              node_id: node.id,
+              x: index * 260,
+              y: index % 2 === 0 ? 80 : 200,
+            })),
+            viewport: {x: 0, y: 0, zoom: 1},
+          },
+        }),
+      },
+    );
+    return reset.status;
+  }, agentSpec);
+  expect(resetStatus).toBe(200);
 
   await page.context().storageState({path: authFile});
 });
