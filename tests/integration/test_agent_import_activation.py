@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -36,7 +36,7 @@ async def test_agent_version_reads_are_project_scoped(
 
     with pytest.raises(ApiError) as error:
         await service.get_version(
-            UUID(imported.version_id),
+            imported.version_id,
             other_project_scope,
         )
 
@@ -62,14 +62,14 @@ async def test_import_and_activation_commit_atomically(
 
     active = await service.activate(
         agent_id="calculator-agent",
-        version_id=UUID(first.version_id),
+        version_id=first.version_id,
         expected_previous_version_id=None,
         scope=request_scope,
     )
     changed = await service.activate(
         agent_id="calculator-agent",
-        version_id=UUID(second.version_id),
-        expected_previous_version_id=UUID(first.version_id),
+        version_id=second.version_id,
+        expected_previous_version_id=first.version_id,
         scope=request_scope,
     )
 

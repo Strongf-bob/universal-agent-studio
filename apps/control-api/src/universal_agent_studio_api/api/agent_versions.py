@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from typing import Annotated, cast
-from uuid import UUID
 
 from fastapi import APIRouter, Depends, Request, Response, status
 from universal_agent_platform_store.scope import RequestScope
@@ -61,7 +60,7 @@ async def import_agent_version(
     response_model=AgentVersionView,
 )
 async def get_agent_version(
-    version_id: UUID,
+    version_id: str,
     authenticated: Annotated[
         AuthenticatedOwner,
         Depends(authenticated_owner),

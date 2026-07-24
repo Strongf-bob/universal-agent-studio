@@ -590,7 +590,7 @@ are checked before model binding. Return:
 
 ```json
 {
-  "version_id": "calculator-v1",
+  "version_id": "calculator-agent-v1",
   "agent_id": "calculator-agent",
   "schema_version": "0.1.0",
   "digest": "<64 lowercase hex>",
@@ -642,14 +642,14 @@ git push
 - Produces: `TemporalDurableExecutionAdapter`, signed execution envelope,
   `AgentRunWorkflow`, idempotent activities and worker entrypoint.
 
-- [ ] **Step 1: Write failing workflow environment tests**
+- [x] **Step 1: Write failing workflow environment tests**
 
 Use Temporal's workflow test environment for deterministic workflow tests and
 a real local Temporal server for integration. Assert exact event sequence,
 UUIDv5 IDs, terminal trace, signal cancellation, activity retry and controlled
 worker restart with one logical calculator invocation.
 
-- [ ] **Step 2: Verify the tests are red**
+- [x] **Step 2: Verify the tests are red**
 
 Run:
 
@@ -662,7 +662,7 @@ uv run pytest workers/runtime/tests/test_workflow.py \
 
 Expected: missing durable adapter, workflow and worker modules.
 
-- [ ] **Step 3: Implement the workflow and activities**
+- [x] **Step 3: Implement the workflow and activities**
 
 Use task queue `uas-runtime-v1` and workflow ID `uas-run-{run_id}`.
 `DurableExecutionPort.request_cancel()` sends the product `request_cancel`
@@ -677,7 +677,7 @@ signature and signature absence from events/traces.
 Workflow code may call only deterministic Temporal APIs. Database, model,
 calculator and trace operations stay in activities.
 
-- [ ] **Step 4: Verify replay, restart and cancellation**
+- [x] **Step 4: Verify replay, restart and cancellation**
 
 Run:
 
@@ -692,7 +692,7 @@ uv run mypy workers/runtime apps/control-api/src/universal_agent_studio_api/runs
 Expected: completed, restarted and cancelled runs have one terminal event and
 schema-valid traces.
 
-- [ ] **Step 5: Commit and push**
+- [x] **Step 5: Commit and push**
 
 ```bash
 git add apps/control-api/src/universal_agent_studio_api/runs workers/runtime \

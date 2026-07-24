@@ -118,14 +118,14 @@ class MemoryAuthStore:
 class MemoryAgentVersionPersistence:
     def __init__(self) -> None:
         self.versions: dict[
-            tuple[UUID, UUID, UUID],
+            tuple[UUID, UUID, str],
             StoredAgentVersion,
         ] = {}
         self.by_digest: dict[
             tuple[UUID, UUID, str, str],
-            UUID,
+            str,
         ] = {}
-        self.active: dict[tuple[UUID, UUID, str], UUID] = {}
+        self.active: dict[tuple[UUID, UUID, str], str] = {}
 
     async def import_version(
         self,
@@ -140,22 +140,32 @@ class MemoryAgentVersionPersistence:
         existing_id = self.by_digest.get(digest_key)
         if existing_id is not None:
             return self.versions[(workspace_id, project_id, existing_id)], False
+        version_number = (
+            sum(
+                1
+                for key, stored in self.versions.items()
+                if key[:2] == (workspace_id, project_id)
+                and stored.agent_id == agent_id
+            )
+            + 1
+        )
         version = StoredAgentVersion(
             id=uuid4(),
             agent_id=agent_id,
+            version_number=version_number,
             schema_version=str(agent_spec["schema_version"]),
             digest=digest,
             agent_spec=agent_spec,
         )
-        self.versions[(workspace_id, project_id, version.id)] = version
-        self.by_digest[digest_key] = version.id
+        self.versions[(workspace_id, project_id, version.public_id)] = version
+        self.by_digest[digest_key] = version.public_id
         return version, True
 
     async def get_version(
         self,
         *,
         scope: RequestScope,
-        version_id: UUID,
+        version_id: str,
     ) -> StoredAgentVersion | None:
         workspace_id, project_id = scope.tenant_ids()
         return self.versions.get((workspace_id, project_id, version_id))
@@ -165,9 +175,9 @@ class MemoryAgentVersionPersistence:
         *,
         scope: RequestScope,
         agent_id: str,
-        version_id: UUID,
-        expected_previous_version_id: UUID | None,
-    ) -> UUID:
+        version_id: str,
+        expected_previous_version_id: str | None,
+    ) -> str:
         workspace_id, project_id = scope.tenant_ids()
         version = self.versions.get((workspace_id, project_id, version_id))
         if version is None or version.agent_id != agent_id:

@@ -84,6 +84,7 @@ class SqlAgentVersionPersistence:
         return StoredAgentVersion(
             id=version.id,
             agent_id=agent_id,
+            version_number=version.version_number,
             schema_version=version.schema_version,
             digest=version.digest,
             agent_spec=cast(dict[str, Any], version.agent_spec),
@@ -108,10 +109,13 @@ class SqlAgentVersionPersistence:
         self,
         *,
         scope: RequestScope,
-        version_id: UUID,
+        version_id: str,
     ) -> StoredAgentVersion | None:
         async with self._transaction() as session:
-            version = await AgentRepository(session, scope).get_version(version_id)
+            version = await AgentRepository(
+                session,
+                scope,
+            ).get_version_by_public_id(version_id)
             if version is None:
                 return None
             agent_id = str(version.agent_spec["agent_id"])
@@ -123,17 +127,28 @@ class SqlAgentVersionPersistence:
         *,
         scope: RequestScope,
         agent_id: str,
-        version_id: UUID,
-        expected_previous_version_id: UUID | None,
-    ) -> UUID:
+        version_id: str,
+        expected_previous_version_id: str | None,
+    ) -> str:
         async with self._transaction() as session:
-            active = await AgentRepository(session, scope).activate(
+            repository = AgentRepository(session, scope)
+            version = await repository.get_version_by_public_id(version_id)
+            if version is None or str(version.agent_spec["agent_id"]) != agent_id:
+                raise AgentVersionNotFound("agent_version_not_found")
+            expected_internal_id: UUID | None = None
+            if expected_previous_version_id is not None:
+                expected = await repository.get_version_by_public_id(
+                    expected_previous_version_id
+                )
+                if expected is None:
+                    raise AgentVersionNotFound("agent_version_not_found")
+                expected_internal_id = expected.id
+            await repository.activate(
                 agent_key=agent_id,
-                version_id=version_id,
-                expected_previous_version_id=expected_previous_version_id,
+                version_id=version.id,
+                expected_previous_version_id=expected_internal_id,
             )
-            active_version_id = active.version_id
-        return active_version_id
+        return version_id
 
 
 class AgentVersionService:
@@ -208,7 +223,7 @@ class AgentVersionService:
             digest=digest,
         )
         return AgentVersionImportView(
-            version_id=str(stored.id),
+            version_id=stored.public_id,
             agent_id=stored.agent_id,
             schema_version=stored.schema_version,
             digest=stored.digest,
@@ -218,7 +233,7 @@ class AgentVersionService:
 
     async def get_version(
         self,
-        version_id: UUID,
+        version_id: str,
         scope: RequestScope,
     ) -> AgentVersionView:
         stored = await self.persistence.get_version(
@@ -228,7 +243,7 @@ class AgentVersionService:
         if stored is None:
             raise ApiError(404, "agent_version_not_found")
         return AgentVersionView(
-            version_id=str(stored.id),
+            version_id=stored.public_id,
             agent_id=stored.agent_id,
             schema_version=stored.schema_version,
             digest=stored.digest,
@@ -239,8 +254,8 @@ class AgentVersionService:
         self,
         *,
         agent_id: str,
-        version_id: UUID,
-        expected_previous_version_id: UUID | None,
+        version_id: str,
+        expected_previous_version_id: str | None,
         scope: RequestScope,
     ) -> ActiveAgentVersionView:
         try:
@@ -256,5 +271,5 @@ class AgentVersionService:
             raise ApiError(404, "agent_version_not_found") from error
         return ActiveAgentVersionView(
             agent_id=agent_id,
-            active_version_id=str(active_version_id),
+            active_version_id=active_version_id,
         )

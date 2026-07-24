@@ -165,3 +165,24 @@ class AgentRepository(ScopedRepository):
                 )
             ),
         )
+
+    async def get_version_by_public_id(
+        self,
+        version_id: str,
+    ) -> AgentVersion | None:
+        agent_key, separator, raw_number = version_id.rpartition("-v")
+        if not separator or not raw_number.isdigit():
+            return None
+        return cast(
+            AgentVersion | None,
+            await self.session.scalar(
+                select(AgentVersion)
+                .join(Agent, Agent.id == AgentVersion.agent_id)
+                .where(
+                    AgentVersion.workspace_id == self.workspace_id,
+                    AgentVersion.project_id == self.project_id,
+                    AgentVersion.version_number == int(raw_number),
+                    Agent.agent_key == agent_key,
+                )
+            ),
+        )
