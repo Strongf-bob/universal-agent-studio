@@ -96,12 +96,17 @@ class SqlAgentVersionPersistence:
         scope: RequestScope,
         agent_spec: dict[str, Any],
         digest: str,
+        provenance: dict[str, Any] | None = None,
     ) -> tuple[StoredAgentVersion, bool]:
         async with self._transaction() as session:
             version, created = await AgentRepository(
                 session,
                 scope,
-            ).import_version(agent_spec, digest)
+            ).import_version(
+                agent_spec,
+                digest,
+                provenance=provenance,
+            )
             stored = self._stored(version, str(agent_spec["agent_id"]))
         return stored, created
 

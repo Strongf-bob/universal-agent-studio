@@ -93,6 +93,18 @@ class DraftDiffView(BaseModel):
     operations: list[DraftDiffOperationView]
 
 
+class DraftTestRunRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    expected_revision: int = Field(ge=1)
+    request_id: UUID
+    idempotency_key: str = Field(
+        pattern=r"^[A-Za-z0-9._:-]{16,128}$"
+    )
+    input: dict[str, Any]
+    locale: Literal["ru-RU", "en-US"]
+
+
 @dataclass(frozen=True)
 class StoredAgentDraft:
     id: UUID

@@ -168,6 +168,7 @@ def test_agent_draft_routes_are_registered() -> None:
 
     assert "/api/v1/agents/{agent_id}/draft" in paths
     assert "/api/v1/agents/{agent_id}/draft/diff" in paths
+    assert "/api/v1/agents/{agent_id}/draft/runs" in paths
 
 
 @pytest.mark.asyncio

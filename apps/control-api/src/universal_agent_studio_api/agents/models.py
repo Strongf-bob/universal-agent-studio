@@ -75,6 +75,7 @@ class AgentVersionPersistence(Protocol):
         scope: RequestScope,
         agent_spec: dict[str, Any],
         digest: str,
+        provenance: dict[str, Any] | None = None,
     ) -> tuple[StoredAgentVersion, bool]: ...
 
     async def get_version(

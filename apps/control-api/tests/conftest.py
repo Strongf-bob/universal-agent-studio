@@ -133,7 +133,9 @@ class MemoryAgentVersionPersistence:
         scope: RequestScope,
         agent_spec: dict[str, object],
         digest: str,
+        provenance: dict[str, object] | None = None,
     ) -> tuple[StoredAgentVersion, bool]:
+        del provenance
         workspace_id, project_id = scope.tenant_ids()
         agent_id = str(agent_spec["agent_id"])
         digest_key = (workspace_id, project_id, agent_id, digest)

@@ -156,6 +156,7 @@ def create_app(
             if draft_persistence is not None:
                 app.state.draft_service = DraftService(
                     draft_persistence,
+                    agent_persistence=agent_persistence,
                 )
             if run_persistence is not None and durable_execution is not None:
                 assert agent_persistence is not None
@@ -164,6 +165,12 @@ def create_app(
                     agent_persistence=agent_persistence,
                     durable_execution=durable_execution,
                 )
+                if draft_persistence is not None:
+                    app.state.draft_service = DraftService(
+                        draft_persistence,
+                        agent_persistence=agent_persistence,
+                        run_service=app.state.run_service,
+                    )
             app.state.ready = True
             try:
                 yield
@@ -186,8 +193,8 @@ def create_app(
             agent_version_persistence,
             max_document_bytes=resolved_settings.max_request_bytes,
         )
-        app.state.draft_service = DraftService(
-            SqlAgentDraftPersistence.from_factory(session_factory),
+        draft_persistence_adapter = SqlAgentDraftPersistence.from_factory(
+            session_factory
         )
         temporal_client = await Client.connect(resolved_settings.temporal_address)
         signing_key = resolved_settings.execution_signing_key_file.read_bytes().strip()
@@ -199,6 +206,11 @@ def create_app(
                 signing_key=signing_key,
                 task_queue=resolved_settings.runtime_task_queue,
             ),
+        )
+        app.state.draft_service = DraftService(
+            draft_persistence_adapter,
+            agent_persistence=agent_version_persistence,
+            run_service=app.state.run_service,
         )
         app.state.ready = True
         try:
@@ -223,7 +235,10 @@ def create_app(
             max_document_bytes=resolved_settings.max_request_bytes,
         )
     if draft_persistence is not None:
-        app.state.draft_service = DraftService(draft_persistence)
+        app.state.draft_service = DraftService(
+            draft_persistence,
+            agent_persistence=agent_persistence,
+        )
     if run_persistence is not None and durable_execution is not None:
         assert agent_persistence is not None
         app.state.run_service = RunService(
@@ -231,6 +246,12 @@ def create_app(
             agent_persistence=agent_persistence,
             durable_execution=durable_execution,
         )
+        if draft_persistence is not None:
+            app.state.draft_service = DraftService(
+                draft_persistence,
+                agent_persistence=agent_persistence,
+                run_service=app.state.run_service,
+            )
 
     app.add_middleware(
         TrustedHostMiddleware,

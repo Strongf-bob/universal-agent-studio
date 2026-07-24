@@ -466,7 +466,7 @@ git commit -m "feat: expose safe agent draft editing"
 - Produces: `DraftService.create_test_run(agent_id, request, scope)`.
 - Consumes: current draft revision, existing idempotent run persistence and Temporal adapter.
 
-- [ ] **Step 1: Write failing snapshot-run tests**
+- [x] **Step 1: Write failing snapshot-run tests**
 
 Arrange active v1 and draft revision 2, then:
 
@@ -497,7 +497,7 @@ assert created.status == "queued"
 Await the trace and assert its version digest equals the draft digest. Repeat
 the request and assert the same run id.
 
-- [ ] **Step 2: Make version import provenance-aware**
+- [x] **Step 2: Make version import provenance-aware**
 
 Extend persistence protocols with:
 
@@ -518,7 +518,7 @@ Pass it through to `AgentRepository.import_version`. For draft tests use:
 
 Existing import behavior passes `{}` and remains unchanged.
 
-- [ ] **Step 3: Refactor RunService without weakening the public route**
+- [x] **Step 3: Refactor RunService without weakening the public route**
 
 Keep `create_run()` active-only. Extract:
 
@@ -536,7 +536,7 @@ It verifies identifier/digest against the supplied version, validates input,
 persists idempotently and starts the durable execution exactly as before.
 `create_run()` resolves an active version then delegates.
 
-- [ ] **Step 4: Add the draft run endpoint**
+- [x] **Step 4: Add the draft run endpoint**
 
 `POST /api/v1/agents/{agent_id}/draft/runs`:
 
@@ -547,7 +547,7 @@ persists idempotently and starts the durable execution exactly as before.
 - calls `create_resolved_run`;
 - returns the existing `CreateRunView`.
 
-- [ ] **Step 5: Run durable regression gates**
+- [x] **Step 5: Run durable regression gates**
 
 ```bash
 uv run pytest apps/control-api/tests/test_draft_runs.py tests/integration/test_draft_run_temporal.py tests/integration/test_run_api_temporal.py workers/runtime/tests -q
@@ -557,7 +557,7 @@ pnpm check
 
 Expected: draft and active run paths pass.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add apps/control-api libs/python/platform_store tests workers/runtime

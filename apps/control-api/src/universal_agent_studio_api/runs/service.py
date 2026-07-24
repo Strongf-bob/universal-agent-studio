@@ -427,6 +427,16 @@ class RunService:
         )
         if version is None:
             raise ApiError(409, "agent_version_not_active")
+        return await self.create_resolved_run(request, scope, version)
+
+    async def create_resolved_run(
+        self,
+        request: CreateRunRequest,
+        scope: RequestScope,
+        version: StoredAgentVersion,
+    ) -> CreateRunView:
+        if version.public_id != request.agent_version_id:
+            raise ApiError(409, "agent_version_not_found")
         if version.digest != request.agent_version_digest:
             raise ApiError(409, "agent_version_digest_mismatch")
         input_validation = validate_agent_input(

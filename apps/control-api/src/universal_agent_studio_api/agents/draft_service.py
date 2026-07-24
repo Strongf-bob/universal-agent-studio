@@ -36,15 +36,22 @@ from universal_agent_studio_api.agents.drafts import (
     DraftDiffView,
     DraftLayoutView,
     DraftNodePositionView,
+    DraftTestRunRequest,
     DraftViewportView,
     StoredAgentDraft,
     UpdateAgentDraftRequest,
 )
 from universal_agent_studio_api.agents.models import (
+    AgentVersionPersistence,
     ValidationIssueView,
     ValidationView,
 )
 from universal_agent_studio_api.errors import ApiError
+from universal_agent_studio_api.runs.service import (
+    CreateRunRequest,
+    CreateRunView,
+    RunService,
+)
 
 
 def _validation_view(result: ValidationResult) -> ValidationView:
@@ -217,8 +224,13 @@ class DraftService:
     def __init__(
         self,
         persistence: AgentDraftPersistence,
+        *,
+        agent_persistence: AgentVersionPersistence | None = None,
+        run_service: RunService | None = None,
     ) -> None:
         self.persistence = persistence
+        self.agent_persistence = agent_persistence
+        self.run_service = run_service
 
     @staticmethod
     def _view(stored: StoredAgentDraft) -> AgentDraftView:
@@ -311,6 +323,46 @@ class DraftService:
             candidate_digest=content_digest(request.candidate_agent_spec),
             validation=_validation_view(validation),
             operations=operations,
+        )
+
+    async def create_test_run(
+        self,
+        agent_id: str,
+        request: DraftTestRunRequest,
+        scope: RequestScope,
+    ) -> CreateRunView:
+        if self.agent_persistence is None or self.run_service is None:
+            raise ApiError(
+                503,
+                "durable_execution_unavailable",
+                retryable=True,
+            )
+        stored = await self._stored(agent_id, scope)
+        if stored.revision != request.expected_revision:
+            raise ApiError(409, "agent_draft_revision_conflict")
+        version, _ = await self.agent_persistence.import_version(
+            scope=scope,
+            agent_spec=stored.agent_spec,
+            digest=stored.digest,
+            provenance={
+                "kind": "draft-test-snapshot",
+                "draft_id": stored.public_id,
+                "draft_revision": stored.revision,
+                "draft_digest": stored.digest,
+            },
+        )
+        return await self.run_service.create_resolved_run(
+            CreateRunRequest(
+                schema_version="0.1.0",
+                request_id=request.request_id,
+                agent_version_id=version.public_id,
+                agent_version_digest=version.digest,
+                idempotency_key=request.idempotency_key,
+                input=request.input,
+                locale=request.locale,
+            ),
+            scope,
+            version,
         )
 
     async def _stored(

@@ -12,6 +12,7 @@ from universal_agent_studio_api.agents.drafts import (
     AgentDraftView,
     DraftDiffRequest,
     DraftDiffView,
+    DraftTestRunRequest,
     UpdateAgentDraftRequest,
 )
 from universal_agent_studio_api.auth.dependencies import (
@@ -19,6 +20,7 @@ from universal_agent_studio_api.auth.dependencies import (
     csrf_authenticated_owner,
 )
 from universal_agent_studio_api.auth.models import AuthenticatedOwner
+from universal_agent_studio_api.runs.service import CreateRunView
 
 router = APIRouter(prefix="/api/v1/agents", tags=["agent-drafts"])
 
@@ -111,3 +113,28 @@ async def preview_agent_draft_diff(
         body,
         _scope(authenticated),
     )
+
+
+@router.post(
+    "/{agent_id}/draft/runs",
+    response_model=CreateRunView,
+)
+async def create_agent_draft_run(
+    agent_id: str,
+    body: DraftTestRunRequest,
+    response: Response,
+    authenticated: Annotated[
+        AuthenticatedOwner,
+        Depends(csrf_authenticated_owner),
+    ],
+    service: Annotated[DraftService, Depends(draft_service)],
+) -> CreateRunView:
+    created = await service.create_test_run(
+        agent_id,
+        body,
+        _scope(authenticated),
+    )
+    response.status_code = (
+        status.HTTP_200_OK if created.reused else status.HTTP_201_CREATED
+    )
+    return created
