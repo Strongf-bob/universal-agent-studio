@@ -15,6 +15,7 @@
   },
   "nav": {
     "agent": "Agent",
+    "build": "Build",
     "runs": "Runs",
     "statusReady": "Local runtime ready"
   },
@@ -203,6 +204,128 @@
         "failed": "Failed",
         "cancelled": "Cancelled"
       }
+    }
+  },
+  "draft": {
+    "eyebrow": "Draft workspace · One spec, two editors",
+    "revision": "Revision {revision}",
+    "sections": "Draft editor sections",
+    "save": "Save draft",
+    "creating": "Creating the editable draft…",
+    "bootstrapError": "The draft could not be created. Make sure an active agent version exists, then try again.",
+    "tabs": {
+      "simple": "Simple",
+      "graph": "Graph",
+      "bulk": "JSON",
+      "test": "Test"
+    },
+    "status": {
+      "ready": "Draft is up to date",
+      "dirty": "Unsaved changes",
+      "saving": "Saving draft…",
+      "saved": "Draft saved",
+      "error": "Draft was not saved",
+      "conflict": "Newer revision found · refresh required"
+    },
+    "settings": {
+      "eyebrow": "Simple settings",
+      "title": "Agent basics",
+      "description": "The common product settings, mapped directly to AgentSpec.",
+      "nameRu": "Name in Russian",
+      "nameEn": "Name in English",
+      "descriptionRu": "Description in Russian",
+      "descriptionEn": "Description in English",
+      "defaultLocale": "Default agent language",
+      "localeRu": "Russian",
+      "localeEn": "English",
+      "temperature": "Model temperature",
+      "temperatureHint": "0 is deterministic; higher values add variation.",
+      "noModel": "This agent has no model profile."
+    },
+    "graph": {
+      "eyebrow": "Advanced view",
+      "title": "Execution graph",
+      "description": "Select or drag a node. Topology stays protected in this slice.",
+      "tableLabel": "Editable agent graph nodes",
+      "node": "Node",
+      "kind": "Kind",
+      "position": "Position",
+      "status": "Run status",
+      "actions": "Keyboard actions",
+      "invalid": "Needs attention",
+      "select": "Select {label}",
+      "moveLeft": "Move {label} left",
+      "moveRight": "Move {label} right",
+      "moveUp": "Move {label} up",
+      "moveDown": "Move {label} down",
+      "kinds": {
+        "input": "Input",
+        "model": "Model",
+        "tool": "Tool",
+        "output": "Output"
+      },
+      "statuses": {
+        "pending": "Pending",
+        "running": "Running",
+        "completed": "Completed",
+        "failed": "Failed",
+        "cancelled": "Cancelled"
+      }
+    },
+    "inspector": {
+      "eyebrow": "Node inspector",
+      "title": "Node settings",
+      "empty": "Select a node in the graph or its keyboard table.",
+      "nodeTitle": "{label} settings",
+      "nameRu": "Node name in Russian",
+      "nameEn": "Node name in English",
+      "promptEn": "Prompt in English",
+      "modelProfile": "Model profile",
+      "timeout": "Timeout, ms",
+      "retries": "Maximum attempts"
+    },
+    "bulk": {
+      "eyebrow": "Bulk editor",
+      "title": "Review complete AgentSpec JSON",
+      "description": "Preview a deterministic diff first. Applying it uses the same validated save path.",
+      "jsonLabel": "Complete AgentSpec JSON",
+      "preview": "Preview changes",
+      "previewing": "Building preview…",
+      "apply": "Apply preview",
+      "applying": "Applying…",
+      "invalidJson": "The candidate is not valid JSON or did not pass validation.",
+      "stalePreview": "The preview is stale or could not be applied. Build a new preview.",
+      "changeCount": "{count} change(s) in this preview",
+      "tableLabel": "AgentSpec change preview",
+      "operation": "Operation",
+      "pointer": "JSON pointer",
+      "before": "Before",
+      "after": "After",
+      "noChanges": "The candidate matches the saved draft."
+    },
+    "test": {
+      "eyebrow": "Draft snapshot",
+      "title": "Test Console",
+      "description": "Run the current saved revision without activating it.",
+      "inputLabel": "Test input",
+      "run": "Run saved draft",
+      "starting": "Creating test run…",
+      "error": "Enter an input and save a valid revision before running.",
+      "empty": "No draft test has been started in this session.",
+      "output": "Structured output",
+      "trace": "Open full trace",
+      "connection": {
+        "connecting": "Connecting to events…",
+        "live": "Test is running",
+        "reconnecting": "Restoring event stream…",
+        "complete": "Test completed",
+        "error": "Event stream unavailable"
+      }
+    },
+    "validation": {
+      "summary": "{count} validation issue(s) must be fixed before the draft can be saved.",
+      "required": "Required field",
+      "invalid": "Invalid value"
     }
   },
   "errors": {

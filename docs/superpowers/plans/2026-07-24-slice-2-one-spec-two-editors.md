@@ -687,13 +687,13 @@ git commit -m "feat: add canonical draft editor state"
 - Consumes: one reducer state, pure projections and typed API calls from Task 5.
 - Consumes: existing SSE/run client behavior without duplicating persistence.
 
-- [ ] **Step 1: Load UI design skills before implementation**
+- [x] **Step 1: Load UI design skills before implementation**
 
 Read and apply `ui-ux-pro-max`, `ui-styling` and `design-system`. Extend the
 existing semantic tokens; do not redesign the established Slice 1 shell or
 copy an external editor.
 
-- [ ] **Step 2: Write failing component and accessibility tests**
+- [x] **Step 2: Write failing component and accessibility tests**
 
 Test:
 
@@ -714,7 +714,7 @@ pnpm --filter @universal-agent-studio/studio-web test -- draft-workspace draft-a
 
 Expected: component modules are missing.
 
-- [ ] **Step 3: Implement the route and single state owner**
+- [x] **Step 3: Implement the route and single state owner**
 
 The server page authenticates by fetching the draft; if absent it renders a
 client workspace that creates it once. Redirect authentication errors to
@@ -729,7 +729,7 @@ const [state, dispatch] = useReducer(draftEditorReducer, initialDraftState(draft
 Children receive values and callbacks only. Save sends the whole candidate and
 layout with `expectedRevision`.
 
-- [ ] **Step 4: Implement Simple Settings and Inspector**
+- [x] **Step 4: Implement Simple Settings and Inspector**
 
 Simple Settings maps exact pointers for two locale names/descriptions, default
 locale and model temperature.
@@ -739,7 +739,7 @@ localized metadata, planner prompt, model-profile reference, timeout and
 retry count. Render node-specific issues adjacent to the appropriate field and
 in a summary.
 
-- [ ] **Step 5: Implement React Flow and accessible table**
+- [x] **Step 5: Implement React Flow and accessible table**
 
 `DraftCanvas` converts first-party projection values to React Flow nodes and
 edges at the component boundary. It supports selection, drag, pan, zoom and
@@ -753,21 +753,21 @@ Select · Move left · Move right · Move up · Move down
 
 Each movement is 24 px and updates the same layout state.
 
-- [ ] **Step 6: Implement safe bulk preview and apply**
+- [x] **Step 6: Implement safe bulk preview and apply**
 
 Use a labelled native textarea for complete JSON. Preview calls the API and
 renders a table with operation, pointer, before and after. Apply parses the
 same candidate and calls ordinary save using the previewed revision. On
 conflict clear preview and require a new one.
 
-- [ ] **Step 7: Implement Test Console and run highlighting**
+- [x] **Step 7: Implement Test Console and run highlighting**
 
 Input comes from `agentSpec.interface.input_fields`. On submit, create the
 draft run and connect to the existing SSE endpoint. Dispatch each event to the
 editor reducer; show terminal structured output and a localized trace link.
 Do not write run/draft state to browser storage.
 
-- [ ] **Step 8: Implement responsive styles and RU/EN**
+- [x] **Step 8: Implement responsive styles and RU/EN**
 
 Add semantic editor tokens and media queries:
 
@@ -781,7 +781,7 @@ Add semantic editor tokens and media queries:
 Add matching keys to both locale files and a test that their recursive key
 sets are equal.
 
-- [ ] **Step 9: Run Web checks**
+- [x] **Step 9: Run Web checks**
 
 ```bash
 pnpm test:web
@@ -790,7 +790,7 @@ pnpm --filter @universal-agent-studio/studio-web check
 
 Expected: all pass.
 
-- [ ] **Step 10: Commit**
+- [x] **Step 10: Commit**
 
 ```bash
 git add apps/studio-web

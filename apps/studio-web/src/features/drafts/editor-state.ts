@@ -35,7 +35,9 @@ export function draftEditorReducer(
           action.value,
         ),
         dirty: true,
-        issues: [],
+        issues: state.issues.filter(
+          (issue) => issue.json_pointer !== action.pointer,
+        ),
         saveStatus: "idle",
         errorCode: null,
       };
