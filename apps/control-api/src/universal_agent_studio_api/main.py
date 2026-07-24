@@ -21,12 +21,18 @@ from universal_agent_platform_store.session import (
     create_session_factory,
 )
 
+from universal_agent_studio_api.agents.draft_service import (
+    DraftService,
+    SqlAgentDraftPersistence,
+)
+from universal_agent_studio_api.agents.drafts import AgentDraftPersistence
 from universal_agent_studio_api.agents.models import AgentVersionPersistence
 from universal_agent_studio_api.agents.service import (
     AgentVersionService,
     SqlAgentVersionPersistence,
 )
 from universal_agent_studio_api.api import (
+    agent_drafts,
     agent_versions,
     bootstrap,
     runs,
@@ -124,6 +130,7 @@ def create_app(
     *,
     auth_store: AuthStore | None = None,
     agent_persistence: AgentVersionPersistence | None = None,
+    draft_persistence: AgentDraftPersistence | None = None,
     run_persistence: RunPersistence | None = None,
     durable_execution: DurableExecutionPort | None = None,
     settings: Settings | None = None,
@@ -145,6 +152,10 @@ def create_app(
                 app.state.agent_version_service = AgentVersionService(
                     agent_persistence,
                     max_document_bytes=resolved_settings.max_request_bytes,
+                )
+            if draft_persistence is not None:
+                app.state.draft_service = DraftService(
+                    draft_persistence,
                 )
             if run_persistence is not None and durable_execution is not None:
                 assert agent_persistence is not None
@@ -174,6 +185,9 @@ def create_app(
         app.state.agent_version_service = AgentVersionService(
             agent_version_persistence,
             max_document_bytes=resolved_settings.max_request_bytes,
+        )
+        app.state.draft_service = DraftService(
+            SqlAgentDraftPersistence.from_factory(session_factory),
         )
         temporal_client = await Client.connect(resolved_settings.temporal_address)
         signing_key = resolved_settings.execution_signing_key_file.read_bytes().strip()
@@ -208,6 +222,8 @@ def create_app(
             agent_persistence,
             max_document_bytes=resolved_settings.max_request_bytes,
         )
+    if draft_persistence is not None:
+        app.state.draft_service = DraftService(draft_persistence)
     if run_persistence is not None and durable_execution is not None:
         assert agent_persistence is not None
         app.state.run_service = RunService(
@@ -240,6 +256,7 @@ def create_app(
     app.include_router(session.router)
     app.include_router(workspace.router)
     app.include_router(agent_versions.router)
+    app.include_router(agent_drafts.router)
     app.include_router(runs.router)
 
     @app.get("/health/live", include_in_schema=False)

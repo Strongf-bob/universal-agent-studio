@@ -347,7 +347,7 @@ git commit -m "feat: persist optimistic agent drafts"
 - Produces: `DraftService.create`, `get`, `update`, `preview_diff`.
 - Consumes: generated AgentDraft, `validate_agent_spec`, canonical digest, redaction policy and `DraftRepository`.
 
-- [ ] **Step 1: Write failing service/API tests**
+- [x] **Step 1: Write failing service/API tests**
 
 Test:
 
@@ -369,7 +369,7 @@ uv run pytest apps/control-api/tests/test_agent_drafts.py -q
 
 Expected: route/module failures.
 
-- [ ] **Step 2: Define request and response models**
+- [x] **Step 2: Define request and response models**
 
 Use strict Pydantic models:
 
@@ -395,7 +395,7 @@ class DraftDiffOperationView(BaseModel):
 Reject layout node duplicates, missing AgentSpec nodes, non-finite coordinates
 and more than 256 nodes.
 
-- [ ] **Step 3: Implement application validation and deterministic diff**
+- [x] **Step 3: Implement application validation and deterministic diff**
 
 Before persistence:
 
@@ -423,13 +423,13 @@ Recursive diff rules:
 Check `expected_revision` before calculating or returning the diff so a stale
 preview cannot be applied as if current.
 
-- [ ] **Step 4: Register authenticated routes**
+- [x] **Step 4: Register authenticated routes**
 
 All POST/PUT routes depend on `csrf_authenticated_owner`; GET depends on
 `authenticated_owner`. Derive `RequestScope` from `AuthenticatedOwner`.
 Map create response to 201 only on first creation.
 
-- [ ] **Step 5: Prove API and security boundaries**
+- [x] **Step 5: Prove API and security boundaries**
 
 ```bash
 uv run pytest apps/control-api/tests/test_agent_drafts.py tests/integration/test_agent_draft_api.py tests/security/test_draft_isolation.py -q
@@ -438,7 +438,7 @@ pnpm check
 
 Expected: all pass.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add apps/control-api tests/integration tests/security
