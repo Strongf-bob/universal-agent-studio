@@ -946,14 +946,14 @@ git commit -m "docs: record Slice 2 verification evidence"
 Invoke `requesting-code-review`. Resolve every Critical and Important finding,
 then rerun the complete release gate on the final commit.
 
-- [ ] **Step 7: Publish and verify**
+- [x] **Step 7: Publish and verify**
 
 Push the feature branch, wait for both contract and Local Preview Actions to
 pass on the exact head SHA, fast-forward merge into `main`, push `main`, and
 wait for both main runs to pass on the same SHA. Verify local `main`,
 `origin/main` and GitHub head equality.
 
-- [ ] **Step 8: Finish**
+- [x] **Step 8: Finish**
 
 Remove the clean merged local worktree and local branch, leave the remote
 feature branch recoverable, mark every plan checkbox complete and close the
