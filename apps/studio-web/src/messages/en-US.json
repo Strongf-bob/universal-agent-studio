@@ -259,6 +259,7 @@
       "moveRight": "Move {label} right",
       "moveUp": "Move {label} up",
       "moveDown": "Move {label} down",
+      "fitView": "Fit graph to view",
       "kinds": {
         "input": "Input",
         "model": "Model",

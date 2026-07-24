@@ -289,8 +289,13 @@ def validate_agent_graph_issues(
             endpoint = edge.get(endpoint_name, {})
             if not isinstance(endpoint, dict):
                 continue
-            node = nodes_by_id.get(endpoint.get("node_id"))
-            if node is None:
+            endpoint_node_id = endpoint.get("node_id")
+            endpoint_node = (
+                nodes_by_id.get(endpoint_node_id)
+                if isinstance(endpoint_node_id, str)
+                else None
+            )
+            if endpoint_node is None:
                 issues.append(
                     _semantic_issue(
                         "dangling_node_reference",
@@ -301,7 +306,7 @@ def validate_agent_graph_issues(
 
             port_ids = {
                 identifier
-                for port in _object_items(node.get(port_collection))
+                for port in _object_items(endpoint_node.get(port_collection))
                 if isinstance(identifier := port.get("id"), str)
             }
             if endpoint.get("port_id") not in port_ids:

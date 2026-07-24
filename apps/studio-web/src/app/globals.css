@@ -1729,10 +1729,45 @@ h1 {
 }
 
 .draftCanvas {
+  position: relative;
   height: 480px;
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
   background: var(--editor-canvas-bg);
+}
+
+.draftCanvasSurface {
+  width: 100%;
+  height: 100%;
+}
+
+.draftFitButton {
+  position: absolute;
+  z-index: 4;
+  right: var(--space-3);
+  bottom: var(--space-3);
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.draftFitButton svg {
+  width: 15px;
+  height: 15px;
+  margin-right: var(--space-2);
+}
+
+.draftFitButton:hover {
+  border-color: var(--action);
+  color: var(--action);
 }
 
 .draftFlowNode {

@@ -259,6 +259,7 @@
       "moveRight": "Сдвинуть {label} вправо",
       "moveUp": "Сдвинуть {label} вверх",
       "moveDown": "Сдвинуть {label} вниз",
+      "fitView": "Вписать граф в экран",
       "kinds": {
         "input": "Ввод",
         "model": "Модель",

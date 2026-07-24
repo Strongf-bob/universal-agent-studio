@@ -166,3 +166,45 @@ test("narrow layout keeps graph selection and movement keyboard-operable", async
   }));
   expect(JSON.stringify(storage)).not.toContain(storageProbe);
 });
+
+test("an explicit fit persists and restores the exact React Flow viewport", async ({
+  page,
+}) => {
+  await openDraft(page);
+  await page.getByRole("button", {name: "Fit graph to view"}).click();
+  await expect(page.getByRole("button", {name: "Save draft"})).toBeEnabled();
+  await page.getByRole("button", {name: "Save draft"}).click();
+  await expect(page.getByRole("status")).toHaveText("Draft saved");
+
+  const savedTransform = await reactFlowViewport(page);
+  const persisted = await page.request.get(
+    "/api/v1/agents/calculator-agent/draft",
+  );
+  const persistedViewport = (
+    (await persisted.json()) as {
+      layout: {viewport: {x: number; y: number; zoom: number}};
+    }
+  ).layout.viewport;
+  expect(savedTransform.x).toBeCloseTo(persistedViewport.x, 3);
+  expect(savedTransform.y).toBeCloseTo(persistedViewport.y, 3);
+  expect(savedTransform.zoom).toBeCloseTo(persistedViewport.zoom, 5);
+
+  await page.reload();
+  await expect(page.getByRole("button", {name: "Save draft"})).toBeDisabled();
+  expect(await reactFlowViewport(page)).toEqual(savedTransform);
+});
+
+async function reactFlowViewport(page: import("@playwright/test").Page) {
+  const transform = await page
+    .locator(".draftCanvas .react-flow__viewport")
+    .evaluate((element) => (element as HTMLElement).style.transform);
+  const match = transform.match(
+    /^translate\((-?[0-9.]+)px, (-?[0-9.]+)px\) scale\(([0-9.]+)\)$/,
+  );
+  expect(match).not.toBeNull();
+  return {
+    x: Number(match?.[1]),
+    y: Number(match?.[2]),
+    zoom: Number(match?.[3]),
+  };
+}

@@ -5,9 +5,12 @@ import {
   ReactFlow,
   type Edge,
   type Node,
+  type ReactFlowInstance,
   type Viewport,
 } from "@xyflow/react";
+import {Scan} from "lucide-react";
 import {useTranslations} from "next-intl";
+import {useRef} from "react";
 
 import type {DraftFlowProjection} from "@/features/drafts/projection";
 
@@ -29,6 +32,7 @@ export function DraftCanvas({
   onSelect,
 }: Props) {
   const t = useTranslations("draft.graph");
+  const flowRef = useRef<ReactFlowInstance<Node, Edge> | null>(null);
   const nodes: Node[] = projection.nodes.map((node) => ({
     id: node.id,
     position: node.position,
@@ -56,27 +60,39 @@ export function DraftCanvas({
   }));
 
   return (
-    <div className="draftCanvas" aria-hidden="true">
-      <ReactFlow
-        disableKeyboardA11y
-        edges={edges}
-        edgesFocusable={false}
-        elementsSelectable
-        defaultViewport={viewport}
-        fitView
-        fitViewOptions={{padding: 0.18}}
-        maxZoom={1.6}
-        minZoom={0.4}
-        nodes={nodes}
-        nodesConnectable={false}
-        nodesFocusable={false}
-        onNodeClick={(_, node) => onSelect(node.id)}
-        onNodeDragStop={(_, node) => onMove(node.id, node.position)}
-        onMoveEnd={(_, nextViewport) => onViewport(nextViewport)}
-        proOptions={{hideAttribution: true}}
+    <div className="draftCanvas">
+      <div className="draftCanvasSurface" aria-hidden="true">
+        <ReactFlow
+          disableKeyboardA11y
+          edges={edges}
+          edgesFocusable={false}
+          elementsSelectable
+          defaultViewport={viewport}
+          maxZoom={1.6}
+          minZoom={0.4}
+          nodes={nodes}
+          nodesConnectable={false}
+          nodesFocusable={false}
+          onInit={(instance) => {
+            flowRef.current = instance;
+          }}
+          onNodeClick={(_, node) => onSelect(node.id)}
+          onNodeDragStop={(_, node) => onMove(node.id, node.position)}
+          onMoveEnd={(_, nextViewport) => onViewport(nextViewport)}
+          proOptions={{hideAttribution: true}}
+        >
+          <Background gap={20} size={1} />
+        </ReactFlow>
+      </div>
+      <button
+        aria-label={t("fitView")}
+        className="draftFitButton"
+        type="button"
+        onClick={() => void flowRef.current?.fitView({padding: 0.18})}
       >
-        <Background gap={20} size={1} />
-      </ReactFlow>
+        <Scan aria-hidden />
+        <span>{t("fitView")}</span>
+      </button>
     </div>
   );
 }
