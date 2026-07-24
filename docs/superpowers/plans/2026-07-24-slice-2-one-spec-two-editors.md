@@ -234,7 +234,7 @@ git commit -m "feat: define canonical agent drafts"
 - Produces: `DraftRevisionConflict` and `DraftNotFound`.
 - Consumes: `RequestScope`, `Agent`, `AgentVersion`, `AgentActiveVersion`.
 
-- [ ] **Step 1: Write failing repository integration tests**
+- [x] **Step 1: Write failing repository integration tests**
 
 Cover:
 
@@ -272,7 +272,7 @@ Add a foreign-project assertion returning no row.
 Run with the isolated PostgreSQL command used by existing integration tests.
 Expected: import/table failures.
 
-- [ ] **Step 2: Add the migration and model**
+- [x] **Step 2: Add the migration and model**
 
 Create `agent_drafts` with:
 
@@ -295,7 +295,7 @@ Add workspace/project indexes, scoped foreign keys, a positive-revision check
 and a 64-character digest check. Upgrade from `0001` and clean upgrade must
 both reach `0002`; downgrade drops only `agent_drafts`.
 
-- [ ] **Step 3: Implement repository locking and CAS**
+- [x] **Step 3: Implement repository locking and CAS**
 
 Creation acquires the same scoped agent advisory lock used by version import,
 loads the active version and inserts only when absent. Update locks the scoped
@@ -312,7 +312,7 @@ record.updated_at = utc_now()
 
 Every query includes workspace and project predicates.
 
-- [ ] **Step 4: Run persistence gates**
+- [x] **Step 4: Run persistence gates**
 
 ```bash
 uv run pytest tests/integration/test_draft_repository.py tests/integration/test_migrations.py -q
@@ -322,7 +322,7 @@ uv run mypy libs/python/platform_store tests/integration
 
 Expected: all pass.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add infra/migrations libs/python/platform_store tests/integration

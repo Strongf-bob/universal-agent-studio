@@ -261,6 +261,71 @@ class AgentActiveVersion(Base):
     )
 
 
+class AgentDraftRecord(Base):
+    __tablename__ = "agent_drafts"
+    __table_args__ = (
+        UniqueConstraint("agent_id"),
+        CheckConstraint("revision > 0", name="ck_agent_draft_revision"),
+        CheckConstraint(
+            "char_length(digest) = 64",
+            name="ck_agent_draft_digest",
+        ),
+    )
+
+    id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True), primary_key=True, default=uuid4
+    )
+    workspace_id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True),
+        ForeignKey("workspaces.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    project_id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True),
+        ForeignKey("projects.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    agent_id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True),
+        ForeignKey("agents.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    base_version_id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True),
+        ForeignKey("agent_versions.id", ondelete="RESTRICT"),
+        nullable=False,
+        index=True,
+    )
+    revision: Mapped[int] = mapped_column(
+        Integer,
+        nullable=False,
+        default=1,
+    )
+    digest: Mapped[str] = mapped_column(String(64), nullable=False)
+    agent_spec: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False)
+    layout: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False)
+    updated_by_owner_id: Mapped[UUID | None] = mapped_column(
+        PGUUID(as_uuid=True),
+        ForeignKey("owners.id", ondelete="SET NULL"),
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=utc_now,
+        server_default=func.now(),
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=utc_now,
+        onupdate=utc_now,
+        server_default=func.now(),
+    )
+
+
 class Run(Base):
     __tablename__ = "runs"
     __table_args__ = (

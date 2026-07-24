@@ -15,6 +15,7 @@ from tests.integration.conftest import database_url_for_tests
 ROOT = Path(__file__).parents[2]
 EXPECTED_TABLES = {
     "agent_active_versions",
+    "agent_drafts",
     "agent_versions",
     "agents",
     "node_executions",
