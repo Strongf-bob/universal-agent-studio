@@ -1,5 +1,4 @@
 import {expect, test} from "@playwright/test";
-import path from "node:path";
 
 import {ownerName, ownerPassword} from "./constants";
 
@@ -19,7 +18,13 @@ test("keyboard navigation reaches primary controls and node details", async ({
 test("logout clears the session and login restores access without storing secrets", async ({
   page,
 }) => {
-  await page.goto("/en-US/agents/calculator-agent");
+  await page.context().clearCookies();
+  await page.goto("/en-US/login");
+  await page.getByLabel("Owner name").fill(ownerName);
+  await page.getByLabel("Password").fill(ownerPassword);
+  await page.getByRole("button", {name: "Sign in"}).click();
+  await expect(page).toHaveURL(/\/en-US\/agents\/calculator-agent$/);
+
   await page.getByRole("button", {name: "Sign out"}).click();
   await expect(page).toHaveURL(/\/en-US\/login$/);
 
@@ -27,9 +32,6 @@ test("logout clears the session and login restores access without storing secret
   await page.getByLabel("Password").fill(ownerPassword);
   await page.getByRole("button", {name: "Sign in"}).click();
   await expect(page).toHaveURL(/\/en-US\/agents\/calculator-agent$/);
-  await page.context().storageState({
-    path: path.resolve("../../.local/playwright/auth.json"),
-  });
 
   const storage = await page.evaluate(() => ({
     local: JSON.stringify(localStorage),

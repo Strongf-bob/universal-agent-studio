@@ -11,10 +11,10 @@ export type ErrorEnvelope = {
 };
 
 export type SessionResponse = {
-  owner_id: string;
-  workspace_id: string;
-  project_id: string;
-  preferred_locale: "ru-RU" | "en-US";
+  owner: {
+    login_name: string;
+    preferred_locale: "ru-RU" | "en-US";
+  };
   csrf_token: string;
 };
 

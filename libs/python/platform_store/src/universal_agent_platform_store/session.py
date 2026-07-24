@@ -1,5 +1,6 @@
 """Async SQLAlchemy engine and session factory construction."""
 
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
@@ -22,3 +23,9 @@ def create_session_factory(
     engine: AsyncEngine,
 ) -> async_sessionmaker[AsyncSession]:
     return async_sessionmaker(engine, expire_on_commit=False)
+
+
+async def check_database_connectivity(engine: AsyncEngine) -> None:
+    """Prove the database accepts queries before a process reports readiness."""
+    async with engine.connect() as connection:
+        await connection.execute(text("SELECT 1"))

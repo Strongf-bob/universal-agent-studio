@@ -10,6 +10,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from temporalio.client import Client
 from temporalio.worker import Worker
 from universal_agent_platform_store.session import (
+    check_database_connectivity,
     create_engine,
     create_session_factory,
 )
@@ -41,6 +42,7 @@ async def run_worker(settings: RuntimeSettings | None = None) -> None:
     resolved = settings or RuntimeSettings()  # type: ignore[call-arg]
     client = await Client.connect(resolved.temporal_address)
     engine = create_engine(resolved.database_url.get_secret_value())
+    await check_database_connectivity(engine)
     activities = RunExecutionActivities(
         signing_key=load_signing_key(resolved.execution_signing_key_file),
         persistence=SqlRuntimePersistence(create_session_factory(engine)),
