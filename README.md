@@ -4,7 +4,9 @@
 
 ## Статус
 
-Проект находится на стадии **Foundation / Slice 0 (verification)**. Production-кода пока нет: архитектурные решения и канонические контракты уже зафиксированы, а их Python/TypeScript conformance проверяется локально и в CI.
+**Slice 0 завершён; Slice 1 планируется.** Production-кода пока нет:
+архитектурные решения и канонические контракты зафиксированы, а их
+Python/TypeScript conformance проверяется локально и в CI.
 
 Первый deployment target — локальная single-workspace установка с BYOK. После прохождения локальных acceptance gates та же сборка переносится на частный сервер.
 

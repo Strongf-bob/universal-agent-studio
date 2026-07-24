@@ -14,8 +14,8 @@
 
 **Цель:** сделать начало реализации однозначным.
 
-**Статус:** verification — contracts и fixtures реализованы; локальные gates
-пройдены, ожидается подтверждение CI.
+**Статус:** complete — contracts и fixtures реализованы; локальные и
+GitHub Actions gates пройдены.
 
 - архитектурные invariants и trust boundaries;
 - ADR-0001…ADR-0007;

@@ -39,12 +39,43 @@ serialization digest is stored with the version and copied into every run
 snapshot. Reimporting identical canonical content must reuse the digest
 without rewriting a published version.
 
+The fixture input is:
+
+```json
+{
+  "question": "Сколько будет 19 × 23?"
+}
+```
+
+The final structured output is:
+
+```json
+{
+  "value": 437
+}
+```
+
+It must validate against this exact interface fragment:
+
+```json
+{
+  "type": "object",
+  "required": ["value"],
+  "properties": {
+    "value": {
+      "type": "number"
+    }
+  },
+  "additionalProperties": false
+}
+```
+
 ## Required user journey
 
 1. The local owner opens setup, chooses `ru-RU` or `en-US`, and completes
    local single-workspace initialization.
-2. The owner imports the golden AgentSpec and sees its validation status and
-   immutable version digest.
+2. The owner imports the golden AgentSpec, promotes it as the locally active
+   immutable version, and sees its validation status and digest.
 3. The owner opens the runner, submits the fixture input, and receives a
    `run_id` immediately.
 4. The run page streams structured progress and survives one browser refresh.

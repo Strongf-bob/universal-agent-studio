@@ -591,7 +591,7 @@ Record GitHub Actions sources, exact major/version policy and licenses in the de
 - deterministic CI path and separate BYOK smoke path;
 - explicit exclusions.
 
-- [ ] **Step 3: Close Slice 0 documentation**
+- [x] **Step 3: Close Slice 0 documentation**
 
 Mark Slice 0 complete only after local verification and passing remote CI. Update README status to `Slice 0 complete / Slice 1 planning`. Link schemas, acceptance contract, threat model and frontend sources.
 
@@ -611,7 +611,7 @@ python3 /Users/strongf/.codex/skills/beautify-github-readme/scripts/audit_readme
 
 Expected: every command passes.
 
-- [ ] **Step 5: Commit and push**
+- [x] **Step 5: Commit and push**
 
 ```bash
 git add .github/workflows/contracts.yml docs/acceptance/SLICE_1_EXECUTABLE_SPINE.md docs/CONTRACTS.md ROADMAP.md README.md third_party/candidates.yaml
@@ -619,7 +619,7 @@ git commit -m "ci: enforce Slice 0 contract gates"
 git push origin agent/slice-0-foundation
 ```
 
-- [ ] **Step 6: Verify remote state**
+- [x] **Step 6: Verify remote state**
 
 Run:
 
