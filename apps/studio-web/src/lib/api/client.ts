@@ -87,6 +87,9 @@ async function requestJson<T>(
       envelope?.retryable ?? false,
     );
   }
+  if (response.status === 204) {
+    return undefined as T;
+  }
   return (await response.json()) as T;
 }
 
@@ -144,6 +147,14 @@ export async function loginOwner(input: {
 
 export function getSession(): Promise<SessionResponse> {
   return requestJson<SessionResponse>("/api/v1/session");
+}
+
+export async function logoutOwner(): Promise<void> {
+  const session = await getSession();
+  await requestJson<void>("/api/v1/session", {
+    method: "DELETE",
+    headers: {"X-CSRF-Token": session.csrf_token},
+  });
 }
 
 export async function createRun(input: {

@@ -126,6 +126,7 @@ services:
     environment:
       UAS_EXECUTION_SIGNING_KEY_FILE: /run/secrets/uas_execution_signing_key
       UAS_TEMPORAL_ADDRESS: temporal:7233
+      UAS_DETERMINISTIC_DELAY_MS: ${UAS_DETERMINISTIC_DELAY_MS:-2000}
     secrets:
       - uas_database_password
       - uas_execution_signing_key

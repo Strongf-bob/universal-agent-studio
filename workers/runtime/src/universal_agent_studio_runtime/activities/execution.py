@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from datetime import UTC, datetime, timedelta
 from typing import Any, cast
 from uuid import UUID, uuid5
@@ -57,9 +58,11 @@ class RunExecutionActivities:
         *,
         signing_key: bytes,
         persistence: RuntimePersistence,
+        deterministic_delay_seconds: float = 0,
     ) -> None:
         self.signing_key = signing_key
         self.persistence = persistence
+        self.deterministic_delay_seconds = deterministic_delay_seconds
 
     def _trusted_command(self, activity_input: dict[str, Any]) -> ExecutionCommand:
         envelope = activity_input.get("envelope")
@@ -78,6 +81,8 @@ class RunExecutionActivities:
             raise ValueError("execution_started_at_invalid")
         started_at = _parse_timestamp(started_at_value)
         activity.heartbeat("execution_verified")
+        if self.deterministic_delay_seconds > 0:
+            await asyncio.sleep(self.deterministic_delay_seconds)
         scope = _scope(command)
         tool_node = next(
             (

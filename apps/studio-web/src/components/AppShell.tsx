@@ -1,11 +1,8 @@
 import { Activity, Bot, CircleCheck } from "lucide-react";
 import Link from "next/link";
 
-import {
-  alternateLocale,
-  type Locale,
-  localizedPath,
-} from "@/lib/i18n/routing";
+import {HeaderActions} from "@/components/HeaderActions";
+import {type Locale, localizedPath} from "@/lib/i18n/routing";
 
 type Props = {
   children: React.ReactNode;
@@ -19,6 +16,7 @@ type Props = {
       russian: string;
       english: string;
       localWorkspace: string;
+      signOut: string;
     };
     nav: {
       agent: string;
@@ -29,7 +27,6 @@ type Props = {
 };
 
 export function AppShell({children, locale, messages}: Props) {
-  const otherLocale = alternateLocale(locale);
   return (
     <>
       <a className="skipLink" href="#main-content">
@@ -65,15 +62,13 @@ export function AppShell({children, locale, messages}: Props) {
             <CircleCheck aria-hidden />
             {messages.nav.statusReady}
           </span>
-          <Link
-            className="localeSwitch"
-            href={localizedPath(otherLocale, "/agents/calculator-agent")}
-            aria-label={messages.common.language}
-          >
-            {otherLocale === "ru-RU"
-              ? messages.common.russian
-              : messages.common.english}
-          </Link>
+          <HeaderActions
+            locale={locale}
+            languageLabel={messages.common.language}
+            russianLabel={messages.common.russian}
+            englishLabel={messages.common.english}
+            signOutLabel={messages.common.signOut}
+          />
         </div>
       </header>
       <main className="appMain" id="main-content" tabIndex={-1}>

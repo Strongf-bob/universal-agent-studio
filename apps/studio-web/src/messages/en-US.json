@@ -8,6 +8,7 @@
     "english": "English",
     "showPassword": "Show password",
     "hidePassword": "Hide password",
+    "signOut": "Sign out",
     "localWorkspace": "Local workspace",
     "securityNote": "Your data and keys stay under your control.",
     "loading": "Loading…"

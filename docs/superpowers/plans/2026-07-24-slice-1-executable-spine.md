@@ -1033,14 +1033,14 @@ git push
 - Consumes: complete local stack and all Slice 1 acceptance requirements.
 - Produces: deterministic browser/API evidence, security evidence, operator guide and required GitHub Actions gate.
 
-- [ ] **Step 1: Write failing browser and security acceptance tests**
+- [x] **Step 1: Write failing browser and security acceptance tests**
 
 The Playwright suite performs setup, fixture import/activation, run, refresh,
 result/flow/trace inspection, locale switch, keyboard navigation, delayed-run
 cancellation and logout/login. Security tests scan response/log/trace/browser
 artifacts for seeded sentinel secrets and verify cross-project denial.
 
-- [ ] **Step 2: Run the acceptance suite before CI wiring**
+- [x] **Step 2: Run the acceptance suite before CI wiring**
 
 Run:
 

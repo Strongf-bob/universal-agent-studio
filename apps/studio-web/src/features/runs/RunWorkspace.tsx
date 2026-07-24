@@ -69,6 +69,8 @@ export function RunWorkspace({
       return;
     }
     let active = true;
+    let retryTimer: number | null = null;
+    let attempts = 0;
     async function hydrateTrace() {
       await Promise.resolve();
       if (!active) {
@@ -76,6 +78,7 @@ export function RunWorkspace({
       }
       setTraceLoading(true);
       setTraceError(false);
+      attempts += 1;
       try {
         const document = await loadTrace(initialRun.run_id);
         if (active) {
@@ -83,7 +86,13 @@ export function RunWorkspace({
         }
       } catch {
         if (active) {
-          setTraceError(true);
+          if (attempts < 10) {
+            retryTimer = window.setTimeout(() => {
+              void hydrateTrace();
+            }, 300);
+          } else {
+            setTraceError(true);
+          }
         }
       } finally {
         if (active) {
@@ -94,6 +103,9 @@ export function RunWorkspace({
     void hydrateTrace();
     return () => {
       active = false;
+      if (retryTimer !== null) {
+        window.clearTimeout(retryTimer);
+      }
     };
   }, [initialRun.run_id, loadTrace, terminal]);
 

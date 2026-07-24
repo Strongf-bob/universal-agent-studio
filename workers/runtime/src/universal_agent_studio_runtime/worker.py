@@ -27,6 +27,7 @@ class RuntimeSettings(BaseSettings):
     runtime_task_queue: str = "uas-runtime-v1"
     execution_signing_key_file: Path = Path("/run/secrets/uas_execution_signing_key")
     readiness_file: Path = Path("/tmp/uas-worker-ready")
+    deterministic_delay_ms: int = 0
 
 
 def load_signing_key(path: Path) -> bytes:
@@ -43,6 +44,7 @@ async def run_worker(settings: RuntimeSettings | None = None) -> None:
     activities = RunExecutionActivities(
         signing_key=load_signing_key(resolved.execution_signing_key_file),
         persistence=SqlRuntimePersistence(create_session_factory(engine)),
+        deterministic_delay_seconds=resolved.deterministic_delay_ms / 1000,
     )
     worker = Worker(
         client,
