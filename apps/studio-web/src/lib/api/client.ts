@@ -1,8 +1,15 @@
 import type {
   AgentDraft,
   AgentSpec,
+  ApiKeyCreateRequest,
+  ApiKeyCreateView,
+  ApiKeyView,
   Layout,
+  PublicationState,
   RunTrace,
+  WebhookCreateRequest,
+  WebhookCreateView,
+  WebhookView,
 } from "@universal-agent-studio/contracts";
 
 export type ErrorEnvelope = {
@@ -304,6 +311,132 @@ export function getAgentDraftForServer(
   return serverRequestJson<AgentDraft>(
     `/api/v1/agents/${encodeURIComponent(agentId)}/draft`,
     cookieHeader,
+  );
+}
+
+export function getPublishingStateForServer(
+  agentId: string,
+  cookieHeader: string,
+): Promise<PublicationState> {
+  return serverRequestJson<PublicationState>(
+    `/api/v1/agents/${encodeURIComponent(agentId)}/publishing`,
+    cookieHeader,
+  );
+}
+
+export function getPublishingState(
+  agentId: string,
+): Promise<PublicationState> {
+  return requestJson<PublicationState>(
+    `/api/v1/agents/${encodeURIComponent(agentId)}/publishing`,
+  );
+}
+
+export async function publishAgent(input: {
+  agentId: string;
+  expectedDraftRevision: number;
+  expectedActiveVersionId: string | null;
+}): Promise<PublicationState> {
+  const session = await getSession();
+  return requestJson<PublicationState>(
+    `/api/v1/agents/${encodeURIComponent(input.agentId)}/publish`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRF-Token": session.csrf_token,
+      },
+      body: JSON.stringify({
+        expected_draft_revision: input.expectedDraftRevision,
+        expected_active_version_id: input.expectedActiveVersionId,
+      }),
+    },
+  );
+}
+
+export async function rollbackAgent(input: {
+  agentId: string;
+  expectedActiveVersionId: string;
+  targetVersionId: string;
+}): Promise<PublicationState> {
+  const session = await getSession();
+  return requestJson<PublicationState>(
+    `/api/v1/agents/${encodeURIComponent(input.agentId)}/rollback`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRF-Token": session.csrf_token,
+      },
+      body: JSON.stringify({
+        expected_active_version_id: input.expectedActiveVersionId,
+        target_version_id: input.targetVersionId,
+      }),
+    },
+  );
+}
+
+export async function createAgentApiKey(input: {
+  agentId: string;
+  request: ApiKeyCreateRequest;
+}): Promise<ApiKeyCreateView> {
+  const session = await getSession();
+  return requestJson<ApiKeyCreateView>(
+    `/api/v1/agents/${encodeURIComponent(input.agentId)}/api-keys`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRF-Token": session.csrf_token,
+      },
+      body: JSON.stringify(input.request),
+    },
+  );
+}
+
+export async function revokeAgentApiKey(input: {
+  agentId: string;
+  keyId: string;
+}): Promise<ApiKeyView> {
+  const session = await getSession();
+  return requestJson<ApiKeyView>(
+    `/api/v1/agents/${encodeURIComponent(input.agentId)}/api-keys/${encodeURIComponent(input.keyId)}/revoke`,
+    {
+      method: "POST",
+      headers: {"X-CSRF-Token": session.csrf_token},
+    },
+  );
+}
+
+export async function createAgentWebhook(input: {
+  agentId: string;
+  request: WebhookCreateRequest;
+}): Promise<WebhookCreateView> {
+  const session = await getSession();
+  return requestJson<WebhookCreateView>(
+    `/api/v1/agents/${encodeURIComponent(input.agentId)}/webhooks`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRF-Token": session.csrf_token,
+      },
+      body: JSON.stringify(input.request),
+    },
+  );
+}
+
+export async function revokeAgentWebhook(input: {
+  agentId: string;
+  subscriptionId: string;
+}): Promise<WebhookView> {
+  const session = await getSession();
+  return requestJson<WebhookView>(
+    `/api/v1/agents/${encodeURIComponent(input.agentId)}/webhooks/${encodeURIComponent(input.subscriptionId)}/revoke`,
+    {
+      method: "POST",
+      headers: {"X-CSRF-Token": session.csrf_token},
+    },
   );
 }
 

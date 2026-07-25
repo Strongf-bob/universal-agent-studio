@@ -1,4 +1,4 @@
-import {Activity, Bot, CircleCheck, Workflow} from "lucide-react";
+import {Activity, Bot, CircleCheck, Rocket, Workflow} from "lucide-react";
 import Link from "next/link";
 
 import {HeaderActions} from "@/components/HeaderActions";
@@ -21,6 +21,7 @@ type Props = {
     nav: {
       agent: string;
       build: string;
+      publish: string;
       runs: string;
       statusReady: string;
     };
@@ -61,6 +62,15 @@ export function AppShell({children, locale, messages}: Props) {
           >
             <Workflow aria-hidden />
             {messages.nav.build}
+          </Link>
+          <Link
+            href={localizedPath(
+              locale,
+              "/agents/calculator-agent/publish",
+            )}
+          >
+            <Rocket aria-hidden />
+            {messages.nav.publish}
           </Link>
           <span aria-disabled="true">
             <Activity aria-hidden />

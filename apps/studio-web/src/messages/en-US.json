@@ -16,6 +16,7 @@
   "nav": {
     "agent": "Agent",
     "build": "Build",
+    "publish": "Publish",
     "runs": "Runs",
     "statusReady": "Local runtime ready"
   },
@@ -331,6 +332,87 @@
       "summary": "{count} validation issue(s) must be fixed before the draft can be saved.",
       "required": "Required field",
       "invalid": "Invalid value"
+    }
+  },
+  "publishing": {
+    "eyebrow": "Delivery control",
+    "title": "Publish agent",
+    "description": "Create immutable versions, choose which version receives traffic, and issue scoped delivery credentials.",
+    "draftRevision": "Draft revision {revision}",
+    "traffic": "Traffic: {versionId}",
+    "unpublished": "not published",
+    "publishRevision": "Publish revision {revision}",
+    "publishing": "Publishing…",
+    "actions": {
+      "idle": "Publishing controls are ready.",
+      "publishing": "Creating an immutable version…",
+      "rolling-back": "Switching traffic…",
+      "creating-key": "Creating API key…",
+      "revoking-key": "Revoking API key…",
+      "creating-webhook": "Creating webhook…",
+      "revoking-webhook": "Revoking webhook…"
+    },
+    "conflict": {
+      "title": "Publishing state changed",
+      "description": "The authoritative state was refreshed. Review it before trying again."
+    },
+    "error": {
+      "title": "The action could not be completed",
+      "description": "No traffic setting was changed. Check the fields and try again."
+    },
+    "versions": {
+      "eyebrow": "Immutable artifacts",
+      "title": "Version history",
+      "version": "Version",
+      "digest": "Digest",
+      "created": "Created",
+      "traffic": "Traffic",
+      "action": "Action",
+      "active": "Active",
+      "inactive": "Inactive",
+      "switchTraffic": "Switch traffic",
+      "rollbackTo": "Switch traffic to {versionId}"
+    },
+    "ledger": {
+      "title": "Publication ledger",
+      "empty": "The first publication event will appear here.",
+      "event": "Event",
+      "route": "Traffic change",
+      "created": "Created"
+    },
+    "delivery": {
+      "eyebrow": "Public delivery",
+      "title": "Web App and API",
+      "description": "Open the isolated public experience or integrate the same published version through the API.",
+      "open": "Open Published Web App"
+    },
+    "keys": {
+      "eyebrow": "Scoped access",
+      "title": "API keys",
+      "description": "Keys are bound to this agent. The complete value is shown only once.",
+      "label": "Key label",
+      "create": "Create API key",
+      "empty": "No API keys have been issued.",
+      "revoke": "Revoke",
+      "revoked": "Revoked"
+    },
+    "webhooks": {
+      "eyebrow": "Terminal events",
+      "title": "Webhooks",
+      "description": "Send signed completion, failure, and cancellation events to an allowed HTTPS origin.",
+      "label": "Webhook label",
+      "url": "Target URL",
+      "create": "Create webhook",
+      "empty": "No webhook subscriptions configured.",
+      "revoke": "Revoke",
+      "revoked": "Revoked"
+    },
+    "secret": {
+      "title": "Copy this API key now",
+      "webhookTitle": "Copy this signing secret now",
+      "description": "For security, the complete value cannot be shown again.",
+      "copy": "Copy",
+      "dismiss": "Dismiss"
     }
   },
   "errors": {

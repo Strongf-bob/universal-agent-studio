@@ -2298,3 +2298,425 @@ h1 {
     animation-iteration-count: 1 !important;
   }
 }
+
+/* Publishing workspace */
+.publishWorkspace {
+  display: grid;
+  gap: var(--space-6);
+  width: min(100%, 1240px);
+  margin: 0 auto;
+}
+
+.publishHero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 380px);
+  align-items: end;
+  gap: var(--space-8);
+  padding: clamp(24px, 4vw, 48px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background:
+    linear-gradient(125deg, var(--surface) 45%, var(--surface-accent)),
+    var(--surface);
+  box-shadow: var(--shadow-md);
+}
+
+.publishHero h1 {
+  max-width: 12ch;
+  margin: var(--space-2) 0 var(--space-4);
+  font-size: clamp(36px, 6vw, 64px);
+  line-height: 1;
+  letter-spacing: -0.055em;
+}
+
+.publishHero p {
+  max-width: 68ch;
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.publishActionCard {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-6);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-sm);
+}
+
+.publishActionCard > span {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.publishActionCard > code {
+  overflow: hidden;
+  color: var(--text-soft);
+  font-size: 12px;
+  text-overflow: ellipsis;
+}
+
+.publishActionCard > strong {
+  font-size: 15px;
+}
+
+.publishActionCard > button,
+.inlineCreateForm button,
+.stackedCreateForm button,
+.secretActions button {
+  min-height: 44px;
+  border: 1px solid var(--action);
+  border-radius: var(--radius-sm);
+  background: var(--action);
+  color: var(--action-text);
+  cursor: pointer;
+  font-weight: 700;
+  transition:
+    background var(--motion-fast),
+    transform var(--motion-fast);
+}
+
+.publishActionCard > button:hover:not(:disabled),
+.inlineCreateForm button:hover:not(:disabled),
+.stackedCreateForm button:hover:not(:disabled),
+.secretActions button:hover:not(:disabled) {
+  background: var(--action-hover);
+  transform: translateY(-1px);
+}
+
+.publishActionCard > button:disabled,
+.inlineCreateForm button:disabled,
+.stackedCreateForm button:disabled {
+  cursor: wait;
+  opacity: 0.64;
+}
+
+.publishStatus {
+  min-height: 24px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.publishAlert {
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-4);
+  border: 1px solid var(--danger);
+  border-radius: var(--radius-md);
+  background: var(--danger-surface);
+  color: var(--danger);
+}
+
+.publishingGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-6);
+}
+
+.publishingPanel {
+  min-width: 0;
+  padding: clamp(20px, 3vw, 32px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.publishingPanel--wide {
+  grid-column: 1 / -1;
+}
+
+.publishingPanelHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.publishingPanelHeader h2,
+.publicDelivery h2 {
+  margin: var(--space-1) 0 0;
+  font-size: clamp(22px, 3vw, 30px);
+  letter-spacing: -0.035em;
+}
+
+.countBadge,
+.trafficBadge,
+.revokedBadge,
+.eventKind {
+  display: inline-flex;
+  min-height: 28px;
+  align-items: center;
+  padding: 0 var(--space-2);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.countBadge {
+  background: var(--surface-subtle);
+  color: var(--text-muted);
+}
+
+.trafficBadge {
+  background: var(--success-surface);
+  color: var(--success);
+}
+
+.revokedBadge {
+  background: var(--surface-subtle);
+  color: var(--text-muted);
+}
+
+.eventKind {
+  border: 1px solid var(--border);
+  background: var(--surface-subtle);
+  color: var(--text);
+  font-family: var(--font-mono);
+}
+
+.panelDescription {
+  margin: 0 0 var(--space-6);
+  color: var(--text-muted);
+}
+
+.publishingTableScroll {
+  overflow-x: auto;
+}
+
+.publishingTable {
+  width: 100%;
+  min-width: 720px;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.publishingTable th,
+.publishingTable td {
+  padding: var(--space-3);
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.publishingTable th {
+  color: var(--text-muted);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.publishingTable td:first-child {
+  display: grid;
+  gap: 2px;
+}
+
+.publishingTable td small {
+  color: var(--text-muted);
+}
+
+.publishingTable code {
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  overflow-wrap: anywhere;
+}
+
+.publishingTable--compact {
+  min-width: 620px;
+}
+
+.ledger {
+  margin-top: var(--space-8);
+}
+
+.ledger h3 {
+  margin: 0 0 var(--space-4);
+}
+
+.emptyState {
+  margin: var(--space-4) 0 0;
+  padding: var(--space-4);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.textButton {
+  min-height: 44px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--action);
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.textButton:hover:not(:disabled) {
+  border-color: var(--action);
+  background: var(--surface-accent);
+}
+
+.textButton--danger {
+  color: var(--danger);
+}
+
+.publicDelivery {
+  display: grid;
+  grid-template-columns: minmax(0, 0.75fr) minmax(340px, 1.25fr);
+  align-items: center;
+  gap: var(--space-8);
+}
+
+.publicDelivery pre {
+  max-width: 100%;
+  margin: 0;
+  padding: var(--space-4);
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-subtle);
+  color: var(--text);
+  font: 12px/1.6 var(--font-mono);
+}
+
+.publicDelivery a {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  font-weight: 750;
+}
+
+.oneTimeSecret {
+  display: grid;
+  gap: var(--space-2);
+  margin-bottom: var(--space-6);
+  padding: var(--space-4);
+  border: 1px solid var(--warning);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--warning) 10%, var(--surface));
+}
+
+.oneTimeSecret p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.oneTimeSecret code {
+  padding: var(--space-3);
+  overflow-wrap: anywhere;
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  font-family: var(--font-mono);
+}
+
+.secretActions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.secretActions button {
+  padding: 0 var(--space-4);
+}
+
+.secretActions button:last-child {
+  border-color: var(--border);
+  background: var(--surface);
+  color: var(--text);
+}
+
+.inlineCreateForm,
+.stackedCreateForm {
+  display: grid;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.inlineCreateForm label,
+.stackedCreateForm label {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.inlineCreateForm > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-2);
+}
+
+.inlineCreateForm input,
+.stackedCreateForm input {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+}
+
+.inlineCreateForm button,
+.stackedCreateForm button {
+  padding: 0 var(--space-4);
+}
+
+.credentialList {
+  display: grid;
+  gap: var(--space-2);
+  margin: var(--space-4) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.credentialList li {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-subtle);
+}
+
+.credentialList li > span:first-child {
+  display: grid;
+  min-width: 0;
+}
+
+.credentialList code,
+.credentialList small {
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 860px) {
+  .publishHero,
+  .publishingGrid,
+  .publicDelivery {
+    grid-template-columns: 1fr;
+  }
+
+  .publishActionCard {
+    width: 100%;
+  }
+}
+
+@media (max-width: 560px) {
+  .inlineCreateForm > div {
+    grid-template-columns: 1fr;
+  }
+
+  .credentialList li {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

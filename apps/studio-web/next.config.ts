@@ -1,9 +1,13 @@
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
+import path from "node:path";
 
 const nextConfig: NextConfig = {
   output: "standalone",
   typedRoutes: false,
+  turbopack: {
+    root: path.resolve(import.meta.dirname, "../.."),
+  },
   async headers() {
     return [
       {
