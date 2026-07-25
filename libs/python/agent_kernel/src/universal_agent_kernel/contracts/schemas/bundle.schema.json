@@ -329,6 +329,14 @@
       "title": "AgentVersion",
       "type": "object"
     },
+    "ApiKeyCreateRequest": {
+      "$ref": "#/$defs/PublicationState/$defs/ApiKeyCreateRequest",
+      "title": "ApiKeyCreateRequest"
+    },
+    "ApiKeyCreateView": {
+      "$ref": "#/$defs/PublicationState/$defs/ApiKeyCreateView",
+      "title": "ApiKeyCreateView"
+    },
     "ErrorEnvelope": {
       "additionalProperties": false,
       "properties": {
@@ -715,6 +723,644 @@
       ],
       "title": "NodeSpec",
       "type": "object"
+    },
+    "PublicAgentView": {
+      "additionalProperties": false,
+      "properties": {
+        "agent_id": {
+          "$ref": "#/$defs/Universal Agent Studio common contract definitions/$defs/identifier"
+        },
+        "agent_version_digest": {
+          "$ref": "#/$defs/Universal Agent Studio common contract definitions/$defs/sha256"
+        },
+        "agent_version_id": {
+          "$ref": "#/$defs/Universal Agent Studio common contract definitions/$defs/identifier"
+        },
+        "interface": {
+          "$ref": "#/$defs/InterfaceSchema"
+        },
+        "localized_metadata": {
+          "$ref": "#/$defs/Universal Agent Studio common contract definitions/$defs/localizedMetadata"
+        },
+        "schema_version": {
+          "const": "0.1.0"
+        }
+      },
+      "required": [
+        "schema_version",
+        "agent_id",
+        "agent_version_id",
+        "agent_version_digest",
+        "localized_metadata",
+        "interface"
+      ],
+      "title": "PublicAgentView",
+      "type": "object"
+    },
+    "PublicRunCreateRequest": {
+      "$ref": "#/$defs/PublicRunView/$defs/PublicRunCreateRequest",
+      "title": "PublicRunCreateRequest"
+    },
+    "PublicRunView": {
+      "$defs": {
+        "PublicLocale": {
+          "enum": [
+            "ru-RU",
+            "en-US"
+          ]
+        },
+        "PublicRunCreateRequest": {
+          "additionalProperties": false,
+          "properties": {
+            "input": {
+              "type": "object"
+            },
+            "locale": {
+              "$ref": "#/$defs/PublicRunView/$defs/PublicLocale"
+            }
+          },
+          "required": [
+            "input",
+            "locale"
+          ],
+          "title": "PublicRunCreateRequest",
+          "type": "object"
+        },
+        "PublicRunEvent": {
+          "additionalProperties": false,
+          "properties": {
+            "error_code": {
+              "oneOf": [
+                {
+                  "enum": [
+                    "invocation_unavailable",
+                    "run_cancelled"
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "occurred_at": {
+              "format": "date-time",
+              "type": "string"
+            },
+            "output": {
+              "oneOf": [
+                {
+                  "type": "object"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "schema_version": {
+              "const": "0.1.0"
+            },
+            "sequence": {
+              "minimum": 1,
+              "type": "integer"
+            },
+            "status": {
+              "$ref": "#/$defs/PublicRunView/$defs/PublicRunStatus"
+            },
+            "type": {
+              "enum": [
+                "run.queued",
+                "run.started",
+                "run.completed",
+                "run.failed",
+                "run.cancelled"
+              ]
+            }
+          },
+          "required": [
+            "schema_version",
+            "sequence",
+            "type",
+            "status",
+            "output",
+            "error_code",
+            "occurred_at"
+          ],
+          "title": "PublicRunEvent",
+          "type": "object"
+        },
+        "PublicRunStatus": {
+          "enum": [
+            "queued",
+            "running",
+            "completed",
+            "failed",
+            "cancelled"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "properties": {
+        "agent_id": {
+          "$ref": "#/$defs/Universal Agent Studio common contract definitions/$defs/identifier"
+        },
+        "agent_version_digest": {
+          "$ref": "#/$defs/Universal Agent Studio common contract definitions/$defs/sha256"
+        },
+        "agent_version_id": {
+          "$ref": "#/$defs/Universal Agent Studio common contract definitions/$defs/identifier"
+        },
+        "error_code": {
+          "oneOf": [
+            {
+              "enum": [
+                "invocation_unavailable",
+                "run_cancelled"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "events_url": {
+          "pattern": "^/public/v1/agents/[a-z][a-z0-9_-]{2,63}/runs/[0-9a-f-]{36}/events$",
+          "type": "string"
+        },
+        "locale": {
+          "$ref": "#/$defs/PublicRunView/$defs/PublicLocale"
+        },
+        "output": {
+          "oneOf": [
+            {
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "run_capability": {
+          "maxLength": 1024,
+          "minLength": 32,
+          "type": "string"
+        },
+        "run_id": {
+          "$ref": "#/$defs/Universal Agent Studio common contract definitions/$defs/uuid"
+        },
+        "schema_version": {
+          "const": "0.1.0"
+        },
+        "status": {
+          "$ref": "#/$defs/PublicRunView/$defs/PublicRunStatus"
+        },
+        "status_url": {
+          "pattern": "^/public/v1/agents/[a-z][a-z0-9_-]{2,63}/runs/[0-9a-f-]{36}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema_version",
+        "run_id",
+        "agent_id",
+        "agent_version_id",
+        "agent_version_digest",
+        "status",
+        "locale",
+        "output",
+        "error_code",
+        "status_url",
+        "events_url"
+      ],
+      "title": "PublicRunView",
+      "type": "object"
+    },
+    "PublicationState": {
+      "$defs": {
+        "ApiKeyCreateRequest": {
+          "additionalProperties": false,
+          "properties": {
+            "expires_at": {
+              "oneOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "label": {
+              "maxLength": 120,
+              "minLength": 1,
+              "type": "string"
+            },
+            "scopes": {
+              "items": {
+                "$ref": "#/$defs/PublicationState/$defs/ApiKeyScope"
+              },
+              "minItems": 1,
+              "type": "array",
+              "uniqueItems": true
+            }
+          },
+          "required": [
+            "label",
+            "scopes",
+            "expires_at"
+          ],
+          "title": "ApiKeyCreateRequest",
+          "type": "object"
+        },
+        "ApiKeyCreateView": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/PublicationState/$defs/ApiKeyView"
+            },
+            {
+              "properties": {
+                "secret": {
+                  "pattern": "^uas_live_[a-f0-9]{16}_[A-Za-z0-9_-]{43}$",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "secret"
+              ],
+              "type": "object"
+            }
+          ],
+          "title": "ApiKeyCreateView"
+        },
+        "ApiKeyScope": {
+          "enum": [
+            "runs:create",
+            "runs:read",
+            "events:read"
+          ]
+        },
+        "ApiKeyView": {
+          "additionalProperties": false,
+          "properties": {
+            "created_at": {
+              "format": "date-time",
+              "type": "string"
+            },
+            "expires_at": {
+              "oneOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "key_id": {
+              "$ref": "#/$defs/Universal Agent Studio common contract definitions/$defs/uuid"
+            },
+            "label": {
+              "type": "string"
+            },
+            "last_used_at": {
+              "oneOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "prefix": {
+              "pattern": "^[a-f0-9]{16}$",
+              "type": "string"
+            },
+            "revoked_at": {
+              "oneOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "scopes": {
+              "items": {
+                "$ref": "#/$defs/PublicationState/$defs/ApiKeyScope"
+              },
+              "minItems": 1,
+              "type": "array",
+              "uniqueItems": true
+            }
+          },
+          "required": [
+            "key_id",
+            "label",
+            "prefix",
+            "scopes",
+            "expires_at",
+            "created_at",
+            "last_used_at",
+            "revoked_at"
+          ],
+          "title": "ApiKeyView",
+          "type": "object"
+        },
+        "PublicationEventView": {
+          "additionalProperties": false,
+          "properties": {
+            "created_at": {
+              "format": "date-time",
+              "type": "string"
+            },
+            "event_id": {
+              "$ref": "#/$defs/Universal Agent Studio common contract definitions/$defs/uuid"
+            },
+            "event_type": {
+              "enum": [
+                "publish",
+                "rollback"
+              ]
+            },
+            "previous_version_id": {
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/Universal Agent Studio common contract definitions/$defs/identifier"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "selected_version_digest": {
+              "$ref": "#/$defs/Universal Agent Studio common contract definitions/$defs/sha256"
+            },
+            "selected_version_id": {
+              "$ref": "#/$defs/Universal Agent Studio common contract definitions/$defs/identifier"
+            }
+          },
+          "required": [
+            "event_id",
+            "event_type",
+            "previous_version_id",
+            "selected_version_id",
+            "selected_version_digest",
+            "created_at"
+          ],
+          "title": "PublicationEventView",
+          "type": "object"
+        },
+        "PublishRequest": {
+          "additionalProperties": false,
+          "properties": {
+            "expected_active_version_id": {
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/Universal Agent Studio common contract definitions/$defs/identifier"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "expected_draft_revision": {
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "expected_draft_revision",
+            "expected_active_version_id"
+          ],
+          "title": "PublishRequest",
+          "type": "object"
+        },
+        "PublishedVersionView": {
+          "additionalProperties": false,
+          "properties": {
+            "created_at": {
+              "format": "date-time",
+              "type": "string"
+            },
+            "digest": {
+              "$ref": "#/$defs/Universal Agent Studio common contract definitions/$defs/sha256"
+            },
+            "version_id": {
+              "$ref": "#/$defs/Universal Agent Studio common contract definitions/$defs/identifier"
+            },
+            "version_number": {
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "version_id",
+            "version_number",
+            "digest",
+            "created_at"
+          ],
+          "title": "PublishedVersionView",
+          "type": "object"
+        },
+        "RollbackRequest": {
+          "additionalProperties": false,
+          "properties": {
+            "expected_active_version_id": {
+              "$ref": "#/$defs/Universal Agent Studio common contract definitions/$defs/identifier"
+            },
+            "target_version_id": {
+              "$ref": "#/$defs/Universal Agent Studio common contract definitions/$defs/identifier"
+            }
+          },
+          "required": [
+            "target_version_id",
+            "expected_active_version_id"
+          ],
+          "title": "RollbackRequest",
+          "type": "object"
+        },
+        "WebhookCreateRequest": {
+          "additionalProperties": false,
+          "properties": {
+            "events": {
+              "items": {
+                "$ref": "#/$defs/PublicationState/$defs/WebhookEventType"
+              },
+              "minItems": 1,
+              "type": "array",
+              "uniqueItems": true
+            },
+            "label": {
+              "maxLength": 120,
+              "minLength": 1,
+              "type": "string"
+            },
+            "target_url": {
+              "format": "uri",
+              "maxLength": 2048,
+              "type": "string"
+            }
+          },
+          "required": [
+            "label",
+            "target_url",
+            "events"
+          ],
+          "title": "WebhookCreateRequest",
+          "type": "object"
+        },
+        "WebhookCreateView": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/PublicationState/$defs/WebhookView"
+            },
+            {
+              "properties": {
+                "secret": {
+                  "pattern": "^whsec_[A-Za-z0-9_-]{43}$",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "secret"
+              ],
+              "type": "object"
+            }
+          ],
+          "title": "WebhookCreateView"
+        },
+        "WebhookEventType": {
+          "enum": [
+            "run.completed",
+            "run.failed",
+            "run.cancelled"
+          ]
+        },
+        "WebhookView": {
+          "additionalProperties": false,
+          "properties": {
+            "created_at": {
+              "format": "date-time",
+              "type": "string"
+            },
+            "events": {
+              "items": {
+                "$ref": "#/$defs/PublicationState/$defs/WebhookEventType"
+              },
+              "minItems": 1,
+              "type": "array",
+              "uniqueItems": true
+            },
+            "label": {
+              "type": "string"
+            },
+            "revoked_at": {
+              "oneOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "subscription_id": {
+              "$ref": "#/$defs/Universal Agent Studio common contract definitions/$defs/uuid"
+            },
+            "target_url": {
+              "format": "uri",
+              "type": "string"
+            }
+          },
+          "required": [
+            "subscription_id",
+            "label",
+            "target_url",
+            "events",
+            "created_at",
+            "revoked_at"
+          ],
+          "title": "WebhookView",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "properties": {
+        "active_version_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Universal Agent Studio common contract definitions/$defs/identifier"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "agent_id": {
+          "$ref": "#/$defs/Universal Agent Studio common contract definitions/$defs/identifier"
+        },
+        "api_keys": {
+          "items": {
+            "$ref": "#/$defs/PublicationState/$defs/ApiKeyView"
+          },
+          "type": "array"
+        },
+        "draft_digest": {
+          "$ref": "#/$defs/Universal Agent Studio common contract definitions/$defs/sha256"
+        },
+        "draft_revision": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "events": {
+          "items": {
+            "$ref": "#/$defs/PublicationState/$defs/PublicationEventView"
+          },
+          "type": "array"
+        },
+        "schema_version": {
+          "const": "0.1.0"
+        },
+        "versions": {
+          "items": {
+            "$ref": "#/$defs/PublicationState/$defs/PublishedVersionView"
+          },
+          "type": "array"
+        },
+        "webhooks": {
+          "items": {
+            "$ref": "#/$defs/PublicationState/$defs/WebhookView"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "schema_version",
+        "agent_id",
+        "draft_revision",
+        "draft_digest",
+        "active_version_id",
+        "versions",
+        "events",
+        "api_keys",
+        "webhooks"
+      ],
+      "title": "PublicationState",
+      "type": "object"
+    },
+    "PublishRequest": {
+      "$ref": "#/$defs/PublicationState/$defs/PublishRequest",
+      "title": "PublishRequest"
+    },
+    "RollbackRequest": {
+      "$ref": "#/$defs/PublicationState/$defs/RollbackRequest",
+      "title": "RollbackRequest"
     },
     "RunEvent": {
       "additionalProperties": false,
@@ -1301,6 +1947,14 @@
         }
       },
       "title": "Universal Agent Studio common contract definitions"
+    },
+    "WebhookCreateRequest": {
+      "$ref": "#/$defs/PublicationState/$defs/WebhookCreateRequest",
+      "title": "WebhookCreateRequest"
+    },
+    "WebhookCreateView": {
+      "$ref": "#/$defs/PublicationState/$defs/WebhookCreateView",
+      "title": "WebhookCreateView"
     }
   },
   "$id": "https://schemas.universal-agent.studio/v0.1.0/contract-bundle.schema.json",
@@ -1316,6 +1970,12 @@
     "agent_version": {
       "$ref": "#/$defs/AgentVersion"
     },
+    "api_key_create_request": {
+      "$ref": "#/$defs/ApiKeyCreateRequest"
+    },
+    "api_key_create_view": {
+      "$ref": "#/$defs/ApiKeyCreateView"
+    },
     "error_envelope": {
       "$ref": "#/$defs/ErrorEnvelope"
     },
@@ -1328,6 +1988,24 @@
     "node_spec": {
       "$ref": "#/$defs/NodeSpec"
     },
+    "public_agent": {
+      "$ref": "#/$defs/PublicAgentView"
+    },
+    "public_run": {
+      "$ref": "#/$defs/PublicRunView"
+    },
+    "public_run_create_request": {
+      "$ref": "#/$defs/PublicRunCreateRequest"
+    },
+    "publication": {
+      "$ref": "#/$defs/PublicationState"
+    },
+    "publish_request": {
+      "$ref": "#/$defs/PublishRequest"
+    },
+    "rollback_request": {
+      "$ref": "#/$defs/RollbackRequest"
+    },
     "run_event": {
       "$ref": "#/$defs/RunEvent"
     },
@@ -1339,6 +2017,12 @@
     },
     "tool_manifest": {
       "$ref": "#/$defs/ToolManifest"
+    },
+    "webhook_create_request": {
+      "$ref": "#/$defs/WebhookCreateRequest"
+    },
+    "webhook_create_view": {
+      "$ref": "#/$defs/WebhookCreateView"
     }
   },
   "title": "ContractBundle",

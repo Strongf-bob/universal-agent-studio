@@ -10,18 +10,37 @@ export type { NodeSpec } from "./node-spec.generated.js";
  * and run json-schema-to-typescript to regenerate this file.
  */
 
+export type ApiKeyCreateView = ApiKeyView & {
+  secret: string;
+  [k: string]: unknown;
+};
+export type WebhookCreateView = WebhookView & {
+  secret: string;
+  [k: string]: unknown;
+};
+
 export interface ContractBundle {
   agent_draft?: AgentDraft;
   agent_spec?: AgentSpec;
   agent_version?: AgentVersion;
+  api_key_create_request?: ApiKeyCreateRequest;
+  api_key_create_view?: ApiKeyCreateView;
   error_envelope?: ErrorEnvelope;
   interface_schema?: InterfaceSchema;
   model_profile?: ModelProfile;
   node_spec?: NodeSpec;
+  public_agent?: PublicAgentView;
+  public_run?: PublicRunView;
+  public_run_create_request?: PublicRunCreateRequest;
+  publication?: PublicationState;
+  publish_request?: PublishRequest;
+  rollback_request?: RollbackRequest;
   run_event?: RunEvent;
   run_request?: RunRequest;
   run_trace?: RunTrace;
   tool_manifest?: ToolManifest;
+  webhook_create_request?: WebhookCreateRequest;
+  webhook_create_view?: WebhookCreateView;
 }
 export interface AgentDraft {
   agent_id: string;
@@ -191,6 +210,27 @@ export interface Signature {
   key_id: string;
   value: string;
 }
+export interface ApiKeyCreateRequest {
+  expires_at: string | null;
+  label: string;
+  /**
+   * @minItems 1
+   */
+  scopes: ["runs:create" | "runs:read" | "events:read", ...("runs:create" | "runs:read" | "events:read")[]];
+}
+export interface ApiKeyView {
+  created_at: string;
+  expires_at: string | null;
+  key_id: string;
+  label: string;
+  last_used_at: string | null;
+  prefix: string;
+  revoked_at: string | null;
+  /**
+   * @minItems 1
+   */
+  scopes: ["runs:create" | "runs:read" | "events:read", ...("runs:create" | "runs:read" | "events:read")[]];
+}
 export interface ErrorEnvelope {
   code: string;
   details: {
@@ -199,6 +239,80 @@ export interface ErrorEnvelope {
   message_key: string;
   node_id?: string;
   retryable: boolean;
+}
+export interface PublicAgentView {
+  agent_id: string;
+  agent_version_digest: string;
+  agent_version_id: string;
+  interface: InterfaceSchema;
+  localized_metadata: LocalizedMetadata;
+  schema_version: "0.1.0";
+}
+export interface PublicRunView {
+  agent_id: string;
+  agent_version_digest: string;
+  agent_version_id: string;
+  error_code: ("invocation_unavailable" | "run_cancelled") | null;
+  events_url: string;
+  locale: "ru-RU" | "en-US";
+  output: {
+    [k: string]: unknown;
+  } | null;
+  run_capability?: string;
+  run_id: string;
+  schema_version: "0.1.0";
+  status: "queued" | "running" | "completed" | "failed" | "cancelled";
+  status_url: string;
+}
+export interface PublicRunCreateRequest {
+  input: {
+    [k: string]: unknown;
+  };
+  locale: "ru-RU" | "en-US";
+}
+export interface PublicationState {
+  active_version_id: string | null;
+  agent_id: string;
+  api_keys: ApiKeyView[];
+  draft_digest: string;
+  draft_revision: number;
+  events: PublicationEventView[];
+  schema_version: "0.1.0";
+  versions: PublishedVersionView[];
+  webhooks: WebhookView[];
+}
+export interface PublicationEventView {
+  created_at: string;
+  event_id: string;
+  event_type: "publish" | "rollback";
+  previous_version_id: string | null;
+  selected_version_digest: string;
+  selected_version_id: string;
+}
+export interface PublishedVersionView {
+  created_at: string;
+  digest: string;
+  version_id: string;
+  version_number: number;
+}
+export interface WebhookView {
+  created_at: string;
+  /**
+   * @minItems 1
+   */
+  events: ["run.completed" | "run.failed" | "run.cancelled", ...("run.completed" | "run.failed" | "run.cancelled")[]];
+  label: string;
+  revoked_at: string | null;
+  subscription_id: string;
+  target_url: string;
+}
+export interface PublishRequest {
+  expected_active_version_id: string | null;
+  expected_draft_revision: number;
+}
+export interface RollbackRequest {
+  expected_active_version_id: string;
+  target_version_id: string;
 }
 export interface RunEvent {
   causation_id: string;
@@ -308,4 +422,12 @@ export interface ToolResolution {
   digest: string;
   tool_id: string;
   version: string;
+}
+export interface WebhookCreateRequest {
+  /**
+   * @minItems 1
+   */
+  events: ["run.completed" | "run.failed" | "run.cancelled", ...("run.completed" | "run.failed" | "run.cancelled")[]];
+  label: string;
+  target_url: string;
 }

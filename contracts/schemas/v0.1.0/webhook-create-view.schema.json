@@ -1,0 +1,6 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.universal-agent.studio/v0.1.0/webhook-create-view.schema.json",
+  "title": "WebhookCreateView",
+  "$ref": "publication.schema.json#/$defs/WebhookCreateView"
+}

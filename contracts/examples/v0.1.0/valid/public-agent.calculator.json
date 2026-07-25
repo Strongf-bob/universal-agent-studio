@@ -1,0 +1,50 @@
+{
+  "schema_version": "0.1.0",
+  "agent_id": "calculator-agent",
+  "agent_version_id": "calculator-agent-v1",
+  "agent_version_digest": "37706b41df661fa4835526e70407223a43868109f18437652a6f1777a5e15a53",
+  "localized_metadata": {
+    "name": {
+      "ru-RU": "Агент-калькулятор",
+      "en-US": "Calculator Agent"
+    },
+    "description": {
+      "ru-RU": "Разбирает арифметическую задачу и возвращает структурированный результат.",
+      "en-US": "Interprets an arithmetic request and returns a structured result."
+    }
+  },
+  "interface": {
+    "mode": "form",
+    "locales": [
+      "ru-RU",
+      "en-US"
+    ],
+    "default_locale": "ru-RU",
+    "input_fields": [
+      {
+        "id": "question",
+        "label": {
+          "ru-RU": "Арифметическая задача",
+          "en-US": "Arithmetic problem"
+        },
+        "schema": {
+          "type": "string",
+          "minLength": 1
+        },
+        "required": true
+      }
+    ],
+    "result_schema": {
+      "type": "object",
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "value": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

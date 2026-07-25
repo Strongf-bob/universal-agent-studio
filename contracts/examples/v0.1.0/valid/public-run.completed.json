@@ -1,0 +1,15 @@
+{
+  "schema_version": "0.1.0",
+  "run_id": "f3042f68-1249-43e5-9f86-cbb47f9c3433",
+  "agent_id": "calculator-agent",
+  "agent_version_id": "calculator-agent-v1",
+  "agent_version_digest": "37706b41df661fa4835526e70407223a43868109f18437652a6f1777a5e15a53",
+  "status": "completed",
+  "locale": "en-US",
+  "output": {
+    "value": 437
+  },
+  "error_code": null,
+  "status_url": "/public/v1/agents/calculator-agent/runs/f3042f68-1249-43e5-9f86-cbb47f9c3433",
+  "events_url": "/public/v1/agents/calculator-agent/runs/f3042f68-1249-43e5-9f86-cbb47f9c3433/events"
+}

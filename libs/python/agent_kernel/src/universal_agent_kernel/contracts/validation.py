@@ -40,6 +40,8 @@ SCHEMA_DEFINITION_BY_FILE = {
     "interface-schema.schema.json": "InterfaceSchema",
     "model-profile.schema.json": "ModelProfile",
     "node-spec.schema.json": "NodeSpec",
+    "public-agent.schema.json": "PublicAgentView",
+    "public-run.schema.json": "PublicRunView",
     "run-event.schema.json": "RunEvent",
     "run-request.schema.json": "RunRequest",
     "run-trace.schema.json": "RunTrace",

@@ -6,7 +6,15 @@ from __future__ import annotations
 from enum import Enum
 from typing import Any, Literal
 
-from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, RootModel, constr
+from pydantic import (
+    AnyUrl,
+    AwareDatetime,
+    BaseModel,
+    ConfigDict,
+    Field,
+    RootModel,
+    constr,
+)
 
 
 class DefaultLocale(Enum):
@@ -38,6 +46,11 @@ class Kind(Enum):
     model = 'model'
     tool = 'tool'
     output = 'output'
+
+
+class ErrorCode(Enum):
+    invocation_unavailable = 'invocation_unavailable'
+    run_cancelled = 'run_cancelled'
 
 
 class Type(Enum):
@@ -255,6 +268,70 @@ class RetryPolicy(BaseModel):
     max_attempts: int = Field(..., ge=1, le=10)
 
 
+class PublicLocale(Enum):
+    ru_RU = 'ru-RU'
+    en_US = 'en-US'
+
+
+class PublicRunCreateRequest(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    input: dict[str, Any]
+    locale: PublicLocale
+
+
+class PublicRunStatus(Enum):
+    queued = 'queued'
+    running = 'running'
+    completed = 'completed'
+    failed = 'failed'
+    cancelled = 'cancelled'
+
+
+class EventType(Enum):
+    publish = 'publish'
+    rollback = 'rollback'
+
+
+class PublicationEventView(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    created_at: AwareDatetime
+    event_id: Uuid
+    event_type: EventType
+    previous_version_id: Identifier | None
+    selected_version_digest: Sha256
+    selected_version_id: Identifier
+
+
+class PublishRequest(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    expected_active_version_id: Identifier | None
+    expected_draft_revision: int = Field(..., ge=1)
+
+
+class PublishedVersionView(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    created_at: AwareDatetime
+    digest: Sha256
+    version_id: Identifier
+    version_number: int = Field(..., ge=1)
+
+
+class RollbackRequest(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    expected_active_version_id: Identifier
+    target_version_id: Identifier
+
+
 class Cost(BaseModel):
     model_config = ConfigDict(
         extra='forbid',
@@ -300,6 +377,18 @@ class Endpoint(BaseModel):
     port_id: Identifier
 
 
+class ApiKeyScope(Enum):
+    runs_create = 'runs:create'
+    runs_read = 'runs:read'
+    events_read = 'events:read'
+
+
+class WebhookEventType(Enum):
+    run_completed = 'run.completed'
+    run_failed = 'run.failed'
+    run_cancelled = 'run.cancelled'
+
+
 class ModelResolution(BaseModel):
     model_config = ConfigDict(
         extra='forbid',
@@ -340,6 +429,29 @@ class InterfaceSchema(BaseModel):
     locales: list[Locale] = Field(..., min_length=2)
     mode: Mode
     result_schema: dict[str, Any]
+
+
+class PublicRunView(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    agent_id: Identifier
+    agent_version_digest: Sha256
+    agent_version_id: Identifier
+    error_code: ErrorCode | None
+    events_url: str = Field(
+        ...,
+        pattern='^/public/v1/agents/[a-z][a-z0-9_-]{2,63}/runs/[0-9a-f-]{36}/events$',
+    )
+    locale: PublicLocale
+    output: dict[str, Any] | None
+    run_capability: str | None = Field(None, max_length=1024, min_length=32)
+    run_id: Uuid
+    schema_version: Literal['0.1.0']
+    status: PublicRunStatus
+    status_url: str = Field(
+        ..., pattern='^/public/v1/agents/[a-z][a-z0-9_-]{2,63}/runs/[0-9a-f-]{36}$'
+    )
 
 
 class RunEvent(BaseModel):
@@ -406,6 +518,50 @@ class Edge(BaseModel):
     target: Endpoint
 
 
+class ApiKeyCreateRequest(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    expires_at: AwareDatetime | None
+    label: str = Field(..., max_length=120, min_length=1)
+    scopes: list[ApiKeyScope] = Field(..., min_length=1)
+
+
+class ApiKeyView(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    created_at: AwareDatetime
+    expires_at: AwareDatetime | None
+    key_id: Uuid
+    label: str
+    last_used_at: AwareDatetime | None
+    prefix: str = Field(..., pattern='^[a-f0-9]{16}$')
+    revoked_at: AwareDatetime | None
+    scopes: list[ApiKeyScope] = Field(..., min_length=1)
+
+
+class WebhookCreateRequest(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    events: list[WebhookEventType] = Field(..., min_length=1)
+    label: str = Field(..., max_length=120, min_length=1)
+    target_url: AnyUrl
+
+
+class WebhookView(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    created_at: AwareDatetime
+    events: list[WebhookEventType] = Field(..., min_length=1)
+    label: str
+    revoked_at: AwareDatetime | None
+    subscription_id: Uuid
+    target_url: AnyUrl
+
+
 class NodeExecution(BaseModel):
     model_config = ConfigDict(
         extra='forbid',
@@ -462,6 +618,33 @@ class NodeSpec(BaseModel):
     version: Semver
 
 
+class PublicAgentView(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    agent_id: Identifier
+    agent_version_digest: Sha256
+    agent_version_id: Identifier
+    interface: InterfaceSchema
+    localized_metadata: LocalizedMetadata
+    schema_version: Literal['0.1.0']
+
+
+class PublicationState(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    active_version_id: Identifier | None
+    agent_id: Identifier
+    api_keys: list[ApiKeyView]
+    draft_digest: Sha256
+    draft_revision: int = Field(..., ge=1)
+    events: list[PublicationEventView]
+    schema_version: Literal['0.1.0']
+    versions: list[PublishedVersionView]
+    webhooks: list[WebhookView]
+
+
 class RunTrace(BaseModel):
     model_config = ConfigDict(
         extra='forbid',
@@ -499,6 +682,14 @@ class ToolManifest(BaseModel):
     permissions: list[Permission]
     side_effect: SideEffect
     version: Semver
+
+
+class ApiKeyCreateView(ApiKeyView):
+    secret: str = Field(..., pattern='^uas_live_[a-f0-9]{16}_[A-Za-z0-9_-]{43}$')
+
+
+class WebhookCreateView(WebhookView):
+    secret: str = Field(..., pattern='^whsec_[A-Za-z0-9_-]{43}$')
 
 
 class AgentSpec(BaseModel):
@@ -556,11 +747,21 @@ class ContractBundle(BaseModel):
     agent_draft: AgentDraft | None = None
     agent_spec: AgentSpec | None = None
     agent_version: AgentVersion | None = None
+    api_key_create_request: ApiKeyCreateRequest | None = None
+    api_key_create_view: ApiKeyCreateView | None = None
     error_envelope: ErrorEnvelope | None = None
     interface_schema: InterfaceSchema | None = None
     model_profile: ModelProfile | None = None
     node_spec: NodeSpec | None = None
+    public_agent: PublicAgentView | None = None
+    public_run: PublicRunView | None = None
+    public_run_create_request: PublicRunCreateRequest | None = None
+    publication: PublicationState | None = None
+    publish_request: PublishRequest | None = None
+    rollback_request: RollbackRequest | None = None
     run_event: RunEvent | None = None
     run_request: RunRequest | None = None
     run_trace: RunTrace | None = None
     tool_manifest: ToolManifest | None = None
+    webhook_create_request: WebhookCreateRequest | None = None
+    webhook_create_view: WebhookCreateView | None = None

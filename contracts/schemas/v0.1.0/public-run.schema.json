@@ -1,0 +1,175 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.universal-agent.studio/v0.1.0/public-run.schema.json",
+  "title": "PublicRunView",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "run_id",
+    "agent_id",
+    "agent_version_id",
+    "agent_version_digest",
+    "status",
+    "locale",
+    "output",
+    "error_code",
+    "status_url",
+    "events_url"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "0.1.0"
+    },
+    "run_id": {
+      "$ref": "common.schema.json#/$defs/uuid"
+    },
+    "agent_id": {
+      "$ref": "common.schema.json#/$defs/identifier"
+    },
+    "agent_version_id": {
+      "$ref": "common.schema.json#/$defs/identifier"
+    },
+    "agent_version_digest": {
+      "$ref": "common.schema.json#/$defs/sha256"
+    },
+    "status": {
+      "$ref": "#/$defs/PublicRunStatus"
+    },
+    "locale": {
+      "$ref": "#/$defs/PublicLocale"
+    },
+    "output": {
+      "oneOf": [
+        {
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "error_code": {
+      "oneOf": [
+        {
+          "enum": [
+            "invocation_unavailable",
+            "run_cancelled"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "status_url": {
+      "type": "string",
+      "pattern": "^/public/v1/agents/[a-z][a-z0-9_-]{2,63}/runs/[0-9a-f-]{36}$"
+    },
+    "events_url": {
+      "type": "string",
+      "pattern": "^/public/v1/agents/[a-z][a-z0-9_-]{2,63}/runs/[0-9a-f-]{36}/events$"
+    },
+    "run_capability": {
+      "type": "string",
+      "minLength": 32,
+      "maxLength": 1024
+    }
+  },
+  "$defs": {
+    "PublicLocale": {
+      "enum": [
+        "ru-RU",
+        "en-US"
+      ]
+    },
+    "PublicRunStatus": {
+      "enum": [
+        "queued",
+        "running",
+        "completed",
+        "failed",
+        "cancelled"
+      ]
+    },
+    "PublicRunCreateRequest": {
+      "title": "PublicRunCreateRequest",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "input",
+        "locale"
+      ],
+      "properties": {
+        "input": {
+          "type": "object"
+        },
+        "locale": {
+          "$ref": "#/$defs/PublicLocale"
+        }
+      }
+    },
+    "PublicRunEvent": {
+      "title": "PublicRunEvent",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "sequence",
+        "type",
+        "status",
+        "output",
+        "error_code",
+        "occurred_at"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": "0.1.0"
+        },
+        "sequence": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "type": {
+          "enum": [
+            "run.queued",
+            "run.started",
+            "run.completed",
+            "run.failed",
+            "run.cancelled"
+          ]
+        },
+        "status": {
+          "$ref": "#/$defs/PublicRunStatus"
+        },
+        "output": {
+          "oneOf": [
+            {
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "error_code": {
+          "oneOf": [
+            {
+              "enum": [
+                "invocation_unavailable",
+                "run_cancelled"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "occurred_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    }
+  }
+}

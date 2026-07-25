@@ -24,6 +24,16 @@
       "valid": true
     },
     {
+      "path": "valid/public-agent.calculator.json",
+      "schema": "public-agent.schema.json",
+      "valid": true
+    },
+    {
+      "path": "valid/public-run.completed.json",
+      "schema": "public-run.schema.json",
+      "valid": true
+    },
+    {
       "path": "invalid/agent.draft.dangling-layout-node.json",
       "schema": "agent-draft.schema.json",
       "valid": false,

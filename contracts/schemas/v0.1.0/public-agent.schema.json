@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.universal-agent.studio/v0.1.0/public-agent.schema.json",
+  "title": "PublicAgentView",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "agent_id",
+    "agent_version_id",
+    "agent_version_digest",
+    "localized_metadata",
+    "interface"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "0.1.0"
+    },
+    "agent_id": {
+      "$ref": "common.schema.json#/$defs/identifier"
+    },
+    "agent_version_id": {
+      "$ref": "common.schema.json#/$defs/identifier"
+    },
+    "agent_version_digest": {
+      "$ref": "common.schema.json#/$defs/sha256"
+    },
+    "localized_metadata": {
+      "$ref": "common.schema.json#/$defs/localizedMetadata"
+    },
+    "interface": {
+      "$ref": "interface-schema.schema.json"
+    }
+  }
+}

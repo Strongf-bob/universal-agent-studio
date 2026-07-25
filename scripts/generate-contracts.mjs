@@ -59,7 +59,7 @@ try {
   const raw = await compile(bundle, generatedPath, dirname(bundle));
   const withoutLintBanner = raw.replace(/^\/\* eslint-disable \*\/\n+/, "");
   const withoutNodePlaceholder = withoutLintBanner.replace(
-    /export type NodeSpec = \{\n  \[k: string\]: unknown;\n\};\n\n/,
+    /export type NodeSpec = \{\n  \[k: string\]: unknown;\n\};\n/,
     ""
   );
   const output = [
