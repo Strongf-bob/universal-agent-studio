@@ -11,6 +11,34 @@ type CreatedPublicRun = {
   status_url: string;
 };
 
+async function ensureV1Traffic(page: Page): Promise<void> {
+  const response = await page.request.get(
+    `${studioBase}/api/v1/agents/calculator-agent/publishing`,
+  );
+  expect(response.ok()).toBeTruthy();
+  const state = (await response.json()) as {
+    active_version_id: string;
+  };
+  if (state.active_version_id === "calculator-agent-v1") {
+    return;
+  }
+  const session = await page.request.get(`${studioBase}/api/v1/session`);
+  const {csrf_token: csrfToken} = (await session.json()) as {
+    csrf_token: string;
+  };
+  const rollback = await page.request.post(
+    `${studioBase}/api/v1/agents/calculator-agent/rollback`,
+    {
+      headers: {"X-CSRF-Token": csrfToken},
+      data: {
+        target_version_id: "calculator-agent-v1",
+        expected_active_version_id: state.active_version_id,
+      },
+    },
+  );
+  expect(rollback.status()).toBe(200);
+}
+
 async function runPublishedAgent(page: Page): Promise<CreatedPublicRun> {
   const response = page.waitForResponse(
     (candidate) =>
@@ -28,6 +56,7 @@ async function runPublishedAgent(page: Page): Promise<CreatedPublicRun> {
 test("publishes v2, binds its run, and switches traffic to immutable v1", async ({
   page,
 }) => {
+  await ensureV1Traffic(page);
   const v1Run = await runPublishedAgent(page);
   expect(v1Run.agent_version_id).toBe("calculator-agent-v1");
 
