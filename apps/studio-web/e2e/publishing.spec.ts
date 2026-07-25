@@ -55,8 +55,11 @@ test("publishes v2, binds its run, and switches traffic to immutable v1", async 
   const state = (await publicationState.json()) as {
     draft_digest: string;
     active_version_id: string;
+    events: Array<{event_id: string}>;
     versions: Array<{version_id: string; digest: string}>;
   };
+  const previousEventCount = state.events.length;
+  const pristineVersionHistory = state.versions.length <= 2;
   const activeDigest = state.versions.find(
     (version) => version.version_id === state.active_version_id,
   )?.digest;
@@ -72,10 +75,21 @@ test("publishes v2, binds its run, and switches traffic to immutable v1", async 
   await page.goto(`${studioBase}/en-US/agents/calculator-agent/publish`);
 
   await page.getByRole("button", {name: /Publish revision/}).click();
-  await expect(page.getByText("Traffic: calculator-agent-v2")).toBeVisible();
+  const publishedState = await page.request.get(
+    `${studioBase}/api/v1/agents/calculator-agent/publishing`,
+  );
+  expect(publishedState.ok()).toBeTruthy();
+  const publishedVersionId = (
+    (await publishedState.json()) as {active_version_id: string}
+  ).active_version_id;
+  expect(publishedVersionId).not.toBe("calculator-agent-v1");
+  if (pristineVersionHistory) {
+    expect(publishedVersionId).toBe("calculator-agent-v2");
+  }
+  await expect(page.getByText(`Traffic: ${publishedVersionId}`)).toBeVisible();
 
-  const v2Run = await runPublishedAgent(page);
-  expect(v2Run.agent_version_id).toBe("calculator-agent-v2");
+  const changedVersionRun = await runPublishedAgent(page);
+  expect(changedVersionRun.agent_version_id).toBe(publishedVersionId);
 
   await page.goto(
     `${studioBase}/en-US/agents/calculator-agent/publish`,
@@ -88,18 +102,16 @@ test("publishes v2, binds its run, and switches traffic to immutable v1", async 
   await expect(page.getByText("Traffic: calculator-agent-v1")).toBeVisible();
   expect(
     await page.getByRole("row", {name: /publish|rollback/i}).count(),
-  ).toBe(3);
+  ).toBe(previousEventCount + 2);
 
   const boundRun = await page.request.get(
-    `${publishedBase}${v2Run.status_url}`,
+    `${publishedBase}${changedVersionRun.status_url}`,
     {
-      headers: {Authorization: `Bearer ${v2Run.run_capability}`},
+      headers: {Authorization: `Bearer ${changedVersionRun.run_capability}`},
     },
   );
   expect(boundRun.ok()).toBeTruthy();
-  expect((await boundRun.json()).agent_version_id).toBe(
-    "calculator-agent-v2",
-  );
+  expect((await boundRun.json()).agent_version_id).toBe(publishedVersionId);
 
   await page.getByRole("textbox", {name: "Webhook label"}).fill("E2E terminal");
   await page

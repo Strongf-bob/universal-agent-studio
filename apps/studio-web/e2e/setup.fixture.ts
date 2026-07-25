@@ -48,14 +48,31 @@ setup("create the local owner and activate the golden AgentSpec", async ({page})
   const existingPublication = await page.request.get(
     "/api/v1/agents/calculator-agent/publishing",
   );
-  const hasPublication =
-    existingPublication.ok() &&
-    (
-      (await existingPublication.json()) as {
+  const publicationState = existingPublication.ok()
+    ? ((await existingPublication.json()) as {
+        active_version_id: string | null;
         events: Array<{event_id: string}>;
-      }
-    ).events.length > 0;
+      })
+    : null;
+  const hasPublication = (publicationState?.events.length ?? 0) > 0;
   if (hasPublication) {
+    if (publicationState?.active_version_id !== "calculator-agent-v1") {
+      const session = await page.request.get("/api/v1/session");
+      const {csrf_token: csrfToken} = (await session.json()) as {
+        csrf_token: string;
+      };
+      const rollback = await page.request.post(
+        "/api/v1/agents/calculator-agent/rollback",
+        {
+          headers: {"X-CSRF-Token": csrfToken},
+          data: {
+            target_version_id: "calculator-agent-v1",
+            expected_active_version_id: publicationState?.active_version_id,
+          },
+        },
+      );
+      expect(rollback.status()).toBe(200);
+    }
     await page.goto("/en-US/agents/calculator-agent");
   } else {
     await page.getByRole("button", {name: "Activate version"}).click();

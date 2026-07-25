@@ -6,11 +6,10 @@ from pathlib import Path
 from uuid import uuid4
 
 import pytest
-from sqlalchemy import func, select
+from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
-    async_sessionmaker,
 )
 from universal_agent_platform_store.models import AgentVersion
 from universal_agent_platform_store.repositories.drafts import DraftRepository
@@ -188,37 +187,70 @@ async def test_legacy_activation_serializes_with_first_publish(
             )
         )
     )
-    concurrent_service = AgentVersionService(
-        SqlAgentVersionPersistence.from_factory(
-            async_sessionmaker(database_engine, expire_on_commit=False)
+    application_name = f"uas-activation-race-{uuid4().hex}"
+    async with AsyncSession(
+        database_engine,
+        expire_on_commit=False,
+    ) as activation_session:
+        await activation_session.scalar(
+            select(
+                func.set_config(
+                    "application_name",
+                    application_name,
+                    False,
+                )
+            )
         )
-    )
-    activation = asyncio.create_task(
-        concurrent_service.activate(
-            agent_id="calculator-agent",
-            version_id=second.version_id,
-            expected_previous_version_id=first.version_id,
-            scope=request_scope,
+        await activation_session.commit()
+        concurrent_service = AgentVersionService(
+            SqlAgentVersionPersistence.from_session(activation_session)
         )
-    )
-    await asyncio.sleep(0.05)
-    assert not activation.done()
-    first_record = await database_session.scalar(
-        select(AgentVersion).where(AgentVersion.digest == first.digest)
-    )
-    assert first_record is not None
-    await PublishingRepository(
-        database_session,
-        request_scope,
-    ).publish_draft(
-        "calculator-agent",
-        expected_revision=draft.revision,
-        expected_active_version_id=first_record.id,
-    )
-    await database_session.commit()
+        activation = asyncio.create_task(
+            concurrent_service.activate(
+                agent_id="calculator-agent",
+                version_id=second.version_id,
+                expected_previous_version_id=first.version_id,
+                scope=request_scope,
+            )
+        )
+        waiting_on_advisory_lock = False
+        for _ in range(200):
+            waiting_on_advisory_lock = bool(
+                await database_session.scalar(
+                    text(
+                        """
+                        SELECT EXISTS (
+                            SELECT 1
+                            FROM pg_stat_activity
+                            WHERE application_name = :application_name
+                              AND wait_event_type = 'Lock'
+                              AND wait_event = 'advisory'
+                        )
+                        """
+                    ),
+                    {"application_name": application_name},
+                )
+            )
+            if waiting_on_advisory_lock:
+                break
+            await asyncio.sleep(0.01)
+        assert waiting_on_advisory_lock
+        first_record = await database_session.scalar(
+            select(AgentVersion).where(AgentVersion.digest == first.digest)
+        )
+        assert first_record is not None
+        await PublishingRepository(
+            database_session,
+            request_scope,
+        ).publish_draft(
+            "calculator-agent",
+            expected_revision=draft.revision,
+            expected_active_version_id=first_record.id,
+        )
+        await database_session.commit()
 
-    with pytest.raises(ApiError) as error:
-        await activation
+        with pytest.raises(ApiError) as error:
+            await activation
 
     assert error.value.status_code == 409
     assert error.value.document["code"] == "published_agent_requires_publish"
