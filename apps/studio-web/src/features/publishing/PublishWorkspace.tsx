@@ -233,7 +233,7 @@ export function PublishWorkspace({
   };
 
   const publicBase =
-    process.env.NEXT_PUBLIC_PUBLISHED_WEB_URL ?? "http://localhost:3001";
+    process.env.NEXT_PUBLIC_PUBLISHED_WEB_URL ?? "http://localhost:3301";
   const publicUrl = `${publicBase}/${locale}/agents/${encodeURIComponent(agentId)}`;
 
   return (

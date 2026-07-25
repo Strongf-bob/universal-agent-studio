@@ -31,7 +31,8 @@ try {
   process.stdout.write(
     [
       "Universal Agent Studio is ready.",
-      "Web: http://localhost:3000/ru-RU/setup",
+      "Studio: http://localhost:3000/ru-RU/setup",
+      "Published Web App: http://localhost:3301/ru-RU/agents/calculator-agent",
       "API: http://localhost:8000/health/ready",
       "Temporal UI: http://localhost:8080",
       "",

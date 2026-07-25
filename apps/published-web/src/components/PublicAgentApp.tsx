@@ -365,6 +365,8 @@ export function PublicAgentApp({
               </>
             ) : state === "submitting" || state === "running" ? (
               <span>{messages.running}</span>
+            ) : state === "failed" ? (
+              <span>{messages.failed}</span>
             ) : (
               <span>{messages.ready}</span>
             )}

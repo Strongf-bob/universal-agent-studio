@@ -34,6 +34,9 @@ const secretDefinitions = {
   UAS_DATABASE_PASSWORD_FILE: "database-password",
   UAS_EXECUTION_SIGNING_KEY_FILE: "execution-signing.key",
   UAS_SESSION_HASH_KEY_FILE: "session-hash.key",
+  UAS_API_KEY_HASH_KEY_FILE: "api-key-hash.key",
+  UAS_PUBLIC_CAPABILITY_KEY_FILE: "public-capability.key",
+  UAS_WEBHOOK_SIGNING_KEY_FILE: "webhook-signing.key",
 };
 
 function markerContents() {

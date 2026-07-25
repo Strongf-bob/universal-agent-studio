@@ -108,6 +108,9 @@ describe("PublicAgentApp", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "Не удалось завершить запуск",
     );
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Не удалось завершить запуск",
+    );
     await user.click(screen.getByRole("button", {name: "Начать заново"}));
     expect(screen.getByRole("button", {name: "Запустить агента"})).toBeEnabled();
   });

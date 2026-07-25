@@ -97,5 +97,46 @@ setup("create the local owner and activate the golden AgentSpec", async ({page})
   }, agentSpec);
   expect(resetStatus).toBe(200);
 
+  const publicationStatus = await page.evaluate(async () => {
+    const current = await fetch(
+      "/api/v1/agents/calculator-agent/publishing",
+      {credentials: "include"},
+    );
+    if (!current.ok) {
+      return current.status;
+    }
+    const state = (await current.json()) as {
+      active_version_id: string | null;
+      draft_revision: number;
+      events: Array<{event_id: string}>;
+    };
+    if (state.events.length > 0) {
+      return 200;
+    }
+    const session = await fetch("/api/v1/session", {
+      credentials: "include",
+    });
+    const {csrf_token: csrfToken} = (await session.json()) as {
+      csrf_token: string;
+    };
+    const published = await fetch(
+      "/api/v1/agents/calculator-agent/publish",
+      {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRF-Token": csrfToken,
+        },
+        body: JSON.stringify({
+          expected_draft_revision: state.draft_revision,
+          expected_active_version_id: state.active_version_id,
+        }),
+      },
+    );
+    return published.status;
+  });
+  expect(publicationStatus).toBe(200);
+
   await page.context().storageState({path: authFile});
 });

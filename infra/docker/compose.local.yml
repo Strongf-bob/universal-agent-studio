@@ -84,14 +84,21 @@ services:
         exec uvicorn universal_agent_studio_api.main:app --host 0.0.0.0 --port 8000
     environment:
       UAS_ALLOWED_HOSTS: '["localhost","127.0.0.1","control-api"]'
-      UAS_ALLOWED_ORIGINS: '["http://localhost:${UAS_WEB_PORT:-3000}"]'
+      UAS_ALLOWED_ORIGINS: '["http://localhost:${UAS_WEB_PORT:-3000}","http://localhost:${UAS_PUBLISHED_WEB_PORT:-3301}","http://127.0.0.1:${UAS_PUBLISHED_WEB_PORT:-3301}"]'
       UAS_EXECUTION_SIGNING_KEY_FILE: /run/secrets/uas_execution_signing_key
       UAS_SESSION_HASH_KEY_FILE: /run/secrets/uas_session_hash_key
+      UAS_API_KEY_HASH_KEY_FILE: /run/secrets/uas_api_key_hash_key
+      UAS_PUBLIC_CAPABILITY_KEY_FILE: /run/secrets/uas_public_capability_key
+      UAS_WEBHOOK_SIGNING_KEY_FILE: /run/secrets/uas_webhook_signing_key
+      UAS_WEBHOOK_ALLOWED_ORIGINS: '["https://hooks.example.test"]'
       UAS_TEMPORAL_ADDRESS: temporal:7233
     secrets:
       - uas_database_password
       - uas_execution_signing_key
       - uas_session_hash_key
+      - uas_api_key_hash_key
+      - uas_public_capability_key
+      - uas_webhook_signing_key
     ports:
       - "127.0.0.1:${UAS_API_PORT:-8000}:8000"
     healthcheck:
@@ -125,11 +132,16 @@ services:
         exec python -m universal_agent_studio_runtime.worker
     environment:
       UAS_EXECUTION_SIGNING_KEY_FILE: /run/secrets/uas_execution_signing_key
+      UAS_WEBHOOK_SIGNING_KEY_FILE: /run/secrets/uas_webhook_signing_key
+      UAS_WEBHOOK_ALLOWED_ORIGINS: '["https://hooks.example.test"]'
       UAS_TEMPORAL_ADDRESS: temporal:7233
       UAS_DETERMINISTIC_DELAY_MS: ${UAS_DETERMINISTIC_DELAY_MS:-2000}
     secrets:
       - uas_database_password
       - uas_execution_signing_key
+      - uas_webhook_signing_key
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     healthcheck:
       test:
         [
@@ -169,6 +181,32 @@ services:
       retries: 30
       start_period: 5s
 
+  published-web:
+    image: uas-published-web:local
+    build:
+      context: ../..
+      dockerfile: infra/docker/published-web.Dockerfile
+    restart: unless-stopped
+    depends_on:
+      control-api:
+        condition: service_healthy
+    environment:
+      CONTROL_API_INTERNAL_URL: http://control-api:8000
+    ports:
+      - "127.0.0.1:${UAS_PUBLISHED_WEB_PORT:-3301}:3000"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 3s
+      timeout: 4s
+      retries: 30
+      start_period: 5s
+
 volumes:
   product_postgres:
   temporal_data:
@@ -180,3 +218,9 @@ secrets:
     file: ${UAS_EXECUTION_SIGNING_KEY_FILE:-../../.local/secrets/execution-signing.key}
   uas_session_hash_key:
     file: ${UAS_SESSION_HASH_KEY_FILE:-../../.local/secrets/session-hash.key}
+  uas_api_key_hash_key:
+    file: ${UAS_API_KEY_HASH_KEY_FILE:-../../.local/secrets/api-key-hash.key}
+  uas_public_capability_key:
+    file: ${UAS_PUBLIC_CAPABILITY_KEY_FILE:-../../.local/secrets/public-capability.key}
+  uas_webhook_signing_key:
+    file: ${UAS_WEBHOOK_SIGNING_KEY_FILE:-../../.local/secrets/webhook-signing.key}

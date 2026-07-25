@@ -1,6 +1,8 @@
 import {defineConfig, devices} from "@playwright/test";
 
 const baseURL = process.env.UAS_E2E_BASE_URL ?? "http://localhost:3000";
+const publishedBaseURL =
+  process.env.UAS_E2E_PUBLISHED_BASE_URL ?? "http://127.0.0.1:3301";
 
 export default defineConfig({
   testDir: "./e2e",
@@ -25,11 +27,20 @@ export default defineConfig({
     },
     {
       name: "chromium",
-      testIgnore: /setup\.fixture\.ts/,
+      testIgnore: [/setup\.fixture\.ts/, /public-.*\.spec\.ts/],
       dependencies: ["bootstrap"],
       use: {
         ...devices["Desktop Chrome"],
         storageState: "../../.local/playwright/auth.json",
+      },
+    },
+    {
+      name: "public-chromium",
+      testMatch: /public-.*\.spec\.ts/,
+      dependencies: ["bootstrap"],
+      use: {
+        ...devices["Desktop Chrome"],
+        baseURL: publishedBaseURL,
       },
     },
   ],

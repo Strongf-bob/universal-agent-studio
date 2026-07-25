@@ -617,7 +617,7 @@ Never write it to URL, local storage, session storage or console.
 - [ ] **Step 6: Add navigation, API examples and RU/EN copy**
 
 Add a Publish navigation item for the current agent, an external link to port
-3001 and curl examples containing `<YOUR_API_KEY>` rather than an issued
+3301 and curl examples containing `<YOUR_API_KEY>` rather than an issued
 secret. Validate parity of all message keys.
 
 - [ ] **Step 7: Verify Studio UI**
@@ -653,7 +653,7 @@ git commit -m "feat: add the Studio Publish workspace" -m "Add RU/EN owner contr
 - Modify: `.github/workflows/slice1.yml`
 
 **Interfaces:**
-- Produces one `pnpm dev:local` stack with healthy ports 3000, 3001 and 8000.
+- Produces one `pnpm dev:local` stack with healthy ports 3000, 3301 and 8000.
 - Consumes all completed Slice 3 endpoints and surfaces.
 
 - [ ] **Step 1: Write failing Compose and E2E expectations**
@@ -661,7 +661,7 @@ git commit -m "feat: add the Studio Publish workspace" -m "Add RU/EN owner contr
 ```python
 def test_local_stack_contains_isolated_published_web(compose_config):
     service = compose_config["services"]["published-web"]
-    assert service["ports"] == ["127.0.0.1:3001:3000"]
+    assert service["ports"] == ["127.0.0.1:3301:3000"]
     assert "uas_session_hash_key" not in service.get("secrets", [])
     assert "uas_api_key_hash_key" not in service.get("secrets", [])
 ```

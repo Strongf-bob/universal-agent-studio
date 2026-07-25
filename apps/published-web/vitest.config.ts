@@ -11,7 +11,7 @@ export default defineConfig({
   test: {
     environment: "jsdom",
     environmentOptions: {
-      jsdom: {url: "http://localhost:3001"},
+      jsdom: {url: "http://localhost:3301"},
     },
     globals: true,
     include: ["tests/**/*.test.{ts,tsx}"],

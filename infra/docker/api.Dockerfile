@@ -19,7 +19,8 @@ COPY libs/python libs/python
 COPY workers/runtime workers/runtime
 COPY infra/migrations infra/migrations
 
-RUN uv sync --frozen --no-dev --all-packages
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen --no-dev --all-packages
 
 ENV PATH="/workspace/.venv/bin:${PATH}"
 

@@ -242,5 +242,5 @@ export const webhookCreateFixture: WebhookCreateView = {
   events: ["run.completed"],
   created_at: "2026-07-25T10:00:00Z",
   revoked_at: null,
-  secret: `uas_whsec_${"B".repeat(43)}`,
+  secret: `whsec_${"B".repeat(43)}`,
 };

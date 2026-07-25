@@ -249,7 +249,7 @@ terminal state when already complete.
 
 ## Published Web App
 
-`apps/published-web` is a separate Next.js application on loopback port 3001.
+`apps/published-web` is a separate Next.js application on loopback port 3301.
 It renders the public `InterfaceSchema` rather than a calculator-specific form.
 The Slice 3 fixture exercises a numeric field and structured result, but the
 renderer supports the schema's form, chat and hybrid modes.
@@ -399,4 +399,3 @@ Published traffic does not exist until an owner explicitly publishes. Existing
 active versions become visible to the new public surface only after the
 publishing state is initialized by the implementation migration/fixture. A
 server deployment will require a separate threat-model and operations review.
-

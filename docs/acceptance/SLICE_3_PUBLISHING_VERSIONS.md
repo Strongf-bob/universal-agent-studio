@@ -24,7 +24,7 @@ external network access.
 Loopback entry points:
 
 - Studio: `http://localhost:3000`;
-- Published Web App: `http://localhost:3001`;
+- Published Web App: `http://localhost:3301`;
 - Control and public API: `http://localhost:8000`.
 
 ## Deterministic control journey
@@ -167,4 +167,3 @@ webhook egress, webhook dashboards, OAuth apps or editing immutable versions.
   the shipped behavior;
 - the implementation is merged to `main`, pushed, and the exact pushed commit
   has a green GitHub Actions run.
-
