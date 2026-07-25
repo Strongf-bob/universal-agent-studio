@@ -24,6 +24,10 @@ from universal_agent_platform_store.repositories.base import ScopedRepository
 from universal_agent_platform_store.repositories.drafts import (
     DraftRevisionConflict as DraftRevisionConflict,
 )
+from universal_agent_platform_store.repositories.locks import (
+    agent_publication_lock_key,
+    public_agent_key_lock_key,
+)
 from universal_agent_platform_store.scope import RequestScope
 
 
@@ -36,6 +40,10 @@ class ActiveVersionConflict(RuntimeError):
 
 
 class DraftValidationFailed(RuntimeError):
+    pass
+
+
+class PublicAgentKeyConflict(RuntimeError):
     pass
 
 
@@ -66,7 +74,11 @@ class PublishingRepository(ScopedRepository):
         self.workspace_id, self.project_id = self.scope.tenant_ids()
 
     async def _lock_agent(self, agent_key: str) -> Agent:
-        lock_key = f"{self.workspace_id}:{self.project_id}:{agent_key}:publish"
+        lock_key = agent_publication_lock_key(
+            self.workspace_id,
+            self.project_id,
+            agent_key,
+        )
         await self.session.scalar(
             select(
                 func.pg_advisory_xact_lock(
@@ -84,6 +96,30 @@ class PublishingRepository(ScopedRepository):
         if agent is None:
             raise PublicationNotFound("agent_not_found")
         return agent
+
+    async def _claim_public_agent_key(
+        self,
+        agent: Agent,
+    ) -> None:
+        lock_key = public_agent_key_lock_key(agent.agent_key)
+        await self.session.scalar(
+            select(
+                func.pg_advisory_xact_lock(
+                    func.hashtextextended(lock_key, 0)
+                )
+            )
+        )
+        conflicting_publication = await self.session.scalar(
+            select(AgentPublicationEvent.id)
+            .join(Agent, Agent.id == AgentPublicationEvent.agent_id)
+            .where(
+                Agent.agent_key == agent.agent_key,
+                Agent.id != agent.id,
+            )
+            .limit(1)
+        )
+        if conflicting_publication is not None:
+            raise PublicAgentKeyConflict("public_agent_id_conflict")
 
     async def _locked_draft(self, agent_id: UUID) -> AgentDraftRecord:
         draft = await self.session.scalar(
@@ -132,14 +168,18 @@ class PublishingRepository(ScopedRepository):
         *,
         expected_revision: int,
         expected_active_version_id: UUID | None,
-        validate_draft: Callable[[dict[str, Any]], bool] | None = None,
+        validate_draft: Callable[[dict[str, Any], str], bool] | None = None,
     ) -> PublicationResult:
         agent = await self._lock_agent(agent_key)
         draft = await self._locked_draft(agent.id)
         if draft.revision != expected_revision:
             raise DraftRevisionConflict("agent_draft_revision_conflict")
-        if validate_draft is not None and not validate_draft(draft.agent_spec):
+        if validate_draft is not None and not validate_draft(
+            draft.agent_spec,
+            draft.digest,
+        ):
             raise DraftValidationFailed("agent_spec_invalid")
+        await self._claim_public_agent_key(agent)
         active = await self._locked_active(agent.id)
         previous = self._check_active(active, expected_active_version_id)
 

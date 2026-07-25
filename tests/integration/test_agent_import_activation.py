@@ -1,14 +1,22 @@
 from __future__ import annotations
 
+import asyncio
 import json
 from pathlib import Path
 from uuid import uuid4
 
 import pytest
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import (
+    AsyncEngine,
+    AsyncSession,
+    async_sessionmaker,
+)
 from universal_agent_platform_store.models import AgentVersion
 from universal_agent_platform_store.repositories.drafts import DraftRepository
+from universal_agent_platform_store.repositories.locks import (
+    agent_publication_lock_key,
+)
 from universal_agent_platform_store.repositories.publishing import (
     PublishingRepository,
 )
@@ -129,6 +137,88 @@ async def test_legacy_activation_cannot_bypass_publication_ledger(
             expected_previous_version_id=first.version_id,
             scope=request_scope,
         )
+
+    assert error.value.status_code == 409
+    assert error.value.document["code"] == "published_agent_requires_publish"
+
+
+@pytest.mark.asyncio
+async def test_legacy_activation_serializes_with_first_publish(
+    database_engine: AsyncEngine,
+    database_session: AsyncSession,
+    request_scope: RequestScope,
+) -> None:
+    setup_service = AgentVersionService(
+        SqlAgentVersionPersistence.from_session(database_session)
+    )
+    first = await setup_service.import_raw(
+        GOLDEN_AGENT.read_bytes(),
+        request_scope,
+    )
+    await setup_service.activate(
+        agent_id="calculator-agent",
+        version_id=first.version_id,
+        expected_previous_version_id=None,
+        scope=request_scope,
+    )
+    document = json.loads(GOLDEN_AGENT.read_bytes())
+    document["revision"] = 2
+    second = await setup_service.import_raw(
+        json.dumps(document).encode(),
+        request_scope,
+    )
+    draft, _ = await DraftRepository(
+        database_session,
+        request_scope,
+    ).create_from_active(
+        "calculator-agent",
+        {"nodes": [], "viewport": {"x": 0, "y": 0, "zoom": 1}},
+    )
+    await database_session.commit()
+    workspace_id, project_id = request_scope.tenant_ids()
+    lock_key = agent_publication_lock_key(
+        workspace_id,
+        project_id,
+        "calculator-agent",
+    )
+    await database_session.scalar(
+        select(
+            func.pg_advisory_xact_lock(
+                func.hashtextextended(lock_key, 0)
+            )
+        )
+    )
+    concurrent_service = AgentVersionService(
+        SqlAgentVersionPersistence.from_factory(
+            async_sessionmaker(database_engine, expire_on_commit=False)
+        )
+    )
+    activation = asyncio.create_task(
+        concurrent_service.activate(
+            agent_id="calculator-agent",
+            version_id=second.version_id,
+            expected_previous_version_id=first.version_id,
+            scope=request_scope,
+        )
+    )
+    await asyncio.sleep(0.05)
+    assert not activation.done()
+    first_record = await database_session.scalar(
+        select(AgentVersion).where(AgentVersion.digest == first.digest)
+    )
+    assert first_record is not None
+    await PublishingRepository(
+        database_session,
+        request_scope,
+    ).publish_draft(
+        "calculator-agent",
+        expected_revision=draft.revision,
+        expected_active_version_id=first_record.id,
+    )
+    await database_session.commit()
+
+    with pytest.raises(ApiError) as error:
+        await activation
 
     assert error.value.status_code == 409
     assert error.value.document["code"] == "published_agent_requires_publish"

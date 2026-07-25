@@ -269,6 +269,54 @@ async def test_publish_revalidates_the_locked_current_draft(
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("corruption", ["embedded_agent_id", "digest"])
+async def test_publish_rejects_valid_but_inconsistent_draft_identity(
+    database_engine: AsyncEngine,
+    database_session: AsyncSession,
+    request_scope: RequestScope,
+    corruption: str,
+) -> None:
+    base, revision = await _seed(database_session, request_scope)
+    draft = await database_session.scalar(select(AgentDraftRecord))
+    assert draft is not None
+    document = _spec()
+    if corruption == "embedded_agent_id":
+        document["agent_id"] = "other-agent"
+        draft.digest = content_digest(document)
+    else:
+        draft.digest = "f" * 64
+    draft.agent_spec = document
+    await database_session.commit()
+    service = PublishingService(
+        async_sessionmaker(database_engine, expire_on_commit=False),
+        api_key_hash_master=b"h" * 32,
+        webhook_signing_master=b"w" * 32,
+        webhook_allowed_origins=[],
+    )
+
+    with pytest.raises(ApiError) as captured:
+        await service.publish(
+            "calculator-agent",
+            PublishRequest(
+                expected_draft_revision=revision,
+                expected_active_version_id=Identifier(
+                    root="calculator-agent-v1"
+                ),
+            ),
+            request_scope,
+        )
+
+    assert captured.value.status_code == 422
+    assert captured.value.document["code"] == "agent_spec_invalid"
+    async with AsyncSession(database_engine) as verification:
+        assert (
+            await verification.scalar(select(AgentPublicationEvent)) is None
+        )
+        versions = list(await verification.scalars(select(AgentVersion)))
+    assert [version.id for version in versions] == [base.id]
+
+
+@pytest.mark.asyncio
 @pytest.mark.parametrize(
     "expires_at",
     [

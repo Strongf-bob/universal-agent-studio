@@ -17,6 +17,7 @@ from universal_agent_platform_store.models import Owner, Project, Workspace
 from universal_agent_platform_store.repositories.agents import AgentRepository
 from universal_agent_platform_store.repositories.drafts import DraftRepository
 from universal_agent_platform_store.repositories.publishing import (
+    PublicAgentKeyConflict,
     PublishingRepository,
 )
 from universal_agent_platform_store.scope import RequestScope
@@ -350,3 +351,62 @@ async def test_same_agent_key_api_key_cannot_cross_project(
 
     assert error.value.status_code == 401
     assert error.value.document["code"] == "authentication_required"
+
+
+@pytest.mark.asyncio
+async def test_public_agent_key_can_be_claimed_by_only_one_project(
+    database_engine: AsyncEngine,
+    database_session: AsyncSession,
+    request_scope: RequestScope,
+) -> None:
+    await _publish(database_session, request_scope)
+    other_workspace = uuid4()
+    other_project = uuid4()
+    other_owner = uuid4()
+    database_session.add(
+        Workspace(id=other_workspace, slug="other", name="Other")
+    )
+    await database_session.flush()
+    database_session.add(
+        Project(
+            id=other_project,
+            workspace_id=other_workspace,
+            slug="default",
+            name="Default",
+        )
+    )
+    await database_session.flush()
+    database_session.add(
+        Owner(
+            id=other_owner,
+            workspace_id=other_workspace,
+            project_id=other_project,
+            login_name="other",
+            password_hash="$argon2id$test",
+            preferred_locale="en-US",
+        )
+    )
+    await database_session.commit()
+    other_scope = RequestScope(
+        workspace_id=other_workspace,
+        project_id=other_project,
+        owner_id=other_owner,
+    )
+
+    with pytest.raises(PublicAgentKeyConflict):
+        await _publish(database_session, other_scope)
+    await database_session.rollback()
+
+    public = PublicService(
+        async_sessionmaker(database_engine, expire_on_commit=False),
+        run_service=cast(Any, FakeRunService()),
+        api_key_hash_master=b"h" * 32,
+        capability_master=b"c" * 32,
+        capability_ttl_seconds=3600,
+        sync_wait_seconds=0.01,
+        poll_interval_seconds=0.001,
+        heartbeat_seconds=0.001,
+        max_polls=1,
+    )
+    resolved = await public.get_agent("calculator-agent")
+    assert resolved.agent_id.root == "calculator-agent"

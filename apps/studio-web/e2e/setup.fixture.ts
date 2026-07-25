@@ -45,8 +45,22 @@ setup("create the local owner and activate the golden AgentSpec", async ({page})
   await expect(page.getByText("Valid AgentSpec")).toBeVisible();
   await expect(page.getByText("calculator-agent-v1")).toBeVisible();
   await expect(page.locator(".monoValue")).toHaveText(/^[0-9a-f]{64}$/);
-  await page.getByRole("button", {name: "Activate version"}).click();
-  await expect(page).toHaveURL(/\/en-US\/agents\/calculator-agent$/);
+  const existingPublication = await page.request.get(
+    "/api/v1/agents/calculator-agent/publishing",
+  );
+  const hasPublication =
+    existingPublication.ok() &&
+    (
+      (await existingPublication.json()) as {
+        events: Array<{event_id: string}>;
+      }
+    ).events.length > 0;
+  if (hasPublication) {
+    await page.goto("/en-US/agents/calculator-agent");
+  } else {
+    await page.getByRole("button", {name: "Activate version"}).click();
+    await expect(page).toHaveURL(/\/en-US\/agents\/calculator-agent$/);
+  }
 
   const agentSpec = JSON.parse(readFileSync(fixtureFile, "utf8")) as {
     nodes: Array<{id: string}>;

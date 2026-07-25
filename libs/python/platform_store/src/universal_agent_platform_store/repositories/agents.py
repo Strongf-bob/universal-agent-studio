@@ -5,19 +5,27 @@ from __future__ import annotations
 from typing import Any, cast
 from uuid import UUID, uuid4
 
-from sqlalchemy import func, select
+from sqlalchemy import exists, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from universal_agent_platform_store.models import (
     Agent,
     AgentActiveVersion,
+    AgentPublicationEvent,
     AgentVersion,
 )
 from universal_agent_platform_store.repositories.base import ScopedRepository
+from universal_agent_platform_store.repositories.locks import (
+    agent_publication_lock_key,
+)
 from universal_agent_platform_store.scope import RequestScope
 
 
 class ActiveVersionConflict(RuntimeError):
+    pass
+
+
+class PublishedAgentActivationForbidden(RuntimeError):
     pass
 
 
@@ -107,6 +115,18 @@ class AgentRepository(ScopedRepository):
         version_id: UUID,
         expected_previous_version_id: UUID | None,
     ) -> AgentActiveVersion:
+        lock_key = agent_publication_lock_key(
+            self.workspace_id,
+            self.project_id,
+            agent_key,
+        )
+        await self.session.scalar(
+            select(
+                func.pg_advisory_xact_lock(
+                    func.hashtextextended(lock_key, 0)
+                )
+            )
+        )
         agent = await self.session.scalar(
             select(Agent).where(
                 Agent.workspace_id == self.workspace_id,
@@ -127,6 +147,19 @@ class AgentRepository(ScopedRepository):
         )
         if version is None:
             raise AgentVersionNotFound("agent_version_not_found")
+        has_publication = await self.session.scalar(
+            select(
+                exists().where(
+                    AgentPublicationEvent.workspace_id == self.workspace_id,
+                    AgentPublicationEvent.project_id == self.project_id,
+                    AgentPublicationEvent.agent_id == agent.id,
+                )
+            )
+        )
+        if has_publication:
+            raise PublishedAgentActivationForbidden(
+                "published_agent_requires_publish"
+            )
 
         active = await self.session.scalar(
             select(AgentActiveVersion)

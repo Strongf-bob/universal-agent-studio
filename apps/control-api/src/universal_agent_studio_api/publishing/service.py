@@ -5,11 +5,12 @@ from __future__ import annotations
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime, timedelta
-from typing import Protocol
+from typing import Any, Protocol
 from urllib.parse import urlsplit
 from uuid import UUID, uuid4
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+from universal_agent_kernel.contracts.canonical import content_digest
 from universal_agent_kernel.contracts.generated import (
     ApiKeyCreateRequest,
     ApiKeyCreateView,
@@ -42,6 +43,7 @@ from universal_agent_platform_store.repositories.publishing import (
     ActiveVersionConflict,
     ApiKeyRepository,
     DraftValidationFailed,
+    PublicAgentKeyConflict,
     PublicationNotFound,
     PublishingRepository,
 )
@@ -293,6 +295,16 @@ class PublishingService:
         body: PublishRequest,
         scope: RequestScope,
     ) -> PublicationState:
+        def draft_is_publishable(
+            agent_spec: dict[str, Any],
+            stored_digest: str,
+        ) -> bool:
+            return (
+                validate_agent_spec(agent_spec).valid
+                and agent_spec.get("agent_id") == agent_id
+                and content_digest(agent_spec) == stored_digest
+            )
+
         async with self._transaction() as session:
             expected = await self._internal_version_id(
                 session,
@@ -305,14 +317,14 @@ class PublishingService:
                     agent_id,
                     expected_revision=body.expected_draft_revision,
                     expected_active_version_id=expected,
-                    validate_draft=lambda draft: validate_agent_spec(
-                        draft
-                    ).valid,
+                    validate_draft=draft_is_publishable,
                 )
             except DraftRevisionConflict as error:
                 raise ApiError(409, "draft_revision_conflict") from error
             except DraftValidationFailed as error:
                 raise ApiError(422, "agent_spec_invalid") from error
+            except PublicAgentKeyConflict as error:
+                raise ApiError(409, "public_agent_id_conflict") from error
             except ActiveVersionConflict as error:
                 raise ApiError(409, "active_version_conflict") from error
             except PublicationNotFound as error:
