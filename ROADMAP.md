@@ -85,6 +85,12 @@ invalid writes fail closed; bulk preview не меняет draft до Apply; tes
 
 ## Slice 3 — Publishing and versions
 
+**Цель:** доказать контролируемую доставку immutable AgentVersion через
+отдельные Web/API surfaces и безопасный rollback.
+
+**Статус:** complete — version ledger, scoped public principals, Published Web
+App, signed terminal webhooks и обязательный local/CI gate реализованы.
+
 - published Web App;
 - sync/async REST API;
 - API keys и scopes;
@@ -95,6 +101,14 @@ invalid writes fail closed; bulk preview не меняет draft до Apply; tes
 - rollback без изменения истории.
 
 **Control scenario:** publish v1 → publish v2 → переключить traffic обратно на v1.
+
+**Не входит:** Internet deployment, TLS/custom domains, multi-user RBAC,
+arbitrary webhook egress, billing и analytics.
+
+**Выход:** новые public runs всегда связываются с версией под active pointer,
+старые runs сохраняют исходную version identity, rollback добавляет событие и
+не изменяет историю, а raw API/webhook secrets отсутствуют в database, logs,
+trace и browser state.
 
 ## Slice 4 — Models and integrations
 

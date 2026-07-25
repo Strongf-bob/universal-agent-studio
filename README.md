@@ -4,14 +4,14 @@
 > приложением для пользователя и раскрывается до версий, графа, событий,
 > trace, моделей, tools и API для инженера.
 
-[![Slice 1–2 Local Preview](https://github.com/Strongf-bob/universal-agent-studio/actions/workflows/slice1.yml/badge.svg?branch=main)](https://github.com/Strongf-bob/universal-agent-studio/actions/workflows/slice1.yml)
+[![Slice 1–3 Local Preview](https://github.com/Strongf-bob/universal-agent-studio/actions/workflows/slice1.yml/badge.svg?branch=main)](https://github.com/Strongf-bob/universal-agent-studio/actions/workflows/slice1.yml)
 [![Contract Conformance](https://github.com/Strongf-bob/universal-agent-studio/actions/workflows/contracts.yml/badge.svg?branch=main)](https://github.com/Strongf-bob/universal-agent-studio/actions/workflows/contracts.yml)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-0b8793.svg)](LICENSE)
 [![RU / EN](https://img.shields.io/badge/UI-ru--RU%20%7C%20en--US-172331.svg)](LOCALIZATION.md)
 
 ## Уже работает
 
-Slices 1–2 — это локальный исполняемый Studio, а не макет интерфейса:
+Slices 1–3 — это локальная исполняемая платформа, а не макет интерфейса:
 
 - immutable `AgentVersion` с каноническим digest;
 - PostgreSQL-backed `AgentDraft` с revision и optimistic concurrency;
@@ -19,6 +19,12 @@ Slices 1–2 — это локальный исполняемый Studio, а н�
   одним canonical `AgentSpec`, без второй модели графа;
 - save/load, field/node validation и non-mutating JSON diff preview;
 - Test Console запускает immutable snapshot черновика без активации;
+- Publish workspace создаёт immutable versions, ведёт append-only ledger и
+  переключает traffic pointer без изменения истории;
+- отдельный least-privilege Published Web App рендерит только
+  `InterfaceSchema`, работает в RU/EN и не получает Studio session или trace;
+- scoped API keys, sync/async public API, opaque per-run browser capability,
+  resumable SSE и подписанные terminal webhooks;
 - видимый Web-путь setup → JSON import → validation → activation;
 - local owner, Argon2id, opaque session, CSRF и project scope;
 - Web + REST API на одном контракте;
@@ -29,6 +35,16 @@ Slices 1–2 — это локальный исполняемый Studio, а н�
 - `ru-RU` / `en-US`, сохранение текущего run при смене языка;
 - opt-in OpenAI-compatible BYOK adapter за явным origin allowlist;
 - Docker Compose с отдельными PostgreSQL и Temporal volumes.
+
+![Published Web App выполняет опубликованную версию и показывает только структурированный результат](assets/readme/slice3-public.png)
+
+Скриншот отдельного public origin после реального запуска `19 × 23`. Published
+App не показывает AgentSpec, prompt, tool configuration или trace.
+
+![Publish workspace с immutable v1 и v2, active traffic pointer и append-only ledger](assets/readme/slice3-publish.png)
+
+Скриншот доказывает контрольный путь `publish v1 → publish v2 → rollback v1`;
+байты обеих версий и прошлых run остаются неизменными.
 
 ![Реальный Build workspace: простые настройки, граф и инспектор одного AgentSpec](assets/readme/slice2-editor.png)
 
@@ -54,12 +70,15 @@ pnpm dev:local
 После readiness:
 
 - Studio: <http://localhost:3000/ru-RU/setup>
+- Published Web App: <http://localhost:3301/ru-RU/agents/calculator-agent>
 - Control API: <http://localhost:8000/health/ready>
 - Temporal UI: <http://localhost:8080>
 
 Первый воспроизводимый walkthrough, включая setup, импорт/активацию fixture,
 редактирование draft двумя представлениями, validation/diff preview, draft
-snapshot run, refresh, locale switch, trace inspection, cancellation и login:
+snapshot run, publication v1/v2, scoped credentials, rollback, отдельный
+Published Web App, public SSE resume, locale switch, trace inspection,
+cancellation и login:
 
 ```bash
 pnpm --filter @universal-agent-studio/studio-web exec playwright install chromium
@@ -92,6 +111,10 @@ flowchart LR
     Graph --> Save
     Save --> Snapshot["Immutable test snapshot"]
     Snapshot --> Version["AgentVersion + digest"]
+    Save --> Publish["Publish with CAS"]
+    Publish --> Version
+    Publish --> Ledger["Append-only publication ledger"]
+    Ledger --> Pointer["Active-version pointer"]
     Version --> API["Control API"]
     API --> Temporal["Temporal workflow"]
     Temporal --> Kernel["Provider-neutral Agent Kernel"]
@@ -101,6 +124,11 @@ flowchart LR
     Events --> Web["Web runner + SSE resume"]
     Trace --> Web
     Version --> Web
+    Pointer --> PublicAPI["Scoped public API"]
+    Pointer --> PublicWeb["Published Web App"]
+    PublicAPI --> Temporal
+    PublicWeb --> PublicAPI
+    Trace --> Webhook["Sanitized signed terminal webhook"]
 ```
 
 `AgentSpec` — единственный источник runtime-семантики. Canvas хранит отдельно
@@ -124,15 +152,17 @@ BYOK smoke запускается только явно и не входит в 
 
 ## Границы текущего preview
 
-Slices 1–2 доказывают путь `draft → validated snapshot → model → tool →
-output → trace`. Создание/удаление topology, node library, AI Builder, RAG,
-arbitrary HTTP/code nodes, MCP, public publishing, multi-user administration,
-eval campaigns и autoresearch начинаются в последующих slices.
+Slices 1–3 доказывают путь `draft → immutable version → published Web/API →
+version-bound run → rollback`, сохраняя исходный runtime и trace-контур.
+Создание/удаление topology, node library, AI Builder, RAG, arbitrary HTTP/code
+nodes, MCP, multi-user administration, Internet deployment, eval campaigns и
+autoresearch начинаются в последующих slices.
 
 Порядок развития зафиксирован в [ROADMAP.md](ROADMAP.md), а точные release
 gates — в acceptance-контрактах
-[Slice 1](docs/acceptance/SLICE_1_EXECUTABLE_SPINE.md) и
-[Slice 2](docs/acceptance/SLICE_2_ONE_SPEC_TWO_EDITORS.md).
+[Slice 1](docs/acceptance/SLICE_1_EXECUTABLE_SPINE.md),
+[Slice 2](docs/acceptance/SLICE_2_ONE_SPEC_TWO_EDITORS.md) и
+[Slice 3](docs/acceptance/SLICE_3_PUBLISHING_VERSIONS.md).
 
 ## Архитектурные и security-документы
 

@@ -305,6 +305,19 @@ Slice 2 добавляет реальный **Build workspace**:
 5. **Test Console** — запуск сохранённой revision как immutable snapshot,
    текстовая история состояний узлов, результат и ссылка на trace.
 
+Slice 3 добавляет две реальные delivery surfaces:
+
+1. **Publish workspace** — draft revision, immutable version history, active
+   traffic pointer и append-only publication ledger.
+2. **Delivery credentials** — agent-scoped API keys и terminal webhooks;
+   полный ключ или signing secret показывается только один раз.
+3. **Published Web App** — отдельный origin без Studio session, render только
+   validated InterfaceSchema и version-bound run через opaque capability.
+4. **Public result state** — ready, running, completed и recoverable error без
+   prompt, tool configuration, provider metadata или trace.
+5. **RU/EN delivery** — локализованные input labels, validation, progress и
+   result с сохранением agent identity при переключении языка.
+
 На экранах уже проверены desktop, `320px`, эквивалент `200%` browser zoom,
 видимый keyboard focus и `prefers-reduced-motion`. Ни одно представление не
 пишет AgentSpec или секреты в browser storage.

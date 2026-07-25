@@ -4,10 +4,11 @@
 
 Universal Agent Studio is a local-first platform that will create, execute,
 publish and improve AI-agent workflows. The repository contains executable
-Local Preview Slices 1–2: authenticated control API, canonical mutable drafts,
-dual-view editing, immutable draft snapshots, durable runtime, deterministic
-tool path, persisted traces and Web UI. Later publishing, RAG, sandbox, eval
-and autoresearch surfaces remain prospective.
+Local Preview Slices 1–3: authenticated control API, canonical mutable drafts,
+dual-view editing, immutable versions and publication ledger, scoped public
+delivery, durable runtime, deterministic tool path, persisted traces and
+separate Studio/Published Web surfaces. RAG, sandbox, eval and autoresearch
+surfaces remain prospective.
 
 Primary protected assets:
 
@@ -44,6 +45,7 @@ Security policy is defined by `SECURITY.md`, architecture boundaries by `ARCHITE
 |---|---|---|---|
 | Browser → Control API | forged identity, CSRF, XSS, oversized or secret-bearing draft input | secure session, Origin/CSRF defense, CSP, 1 MiB limit, schema and semantic validation | Slice 1/2 |
 | Published App/API → Control API | abusive traffic, broken object authorization | scoped principal, rate limit, project-aware authorization | Slice 3 |
+| Runtime → Webhook destination | SSRF, redirect escape, secret or internal-data disclosure, retry amplification | exact HTTPS origin allowlist, redirect denial, sanitized signed payload, bounded retry/response | Slice 3 |
 | Control API → Runtime worker | command tampering, duplicate execution | authenticated worker channel, immutable version digest, idempotency key | Slice 1 |
 | Runtime → Model provider | credential or sensitive-data leakage | server-side CredentialReference, policy routing, redaction, fail-closed capability checks | Slice 1/4 |
 | Runtime → Tool/integration | excessive agency, SSRF, duplicate side effect | typed manifest, scopes, egress policy, idempotency, approval | Slice 4 |
@@ -76,6 +78,27 @@ or execute uncommitted semantics. Draft reads and writes derive scope only from
 the authenticated owner, compare `expected_revision`, validate before
 persistence, redact diff values, and bind test runs to an immutable snapshot
 of the exact saved digest. The active version pointer is not changed.
+
+In Slice 3, a stale owner may attempt to publish an outdated draft, race a
+rollback, replace historical bytes or target another project's version.
+Publish compares the expected draft revision and active-version pointer in one
+transaction; rollback selects only a historical version of the same scoped
+agent. Both operations append immutable events, while existing runs retain
+their original version identifier and digest.
+
+An untrusted end user may replay or forge an API key, enumerate runs, reuse a
+browser capability for another run, or infer private AgentSpec fields.
+API-key hashes are agent/project scoped and enforce exact scopes, expiry and
+revocation. Published Web receives only a signed opaque capability bound to
+one run. Public projections omit prompts, tools, provider data, traces,
+workflow identifiers, stack traces and raw internal errors.
+
+A webhook subscriber may target a private service, redirect after validation,
+exfiltrate signing material or amplify retries. Registration accepts only
+exact origins from the operator allowlist and rejects URL userinfo, fragments
+and redirects. The dispatcher rechecks revocation, bounds time, response
+bytes, attempts and stored errors, signs the exact sanitized body, and never
+persists or logs the raw signing secret.
 
 ### Model, RAG and prompt injection
 
@@ -140,4 +163,4 @@ Compromised packages or copied assets may introduce execution, tracking or licen
 - metadata leakage that reveals no private content, identity or infrastructure secret.
 
 Repository: https://github.com/Strongf-bob/universal-agent-studio
-Version: Slice 2 one spec, two editors
+Version: Slice 3 publishing and versions

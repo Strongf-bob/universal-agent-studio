@@ -2,7 +2,7 @@
 
 ## Supported baseline
 
-The tested Slices 1–2 toolchain is:
+The tested Slices 1–3 toolchain is:
 
 | Component | Version |
 |---|---:|
@@ -29,9 +29,9 @@ pnpm dev:local
 The launcher:
 
 1. verifies Docker availability;
-2. creates three distinct random secrets under `.local/secrets`;
+2. creates six distinct random secrets under `.local/secrets`;
 3. enforces mode `0600` on each secret file;
-4. builds the pinned API, worker and Web images;
+4. builds the pinned API, worker, Studio and Published Web images;
 5. starts PostgreSQL and Temporal with independent named volumes;
 6. runs Alembic before API and worker startup;
 7. waits for every long-running service to become healthy.
@@ -40,6 +40,7 @@ Successful output includes:
 
 ```text
 Web: http://localhost:3000/ru-RU/setup
+Published Web App: http://localhost:3301/ru-RU/agents/calculator-agent
 API: http://localhost:8000/health/ready
 Temporal UI: http://localhost:8080
 ```
@@ -82,6 +83,12 @@ Web UI, and stores only an opaque session cookie. The remaining tests prove:
 - immutable, unactivated draft snapshot run with node event history and
   `{"value":437}`;
 - draft identity preservation through trace navigation and RU/EN switching.
+- first publication of v1, publication of changed v2 and rollback of traffic
+  to the byte-identical v1 through the Studio Publish workspace;
+- a version-bound public run through the separate RU/EN Published Web App;
+- one-time API-key and webhook-secret display followed by revocation without
+  browser, database, rendered HTML or log disclosure;
+- public SSE resume from `Last-Event-ID` without duplicate output.
 
 The credentials in `apps/studio-web/e2e/constants.ts` are local test data only.
 Do not reuse them outside an isolated preview.
@@ -93,6 +100,7 @@ Copy `infra/docker/.env.example` only when default ports conflict:
 | Variable | Default | Purpose |
 |---|---:|---|
 | `UAS_WEB_PORT` | 3000 | Studio Web |
+| `UAS_PUBLISHED_WEB_PORT` | 3301 | Published Web App |
 | `UAS_API_PORT` | 8000 | Control API |
 | `UAS_TEMPORAL_UI_PORT` | 8080 | Temporal UI |
 | `UAS_DETERMINISTIC_DELAY_MS` | 2000 | Cancellation-observable fake run delay |
@@ -110,13 +118,27 @@ pnpm local:down
 pnpm dev:local
 ```
 
-The active Alembic revision, persisted runs and latest committed draft
-revision/digest remain available after restart.
+The active Alembic revision, persisted runs, publication ledger, active
+traffic pointer and latest committed draft revision/digest remain available
+after restart.
 
 After importing and activating the calculator fixture, the Build workspace is:
 
 ```text
 http://localhost:3000/en-US/agents/calculator-agent/build
+```
+
+After publishing, the owner controls immutable versions and delivery
+credentials at:
+
+```text
+http://localhost:3000/en-US/agents/calculator-agent/publish
+```
+
+The least-privilege end-user surface is a separate origin:
+
+```text
+http://localhost:3301/en-US/agents/calculator-agent
 ```
 
 Every unsafe API call, including direct operator scripts, must send an allowed
@@ -139,6 +161,7 @@ repository files are never reset targets.
 ```bash
 curl --fail http://localhost:8000/health/ready
 curl --fail http://localhost:3000/en-US/setup
+curl --fail http://localhost:3301/health
 curl --fail http://localhost:8080
 docker compose -f infra/docker/compose.local.yml ps
 node scripts/collect-redacted-logs.mjs

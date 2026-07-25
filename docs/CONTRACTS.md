@@ -21,7 +21,7 @@ Generated files не редактируются вручную. Python или Ty
 - Import или edit старой версии создаёт новый draft в текущей schema.
 - Runtime объявляет точный диапазон поддерживаемых schema versions.
 
-## Slices 1–2 contract set
+## Slices 1–3 contract set
 
 ### Authoring and versioning
 
@@ -50,6 +50,20 @@ Generated files не редактируются вручную. Python или Ty
 - `NodeExecution`
 - `ErrorEnvelope`
 - `UsageRecord`
+
+### Publication and public delivery
+
+- `Publication`
+- `PublishRequest`
+- `RollbackRequest`
+- `PublicAgent`
+- `PublicRunCreateRequest`
+- `PublicRun`
+- `PublicRunEvent`
+- `ApiKeyCreateRequest`
+- `ApiKeyCreateView`
+- `WebhookCreateRequest`
+- `WebhookCreateView`
 
 ## Required event envelope
 
@@ -161,6 +175,25 @@ existing `RunRequest`/`RunEvent`/`RunTrace` path.
 
 The authenticated HTTP surface is documented in
 [`SLICE_2_ONE_SPEC_TWO_EDITORS.md`](acceptance/SLICE_2_ONE_SPEC_TWO_EDITORS.md).
+
+## Slice 3 publication contracts
+
+Publication and public delivery use narrow generated contracts over the same
+immutable AgentVersion:
+
+- `Publication` exposes the active pointer, draft revision/digest, immutable
+  version summaries and append-only traffic events to the owner;
+- `PublishRequest` and `RollbackRequest` carry both compare-and-swap tokens;
+- `PublicAgent` projects only localized copy, validated `InterfaceSchema` and
+  selected version identity;
+- `PublicRun` and `PublicRunEvent` omit prompts, tool/provider configuration,
+  trace data and internal workflow identifiers;
+- API-key and webhook create views contain one-time secret material only in
+  the create response; list responses use separate non-secret projections.
+
+The exact endpoint, scope, idempotency, stream and webhook requirements are
+documented in
+[`SLICE_3_PUBLISHING_VERSIONS.md`](acceptance/SLICE_3_PUBLISHING_VERSIONS.md).
 
 ## Runtime handoff
 

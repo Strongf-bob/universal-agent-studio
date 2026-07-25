@@ -144,7 +144,7 @@ Routing must fail closed when a selected provider violates the policy.
 
 Critical issues include unauthenticated production code execution, cross-project credential access, bypass of manual publication, or extraction of model/tool secrets at scale. High severity includes project-level data access, durable approval bypass, SSRF into privileged networks, or stored XSS in Studio/Published App. Detailed calibration lives in the threat model.
 
-## 13. Slices 1–2 implemented controls
+## 13. Slices 1–3 implemented controls
 
 The Local Preview executable spine currently enforces:
 
@@ -172,9 +172,24 @@ The Local Preview executable spine currently enforces:
   version pointer;
 - PostgreSQL persistence with restart recovery and no AgentSpec/secret
   persistence in local/session storage.
+- publish and rollback compare both draft revision and active-version pointer,
+  reject stale writes, and append immutable publication events;
+- public metadata exposes only localized copy, InterfaceSchema and active
+  version identity, never draft, prompt, tool, provider or trace data;
+- API keys are agent/project scoped, stored as keyed hashes, shown once and
+  checked for exact scopes, revocation and expiry on every request;
+- Published Web App uses an opaque, single-run capability instead of owner
+  cookies, CSRF tokens or public API keys;
+- webhook destinations are restricted to exact HTTPS allowlisted origins,
+  deny userinfo/fragments/redirects and are rechecked before bounded egress;
+- terminal webhook payloads are sanitized and HMAC-signed over exact bytes;
+  signing material is derived from a file-mounted master key and never logged;
+- credential-management and public create routes enforce request-size and rate
+  bounds, while guessed identifiers grant no access.
 
 Automated evidence lives in `tests/security`, the Chromium E2E suite and
 [`docs/acceptance/evidence/SLICE_1.md`](docs/acceptance/evidence/SLICE_1.md)
-and [`docs/acceptance/evidence/SLICE_2.md`](docs/acceptance/evidence/SLICE_2.md).
+[`docs/acceptance/evidence/SLICE_2.md`](docs/acceptance/evidence/SLICE_2.md)
+and [`docs/acceptance/evidence/SLICE_3.md`](docs/acceptance/evidence/SLICE_3.md).
 These controls are a Local Preview boundary, not a production deployment
 certification.
