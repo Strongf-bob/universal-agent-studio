@@ -7,9 +7,16 @@ from typing import Any, cast
 
 import pytest
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 from universal_agent_kernel.contracts.canonical import content_digest
+from universal_agent_kernel.contracts.generated import (
+    ApiKeyCreateRequest,
+    ApiKeyScope,
+    WebhookCreateRequest,
+    WebhookEventType,
+)
 from universal_agent_platform_store.models import (
+    AgentApiKey,
     AgentPublicationEvent,
     AgentVersion,
     Base,
@@ -21,6 +28,7 @@ from universal_agent_platform_store.repositories.publishing import (
     PublishingRepository,
 )
 from universal_agent_platform_store.scope import RequestScope
+from universal_agent_studio_api.publishing.service import PublishingService
 
 ROOT = Path(__file__).parents[2]
 GOLDEN = (
@@ -139,3 +147,52 @@ async def test_stale_draft_revision_does_not_publish(
         )
         is None
     )
+
+
+@pytest.mark.asyncio
+async def test_issued_secrets_are_not_persisted_as_plaintext(
+    database_engine: AsyncEngine,
+    database_session: AsyncSession,
+    request_scope: RequestScope,
+) -> None:
+    await _seed(database_session, request_scope)
+    service = PublishingService(
+        async_sessionmaker(database_engine, expire_on_commit=False),
+        api_key_hash_master=b"h" * 32,
+        webhook_signing_master=b"w" * 32,
+        webhook_allowed_origins=["http://example.test:9090"],
+    )
+
+    api_key = await service.create_api_key(
+        "calculator-agent",
+        ApiKeyCreateRequest(
+            label="Acceptance",
+            scopes=[ApiKeyScope.runs_create],
+            expires_at=None,
+        ),
+        request_scope,
+    )
+    webhook = await service.create_webhook(
+        "calculator-agent",
+        WebhookCreateRequest.model_validate(
+            {
+                "label": "Acceptance",
+                "target_url": "http://example.test:9090/hooks/terminal",
+                "events": [WebhookEventType.run_completed.value],
+            }
+        ),
+        request_scope,
+    )
+
+    async with AsyncSession(database_engine) as verification:
+        stored_key = await verification.scalar(select(AgentApiKey))
+        assert stored_key is not None
+        assert stored_key.key_hash != api_key.secret
+        serialized_rows = json.dumps(
+            {
+                "key_hash": stored_key.key_hash,
+                "webhook_secret": None,
+            }
+        )
+    assert api_key.secret not in serialized_rows
+    assert webhook.secret not in serialized_rows

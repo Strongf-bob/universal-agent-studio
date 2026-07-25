@@ -31,6 +31,14 @@ class Settings(BaseSettings):
     runtime_task_queue: str = "uas-runtime-v1"
     session_hash_key_file: Path | None = None
     execution_signing_key_file: Path = Path("/run/secrets/uas_execution_signing_key")
+    api_key_hash_key_file: Path = Path("/run/secrets/uas_api_key_hash_key")
+    public_capability_key_file: Path = Path(
+        "/run/secrets/uas_public_capability_key"
+    )
+    webhook_signing_key_file: Path = Path(
+        "/run/secrets/uas_webhook_signing_key"
+    )
+    webhook_allowed_origins: list[str] = Field(default_factory=list)
     sse_poll_interval_seconds: float = Field(default=0.25, gt=0, le=5)
     sse_heartbeat_seconds: float = Field(default=15, gt=0, le=60)
     sse_max_polls: int = Field(default=1200, ge=1, le=100_000)

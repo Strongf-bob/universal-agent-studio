@@ -35,6 +35,7 @@ from universal_agent_studio_api.api import (
     agent_drafts,
     agent_versions,
     bootstrap,
+    publishing,
     runs,
     session,
     workspace,
@@ -43,6 +44,11 @@ from universal_agent_studio_api.auth.models import AuthStore
 from universal_agent_studio_api.auth.service import AuthService
 from universal_agent_studio_api.auth.store import SqlAuthStore
 from universal_agent_studio_api.errors import error_document, install_exception_handlers
+from universal_agent_studio_api.publishing.crypto import load_master_key
+from universal_agent_studio_api.publishing.service import (
+    PublishingService,
+    PublishingServicePort,
+)
 from universal_agent_studio_api.runs.durable import DurableExecutionPort
 from universal_agent_studio_api.runs.service import (
     RunPersistence,
@@ -71,6 +77,13 @@ class RequestGuardsMiddleware(BaseHTTPMiddleware):
             and bool(path_parts[4])
             and path_parts[5:] == ["draft", "runs"]
         )
+        is_publishing_mutation = (
+            len(path_parts) >= 6
+            and path_parts[1:4] == ["api", "v1", "agents"]
+            and bool(path_parts[4])
+            and path_parts[5]
+            in {"publish", "rollback", "api-keys", "webhooks"}
+        )
         if request.method != "POST" or (
             path not in {
                 "/api/v1/bootstrap/owner",
@@ -79,10 +92,16 @@ class RequestGuardsMiddleware(BaseHTTPMiddleware):
                 "/api/v1/runs",
             }
             and not is_draft_run
+            and not is_publishing_mutation
         ):
             return False
         client_host = request.client.host if request.client is not None else "unknown"
-        rate_path = "/api/v1/agents/*/draft/runs" if is_draft_run else path
+        if is_draft_run:
+            rate_path = "/api/v1/agents/*/draft/runs"
+        elif is_publishing_mutation:
+            rate_path = f"/api/v1/agents/*/{path_parts[5]}"
+        else:
+            rate_path = path
         key = (client_host, rate_path)
         now = time.monotonic()
         cutoff = now - self.settings.auth_rate_window_seconds
@@ -145,6 +164,7 @@ def create_app(
     draft_persistence: AgentDraftPersistence | None = None,
     run_persistence: RunPersistence | None = None,
     durable_execution: DurableExecutionPort | None = None,
+    publishing_service: PublishingServicePort | None = None,
     settings: Settings | None = None,
 ) -> FastAPI:
     resolved_settings = settings or Settings()
@@ -170,6 +190,8 @@ def create_app(
                     draft_persistence,
                     agent_persistence=agent_persistence,
                 )
+            if publishing_service is not None:
+                app.state.publishing_service = publishing_service
             if run_persistence is not None and durable_execution is not None:
                 assert agent_persistence is not None
                 app.state.run_service = RunService(
@@ -224,6 +246,16 @@ def create_app(
             agent_persistence=agent_version_persistence,
             run_service=app.state.run_service,
         )
+        app.state.publishing_service = PublishingService(
+            session_factory,
+            api_key_hash_master=load_master_key(
+                resolved_settings.api_key_hash_key_file
+            ),
+            webhook_signing_master=load_master_key(
+                resolved_settings.webhook_signing_key_file
+            ),
+            webhook_allowed_origins=resolved_settings.webhook_allowed_origins,
+        )
         app.state.ready = True
         try:
             yield
@@ -251,6 +283,8 @@ def create_app(
             draft_persistence,
             agent_persistence=agent_persistence,
         )
+    if publishing_service is not None:
+        app.state.publishing_service = publishing_service
     if run_persistence is not None and durable_execution is not None:
         assert agent_persistence is not None
         app.state.run_service = RunService(
@@ -290,6 +324,7 @@ def create_app(
     app.include_router(workspace.router)
     app.include_router(agent_versions.router)
     app.include_router(agent_drafts.router)
+    app.include_router(publishing.router)
     app.include_router(runs.router)
 
     @app.get("/health/live", include_in_schema=False)
