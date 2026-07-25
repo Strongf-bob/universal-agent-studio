@@ -378,7 +378,9 @@
       "empty": "Здесь появится первое событие публикации.",
       "event": "Событие",
       "route": "Изменение трафика",
-      "created": "Создано"
+      "created": "Создано",
+      "publish": "Публикация",
+      "rollback": "Откат"
     },
     "delivery": {
       "eyebrow": "Публичная доставка",
@@ -402,6 +404,7 @@
       "description": "Отправляйте подписанные события завершения, ошибки и отмены на разрешённый HTTPS origin.",
       "label": "Название webhook",
       "url": "Целевой URL",
+      "placeholder": "https://hooks.example.com/agent",
       "create": "Создать webhook",
       "empty": "Подписки webhook ещё не настроены.",
       "revoke": "Отозвать",

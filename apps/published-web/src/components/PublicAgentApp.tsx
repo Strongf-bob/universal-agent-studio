@@ -101,6 +101,14 @@ export function PublicAgentApp({
   const controllerRef = useRef<AbortController | null>(null);
   const lastSequenceRef = useRef(0);
 
+  useEffect(() => {
+    const previous = document.documentElement.lang;
+    document.documentElement.lang = locale;
+    return () => {
+      document.documentElement.lang = previous;
+    };
+  }, [locale]);
+
   useEffect(
     () => () => {
       controllerRef.current?.abort();
@@ -193,7 +201,7 @@ export function PublicAgentApp({
       ? messages.modeChat
       : agent.interface.mode === "hybrid"
         ? messages.modeHybrid
-        : messages.ready;
+        : messages.modeForm;
 
   return (
     <>
@@ -242,9 +250,11 @@ export function PublicAgentApp({
                   ? messages.completed
                   : state === "failed"
                     ? messages.failed
-                    : modeLabel}
+                    : state === "ready"
+                      ? messages.ready
+                      : modeLabel}
               </strong>
-              <small>{agent.interface.mode}</small>
+              <small>{modeLabel}</small>
             </div>
           </div>
 

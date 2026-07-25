@@ -337,6 +337,13 @@ class AgentPublicationEvent(Base):
             "char_length(selected_version_digest) = 64",
             name="ck_agent_publication_digest",
         ),
+        CheckConstraint(
+            (
+                "event_type != 'rollback' "
+                "OR previous_version_id IS DISTINCT FROM selected_version_id"
+            ),
+            name="ck_agent_publication_rollback_changes_version",
+        ),
         Index(
             "ix_publication_events_scope_agent_created",
             "workspace_id",

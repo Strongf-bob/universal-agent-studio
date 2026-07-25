@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from datetime import UTC, datetime, timedelta
 from typing import Protocol
 from urllib.parse import urlsplit
 from uuid import UUID, uuid4
@@ -28,6 +29,7 @@ from universal_agent_kernel.contracts.generated import (
     WebhookEventType,
     WebhookView,
 )
+from universal_agent_kernel.contracts.validation import validate_agent_spec
 from universal_agent_platform_store.models import (
     AgentApiKey,
     AgentPublicationEvent,
@@ -39,6 +41,7 @@ from universal_agent_platform_store.repositories.drafts import DraftRevisionConf
 from universal_agent_platform_store.repositories.publishing import (
     ActiveVersionConflict,
     ApiKeyRepository,
+    DraftValidationFailed,
     PublicationNotFound,
     PublishingRepository,
 )
@@ -56,6 +59,7 @@ from universal_agent_studio_api.publishing.crypto import (
 
 KNOWN_SCOPES = frozenset(scope.value for scope in ApiKeyScope)
 KNOWN_WEBHOOK_EVENTS = frozenset(event.value for event in WebhookEventType)
+MAX_API_KEY_LIFETIME = timedelta(days=366)
 
 
 class PublishingServicePort(Protocol):
@@ -301,9 +305,14 @@ class PublishingService:
                     agent_id,
                     expected_revision=body.expected_draft_revision,
                     expected_active_version_id=expected,
+                    validate_draft=lambda draft: validate_agent_spec(
+                        draft
+                    ).valid,
                 )
             except DraftRevisionConflict as error:
                 raise ApiError(409, "draft_revision_conflict") from error
+            except DraftValidationFailed as error:
+                raise ApiError(422, "agent_spec_invalid") from error
             except ActiveVersionConflict as error:
                 raise ApiError(409, "active_version_conflict") from error
             except PublicationNotFound as error:
@@ -352,6 +361,13 @@ class PublishingService:
         raw_scopes = [item.value for item in body.scopes]
         if not raw_scopes or not set(raw_scopes) <= KNOWN_SCOPES:
             raise ApiError(422, "invalid_api_key_scope")
+        if body.expires_at is not None:
+            now = datetime.now(UTC)
+            if (
+                body.expires_at <= now
+                or body.expires_at > now + MAX_API_KEY_LIFETIME
+            ):
+                raise ApiError(422, "invalid_api_key_expiry")
         issued = issue_api_key(self.api_key_hash_master)
         async with self._transaction() as session:
             try:

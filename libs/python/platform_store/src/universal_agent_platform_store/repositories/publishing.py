@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import cast
+from typing import Any, cast
 from uuid import UUID, uuid4
 
 from sqlalchemy import func, select
@@ -31,6 +32,10 @@ class PublicationNotFound(RuntimeError):
 
 
 class ActiveVersionConflict(RuntimeError):
+    pass
+
+
+class DraftValidationFailed(RuntimeError):
     pass
 
 
@@ -127,11 +132,14 @@ class PublishingRepository(ScopedRepository):
         *,
         expected_revision: int,
         expected_active_version_id: UUID | None,
+        validate_draft: Callable[[dict[str, Any]], bool] | None = None,
     ) -> PublicationResult:
         agent = await self._lock_agent(agent_key)
         draft = await self._locked_draft(agent.id)
         if draft.revision != expected_revision:
             raise DraftRevisionConflict("agent_draft_revision_conflict")
+        if validate_draft is not None and not validate_draft(draft.agent_spec):
+            raise DraftValidationFailed("agent_spec_invalid")
         active = await self._locked_active(agent.id)
         previous = self._check_active(active, expected_active_version_id)
 

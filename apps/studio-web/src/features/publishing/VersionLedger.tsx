@@ -108,7 +108,11 @@ export function VersionLedger({state, busy, onRollback}: Props) {
                 {state.events.map((event) => (
                   <tr key={event.event_id}>
                     <td>
-                      <span className="eventKind">{event.event_type}</span>
+                      <span className="eventKind">
+                        {event.event_type === "publish"
+                          ? t("ledger.publish")
+                          : t("ledger.rollback")}
+                      </span>
                     </td>
                     <td>
                       <code>

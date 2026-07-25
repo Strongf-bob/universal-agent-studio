@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import copy
 import json
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any, cast
 
@@ -12,11 +13,14 @@ from universal_agent_kernel.contracts.canonical import content_digest
 from universal_agent_kernel.contracts.generated import (
     ApiKeyCreateRequest,
     ApiKeyScope,
+    Identifier,
+    PublishRequest,
     WebhookCreateRequest,
     WebhookEventType,
 )
 from universal_agent_platform_store.models import (
     AgentApiKey,
+    AgentDraftRecord,
     AgentPublicationEvent,
     AgentVersion,
     Base,
@@ -28,6 +32,7 @@ from universal_agent_platform_store.repositories.publishing import (
     PublishingRepository,
 )
 from universal_agent_platform_store.scope import RequestScope
+from universal_agent_studio_api.errors import ApiError
 from universal_agent_studio_api.publishing.service import PublishingService
 
 ROOT = Path(__file__).parents[2]
@@ -219,3 +224,84 @@ async def test_issued_secrets_are_not_persisted_as_plaintext(
         )
     assert api_key.secret not in serialized_rows
     assert webhook.secret not in serialized_rows
+
+
+@pytest.mark.asyncio
+async def test_publish_revalidates_the_locked_current_draft(
+    database_engine: AsyncEngine,
+    database_session: AsyncSession,
+    request_scope: RequestScope,
+) -> None:
+    base, revision = await _seed(database_session, request_scope)
+    draft = await database_session.scalar(select(AgentDraftRecord))
+    assert draft is not None
+    draft.agent_spec = {"schema_version": "0.1.0"}
+    draft.digest = "f" * 64
+    await database_session.commit()
+    service = PublishingService(
+        async_sessionmaker(database_engine, expire_on_commit=False),
+        api_key_hash_master=b"h" * 32,
+        webhook_signing_master=b"w" * 32,
+        webhook_allowed_origins=[],
+    )
+
+    with pytest.raises(ApiError) as captured:
+        await service.publish(
+            "calculator-agent",
+            PublishRequest(
+                expected_draft_revision=revision,
+                expected_active_version_id=Identifier(
+                    root="calculator-agent-v1"
+                ),
+            ),
+            request_scope,
+        )
+
+    assert captured.value.status_code == 422
+    assert captured.value.document["code"] == "agent_spec_invalid"
+    async with AsyncSession(database_engine) as verification:
+        events = list(
+            await verification.scalars(select(AgentPublicationEvent))
+        )
+        versions = list(await verification.scalars(select(AgentVersion)))
+    assert events == []
+    assert [version.id for version in versions] == [base.id]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "expires_at",
+    [
+        datetime.now(UTC) - timedelta(seconds=1),
+        datetime.now(UTC) + timedelta(days=367),
+    ],
+)
+async def test_api_key_expiry_is_future_bounded(
+    database_engine: AsyncEngine,
+    database_session: AsyncSession,
+    request_scope: RequestScope,
+    expires_at: datetime,
+) -> None:
+    await _seed(database_session, request_scope)
+    service = PublishingService(
+        async_sessionmaker(database_engine, expire_on_commit=False),
+        api_key_hash_master=b"h" * 32,
+        webhook_signing_master=b"w" * 32,
+        webhook_allowed_origins=[],
+    )
+
+    with pytest.raises(ApiError) as captured:
+        await service.create_api_key(
+            "calculator-agent",
+            ApiKeyCreateRequest(
+                label="Bounded",
+                scopes=[ApiKeyScope.runs_create],
+                expires_at=expires_at,
+            ),
+            request_scope,
+        )
+
+    assert captured.value.status_code == 422
+    assert captured.value.document["code"] == "invalid_api_key_expiry"
+    async with AsyncSession(database_engine) as verification:
+        assert await verification.scalar(select(AgentApiKey)) is None

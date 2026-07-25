@@ -28,6 +28,7 @@ class FakeStore:
         self,
         delivery_id: UUID,
         *,
+        attempt_count: int,
         state: str,
         next_attempt_at: datetime | None,
         status_code: int | None,
@@ -36,6 +37,7 @@ class FakeStore:
         self.finished.append(
             {
                 "delivery_id": delivery_id,
+                "attempt_count": attempt_count,
                 "state": state,
                 "next_attempt_at": next_attempt_at,
                 "status_code": status_code,
@@ -104,6 +106,7 @@ async def test_dispatcher_signs_and_completes_successful_delivery() -> None:
 
     assert count == 1
     assert store.finished[0]["state"] == "delivered"
+    assert store.finished[0]["attempt_count"] == claimed.attempt_count
     headers = client.requests[0]["headers"]
     assert isinstance(headers, dict)
     assert headers["X-UAS-Delivery"] == str(claimed.id)

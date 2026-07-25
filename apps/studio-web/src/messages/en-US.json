@@ -378,7 +378,9 @@
       "empty": "The first publication event will appear here.",
       "event": "Event",
       "route": "Traffic change",
-      "created": "Created"
+      "created": "Created",
+      "publish": "Publish",
+      "rollback": "Rollback"
     },
     "delivery": {
       "eyebrow": "Public delivery",
@@ -402,6 +404,7 @@
       "description": "Send signed completion, failure, and cancellation events to an allowed HTTPS origin.",
       "label": "Webhook label",
       "url": "Target URL",
+      "placeholder": "https://hooks.example.com/agent",
       "create": "Create webhook",
       "empty": "No webhook subscriptions configured.",
       "revoke": "Revoke",

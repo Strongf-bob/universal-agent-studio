@@ -45,6 +45,7 @@ class WebhookDeliveryStore(Protocol):
         self,
         delivery_id: UUID,
         *,
+        attempt_count: int,
         state: str,
         next_attempt_at: datetime | None,
         status_code: int | None,
@@ -165,6 +166,7 @@ class SqlWebhookDeliveryStore:
         self,
         delivery_id: UUID,
         *,
+        attempt_count: int,
         state: str,
         next_attempt_at: datetime | None,
         status_code: int | None,
@@ -173,7 +175,11 @@ class SqlWebhookDeliveryStore:
         async with self.session_factory() as session:
             delivery = await session.scalar(
                 select(WebhookDelivery)
-                .where(WebhookDelivery.id == delivery_id)
+                .where(
+                    WebhookDelivery.id == delivery_id,
+                    WebhookDelivery.state == "delivering",
+                    WebhookDelivery.attempt_count == attempt_count,
+                )
                 .with_for_update()
             )
             if delivery is None:
@@ -253,6 +259,7 @@ class WebhookDispatcher:
         if _origin(delivery.target_url) not in self.allowed_origins:
             await self.store.finish(
                 delivery.id,
+                attempt_count=delivery.attempt_count,
                 state="failed",
                 next_attempt_at=None,
                 status_code=None,
@@ -291,6 +298,7 @@ class WebhookDispatcher:
         if 200 <= status_code < 300:
             await self.store.finish(
                 delivery.id,
+                attempt_count=delivery.attempt_count,
                 state="delivered",
                 next_attempt_at=None,
                 status_code=status_code,
@@ -309,6 +317,7 @@ class WebhookDispatcher:
         else:
             await self.store.finish(
                 delivery.id,
+                attempt_count=delivery.attempt_count,
                 state="failed",
                 next_attempt_at=None,
                 status_code=status_code,
@@ -332,6 +341,7 @@ class WebhookDispatcher:
             next_attempt_at = now + timedelta(seconds=delay)
         await self.store.finish(
             delivery.id,
+            attempt_count=delivery.attempt_count,
             state=state,
             next_attempt_at=next_attempt_at,
             status_code=status_code,

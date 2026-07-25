@@ -24,6 +24,9 @@ from universal_agent_platform_store.repositories.runs import (
     IdempotencyConflict,
     RunRepository,
 )
+from universal_agent_platform_store.repositories.webhooks import (
+    WebhookRepository,
+)
 from universal_agent_platform_store.scope import RequestScope
 
 from universal_agent_studio_api.agents.models import (
@@ -398,6 +401,10 @@ class SqlRunPersistence:
                 await repository.append_event(run.id, started.to_document())
                 await repository.append_event(run.id, failed.to_document())
                 await repository.finalize_trace(run.id, trace)
+                await WebhookRepository(
+                    session,
+                    scope,
+                ).enqueue_terminal(run_id=run.id, trace=trace)
                 await session.commit()
             except Exception:
                 await session.rollback()

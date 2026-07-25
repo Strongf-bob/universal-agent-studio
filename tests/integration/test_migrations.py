@@ -56,8 +56,33 @@ async def test_empty_database_migrates_to_head() -> None:
             tables = await connection.run_sync(
                 lambda sync_connection: set(inspect(sync_connection).get_table_names())
             )
+            publication_constraints = set(
+                await connection.scalars(
+                    text(
+                        """
+                        SELECT conname
+                        FROM pg_constraint
+                        WHERE conrelid = 'agent_publication_events'::regclass
+                        """
+                    )
+                )
+            )
+            publication_triggers = set(
+                await connection.scalars(
+                    text(
+                        """
+                        SELECT tgname
+                        FROM pg_trigger
+                        WHERE tgrelid = 'agent_publication_events'::regclass
+                          AND NOT tgisinternal
+                        """
+                    )
+                )
+            )
     finally:
         await engine.dispose()
 
     assert EXPECTED_TABLES <= tables
+    assert "ck_agent_publication_rollback_changes_version" in publication_constraints
+    assert "tr_agent_publication_events_append_only" in publication_triggers
     await asyncio.to_thread(command.downgrade, config, "base")

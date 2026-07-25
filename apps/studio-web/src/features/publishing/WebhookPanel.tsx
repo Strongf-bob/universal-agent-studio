@@ -84,7 +84,7 @@ export function WebhookPanel({
           value={targetUrl}
           required
           type="url"
-          placeholder="https://hooks.example.com/agent"
+          placeholder={t("webhooks.placeholder")}
           onChange={(event) => setTargetUrl(event.target.value)}
         />
         <button type="submit" disabled={busy}>

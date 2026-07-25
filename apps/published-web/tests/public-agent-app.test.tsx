@@ -102,6 +102,8 @@ describe("PublicAgentApp", () => {
         transport={transport}
       />,
     );
+    expect(document.documentElement.lang).toBe("ru-RU");
+    expect(screen.getByText("Форма ввода")).toBeInTheDocument();
     await user.type(screen.getByLabelText("Выражение"), "19 * 23");
     await user.click(screen.getByRole("button", {name: "Запустить агента"}));
 

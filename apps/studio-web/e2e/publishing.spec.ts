@@ -48,6 +48,14 @@ test("publishes v2, binds its run, and switches traffic to immutable v1", async 
     .getByRole("button", {name: "Revoke"})
     .click();
 
+  await page.goto(`${studioBase}/en-US/agents/calculator-agent/build`);
+  await page
+    .getByRole("textbox", {name: "Name in English"})
+    .fill("Published Calculator v2");
+  await page.getByRole("button", {name: "Save draft"}).click();
+  await expect(page.getByText("Draft saved")).toBeVisible();
+  await page.goto(`${studioBase}/en-US/agents/calculator-agent/publish`);
+
   await page.getByRole("button", {name: /Publish revision/}).click();
   await expect(page.getByText("Traffic: calculator-agent-v2")).toBeVisible();
 
