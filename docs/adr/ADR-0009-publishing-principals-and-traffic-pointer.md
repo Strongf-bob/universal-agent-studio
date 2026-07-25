@@ -25,6 +25,12 @@ the pointer, and appends an immutable publication event. Rollback
 compare-and-swaps only the pointer to an owned historical version and appends
 another event. Existing versions and runs are never rewritten.
 
+The public route uses `agent_id` without tenant coordinates, so first
+publication claims that identifier across published projects under a global
+advisory lock. Publishing and legacy activation also share one scoped advisory
+lock. The locked draft must pass schema validation, embedded-agent matching
+and canonical-digest recomputation before it can become version identity.
+
 Represent public access as explicit least-privilege principals:
 
 - one-time API-key secrets, stored only as keyed hashes, are bound to one
@@ -76,6 +82,8 @@ contract. The module and schema boundaries preserve future extraction.
 
 - Studio and Published Web App have separate origins and privilege surfaces.
 - Publishing and rollback need explicit compare-and-swap conflict UX.
+- Public `agent_id` collisions are rejected at publication rather than making
+  an existing public route ambiguous.
 - Public schemas intentionally duplicate a small safe subset of runtime data.
 - Key and capability authentication must be checked before revealing object
   existence.
@@ -84,4 +92,3 @@ contract. The module and schema boundaries preserve future extraction.
   first webhook feature from becoming arbitrary SSRF.
 - A future production gateway can consume these public contracts without
   changing version or run semantics.
-

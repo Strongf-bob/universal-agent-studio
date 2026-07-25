@@ -191,6 +191,10 @@ immutable AgentVersion:
 - API-key and webhook create views contain one-time secret material only in
   the create response; list responses use separate non-secret projections.
 
+Because the public route is `/public/v1/agents/{agent_id}`, publication claims
+`agent_id` across currently published projects. A conflicting second claim is
+a 409 and cannot turn the existing route into an ambiguous 404.
+
 The exact endpoint, scope, idempotency, stream and webhook requirements are
 documented in
 [`SLICE_3_PUBLISHING_VERSIONS.md`](acceptance/SLICE_3_PUBLISHING_VERSIONS.md).

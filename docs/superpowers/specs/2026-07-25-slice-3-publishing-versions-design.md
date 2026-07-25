@@ -110,12 +110,15 @@ immutable version even when the traffic pointer changes later.
 Within one database transaction the service:
 
 1. scopes the agent and draft from the authenticated owner;
-2. locks the draft and active pointer;
-3. rejects a stale revision or stale pointer with HTTP 409;
-4. validates the complete canonical AgentSpec;
-5. creates or reuses an immutable version by canonical digest;
-6. changes the active pointer with compare-and-swap;
-7. appends a `publish` event to the publication ledger.
+2. takes the same scoped advisory lock used by legacy activation;
+3. serializes and claims the globally routed public `agent_id`;
+4. locks the draft and active pointer;
+5. rejects a stale revision, stale pointer or public-ID collision with HTTP 409;
+6. validates the complete AgentSpec, embedded agent identity and stored
+   canonical digest;
+7. creates or reuses an immutable version by canonical digest;
+8. changes the active pointer with compare-and-swap;
+9. appends a `publish` event to the publication ledger.
 
 `POST /api/v1/agents/{agent_id}/rollback` accepts a target historical
 `version_id` and `expected_active_version_id`. It verifies that the target
@@ -146,8 +149,8 @@ Slice 3 adds:
 - selected version digest;
 - server timestamp.
 
-Rows are append-only. A database constraint rejects equal previous/selected
-versions for rollback events.
+Rows are append-only: a database trigger rejects update/delete and a
+constraint rejects equal previous/selected versions for rollback events.
 
 ### `agent_api_keys`
 
@@ -155,7 +158,7 @@ versions for rollback events.
 - human label and visible random prefix;
 - keyed hash of the complete raw secret;
 - non-empty scope set;
-- optional expiry;
+- optional future expiry bounded to one year;
 - created, last-used and revoked timestamps.
 
 The raw value is returned exactly once. Database rows, API responses after

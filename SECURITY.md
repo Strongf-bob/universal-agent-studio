@@ -173,17 +173,23 @@ The Local Preview executable spine currently enforces:
 - PostgreSQL persistence with restart recovery and no AgentSpec/secret
   persistence in local/session storage.
 - publish and rollback compare both draft revision and active-version pointer,
-  reject stale writes, and append immutable publication events;
+  reject stale writes, revalidate locked draft identity/digest, and append
+  database-enforced immutable publication events;
+- legacy activation shares the publication advisory lock, while first publish
+  atomically claims the globally routed public agent identifier;
 - public metadata exposes only localized copy, InterfaceSchema and active
   version identity, never draft, prompt, tool, provider or trace data;
 - API keys are agent/project scoped, stored as keyed hashes, shown once and
-  checked for exact scopes, revocation and expiry on every request;
+  checked for exact scopes, tenant identity, revocation and bounded expiry on
+  every request;
 - Published Web App uses an opaque, single-run capability instead of owner
   cookies, CSRF tokens or public API keys;
 - webhook destinations are restricted to exact HTTPS allowlisted origins,
   deny userinfo/fragments/redirects and are rechecked before bounded egress;
 - terminal webhook payloads are sanitized and HMAC-signed over exact bytes;
   signing material is derived from a file-mounted master key and never logged;
+- failed durable starts enqueue terminal webhooks atomically, and delivery
+  completion uses the claimed attempt number to reject stale leases;
 - credential-management and public create routes enforce request-size and rate
   bounds, while guessed identifiers grant no access.
 

@@ -86,6 +86,15 @@ transaction; rollback selects only a historical version of the same scoped
 agent. Both operations append immutable events, while existing runs retain
 their original version identifier and digest.
 
+A corrupted persistence row may carry a valid AgentSpec under the wrong
+embedded agent identity or digest, a legacy activation may race the first
+publication, and another tenant may try to claim the same globally routed
+public `agent_id`. Publication recomputes the canonical digest and checks the
+embedded identity while holding the draft lock. Legacy activation shares the
+same scoped advisory lock, and a second published project is rejected under a
+global public-ID lock. PostgreSQL enforces rollback inequality and rejects
+update/delete mutations of ledger rows.
+
 An untrusted end user may replay or forge an API key, enumerate runs, reuse a
 browser capability for another run, or infer private AgentSpec fields.
 API-key hashes are agent/project scoped and enforce exact scopes, expiry and
@@ -93,12 +102,21 @@ revocation. Published Web receives only a signed opaque capability bound to
 one run. Public projections omit prompts, tools, provider data, traces,
 workflow identifiers, stack traces and raw internal errors.
 
+API-key authentication also matches the resolved publication tenant before a
+run is created. Request identity is deterministic within an API key's
+idempotency namespace, while browser capabilities remain memory-only and are
+returned across bounded synchronous timeouts.
+
 A webhook subscriber may target a private service, redirect after validation,
 exfiltrate signing material or amplify retries. Registration accepts only
 exact origins from the operator allowlist and rejects URL userinfo, fragments
 and redirects. The dispatcher rechecks revocation, bounds time, response
 bytes, attempts and stored errors, signs the exact sanitized body, and never
 persists or logs the raw signing secret.
+
+Terminal outbox insertion also covers durable-start failure. Delivery
+completion compares the claimed attempt number, so an expired worker lease
+cannot overwrite a newer attempt.
 
 ### Model, RAG and prompt injection
 

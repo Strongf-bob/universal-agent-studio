@@ -3,7 +3,7 @@
 ## Candidate
 
 - Scope: `Publishing and versions`
-- Implementation head verified before documentation: `7d51419`
+- Implementation head verified before documentation: `1873dac`
 - Environment: macOS, Docker Compose v2, Chromium, loopback-only Local Preview
 - External LLM/network dependency: none
 - Optional BYOK smoke: not configured and not claimed
@@ -14,10 +14,10 @@ Run from an isolated Git worktree on 2026-07-25:
 
 | Command | Observed result |
 |---|---|
-| `pnpm check` | generated files, contracts, ESLint, TypeScript and Ruff passed; mypy: 134 source files |
+| `pnpm check` | generated files, contracts, ESLint, TypeScript and Ruff passed; mypy: 136 source files |
 | `pnpm test:contracts` | 1 file, 14 tests passed |
 | `pnpm test:web` | 17 files, 45 tests passed |
-| `TEST_DATABASE_URL=… uv run pytest -q` | 171 passed, 1 explicit BYOK skip |
+| `TEST_DATABASE_URL=… uv run pytest -q` | 186 passed, 1 explicit BYOK skip |
 | `pnpm test:e2e` against a clean local stack | 14 Chromium tests passed |
 | `uv run pytest tests/security/test_secret_absence.py tests/security/test_slice3_secret_absence.py -q` | 3 live secret-absence tests passed |
 | `uv run pytest tests/integration/test_local_stack.py -q` | 8 Compose integration tests passed |
@@ -26,6 +26,9 @@ Run from an isolated Git worktree on 2026-07-25:
 
 The only full-suite skip was the opt-in OpenAI-compatible BYOK smoke. The
 deterministic delivery path made no external model call.
+
+An independent read-only review on `1873dac` returned `READY` with no
+Critical, Important or Minor findings after four hardening passes.
 
 ## User-journey proof
 
@@ -50,24 +53,36 @@ and webhook secrets from local/session storage, cookies and rendered HTML.
 
 - Canonical JSON Schemas generate matching Python and TypeScript types for
   publication, public agent/run/event, API-key and webhook payloads.
-- Publish and rollback compare expected draft revision and active pointer,
-  reject stale state and append one immutable event transactionally.
+- Publish holds the shared agent-publication lock, revalidates the current
+  AgentSpec, embedded agent identity and canonical digest, compares draft and
+  pointer state, then appends one immutable event transactionally.
+- First publication atomically claims the globally routed public `agent_id`;
+  a second project cannot make an existing public route ambiguous.
 - Existing identical bytes reuse the immutable version; a changed digest gets
   a new monotonically numbered version.
 - Every public run stores the selected version identifier and digest.
 - Public metadata is a narrow projection of localized copy, InterfaceSchema
   and active version identity.
-- Terminal trace finalization inserts one idempotent webhook outbox row.
+- Terminal trace finalization, including durable-start failure, inserts one
+  idempotent webhook outbox row in the same transaction.
 - Fixed-vector tests verify API-key hashing, browser capability verification,
   HMAC body signing, bounded retry and stable delivery identifiers.
+- An actual loopback HTTP receiver verifies the signed POST bytes and headers;
+  compare-and-set lease completion prevents a stale attempt overwriting a
+  newer delivery attempt.
 
 ## Security and recovery proof
 
 - A foreign project cannot publish, roll back, list or revoke another
   project's versions, keys or webhooks.
 - An API key for one agent cannot create or read another agent's runs.
+- An API key with the same agent name in another project cannot cross the
+  resolved tenant boundary, and API-key expiry is future-bounded.
 - A per-run browser capability cannot read a guessed or different run.
-- Stale concurrent publish/rollback attempts fail closed.
+- Stale concurrent publish/rollback attempts fail closed; legacy activation
+  uses the same advisory lock and cannot race the first ledger event.
+- PostgreSQL rejects equal-target rollback rows and rejects update/delete
+  mutations of the publication ledger.
 - Webhook URL userinfo, fragments, unlisted origins and redirects are rejected
   before or during bounded egress.
 - Raw API keys, webhook secrets and generated infrastructure secrets are
