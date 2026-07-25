@@ -10,6 +10,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from universal_agent_platform_store.models import (
     Agent,
+    AgentVersion,
+    Run,
     WebhookDelivery,
     WebhookSubscription,
     utc_now,
@@ -120,19 +122,111 @@ class WebhookRepository(ScopedRepository):
         )
         if existing is not None:
             return existing, False
+        delivery_id = uuid4()
         delivery = WebhookDelivery(
-            id=uuid4(),
+            id=delivery_id,
             workspace_id=subscription.workspace_id,
             project_id=subscription.project_id,
             subscription_id=subscription.id,
             run_id=run_id,
             event_sequence=event_sequence,
             event_type=event_type,
-            payload=payload,
+            payload={**payload, "delivery_id": str(delivery_id)},
         )
         self.session.add(delivery)
         await self.session.flush()
         return delivery, True
+
+    async def enqueue_terminal(
+        self,
+        *,
+        run_id: UUID,
+        trace: dict[str, object],
+    ) -> tuple[WebhookDelivery, ...]:
+        row = (
+            await self.session.execute(
+                select(Run, AgentVersion, Agent)
+                .join(
+                    AgentVersion,
+                    AgentVersion.id == Run.agent_version_id,
+                )
+                .join(Agent, Agent.id == AgentVersion.agent_id)
+                .where(
+                    Run.id == run_id,
+                    Run.workspace_id == self.workspace_id,
+                    Run.project_id == self.project_id,
+                )
+            )
+        ).one_or_none()
+        if row is None:
+            raise WebhookNotFound("run_not_found")
+        run, version, agent = row
+        raw_events = trace.get("events")
+        if not isinstance(raw_events, list):
+            raise ValueError("terminal_trace_events_missing")
+        terminal = next(
+            (
+                event
+                for event in reversed(raw_events)
+                if isinstance(event, dict)
+                and event.get("type")
+                in {"run.completed", "run.failed", "run.cancelled"}
+            ),
+            None,
+        )
+        if terminal is None:
+            raise ValueError("terminal_trace_event_missing")
+        event_type = str(terminal["type"])
+        sequence = int(terminal["sequence"])
+        status = str(trace.get("status"))
+        output = trace.get("output")
+        if event_type == "run.failed":
+            error_code: str | None = "invocation_unavailable"
+        elif event_type == "run.cancelled":
+            error_code = "run_cancelled"
+        else:
+            error_code = None
+        subscriptions = tuple(
+            await self.session.scalars(
+                select(WebhookSubscription).where(
+                    WebhookSubscription.workspace_id == self.workspace_id,
+                    WebhookSubscription.project_id == self.project_id,
+                    WebhookSubscription.agent_id == agent.id,
+                    WebhookSubscription.revoked_at.is_(None),
+                )
+            )
+        )
+        created: list[WebhookDelivery] = []
+        for subscription in subscriptions:
+            if event_type not in subscription.events:
+                continue
+            delivery, _ = await self.enqueue(
+                subscription=subscription,
+                run_id=run.id,
+                event_sequence=sequence,
+                event_type=event_type,
+                payload={
+                    "schema_version": "0.1.0",
+                    "agent_id": agent.agent_key,
+                    "agent_version_id": (
+                        f"{agent.agent_key}-v{version.version_number}"
+                    ),
+                    "agent_version_digest": version.digest,
+                    "run_id": str(run.id),
+                    "event_type": event_type,
+                    "status": status,
+                    "result": (
+                        output
+                        if event_type == "run.completed"
+                        and isinstance(output, dict)
+                        else None
+                    ),
+                    "error_code": error_code,
+                    "occurred_at": terminal.get("occurred_at"),
+                },
+            )
+            created.append(delivery)
+        return tuple(created)
 
     async def claim_due(
         self,

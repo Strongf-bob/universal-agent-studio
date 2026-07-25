@@ -13,6 +13,7 @@ from universal_agent_kernel.ports import RunEventSink, ToolGatewayPort, TraceSto
 from universal_agent_kernel.tools.calculator import CalculatorTool
 from universal_agent_platform_store.models import ToolInvocation
 from universal_agent_platform_store.repositories.runs import RunRepository
+from universal_agent_platform_store.repositories.webhooks import WebhookRepository
 from universal_agent_platform_store.scope import RequestScope
 
 
@@ -94,6 +95,10 @@ class SqlRuntimePersistence:
         async with self.session_factory() as session:
             try:
                 await RunRepository(session, scope).finalize_trace(run_id, document)
+                await WebhookRepository(session, scope).enqueue_terminal(
+                    run_id=run_id,
+                    trace=document,
+                )
                 await session.commit()
             except Exception:
                 await session.rollback()

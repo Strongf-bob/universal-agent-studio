@@ -8,7 +8,10 @@ import hmac
 import secrets
 from dataclasses import dataclass
 from pathlib import Path
-from uuid import UUID
+
+from universal_agent_platform_store.webhook_crypto import (
+    derive_webhook_secret as derive_webhook_secret,
+)
 
 
 def _require_master_key(master_key: bytes) -> bytes:
@@ -60,12 +63,3 @@ def verify_api_key_hash(
         api_key_hash(master_key, raw_key),
         expected_hash,
     )
-
-
-def derive_webhook_secret(master_key: bytes, key_id: UUID) -> str:
-    derived = hmac.new(
-        _require_master_key(master_key),
-        b"uas:webhook:v1:" + key_id.bytes,
-        hashlib.sha256,
-    ).digest()
-    return f"whsec_{_base64url(derived)}"

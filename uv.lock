@@ -1691,6 +1691,7 @@ name = "universal-agent-studio-runtime"
 version = "0.1.0"
 source = { editable = "workers/runtime" }
 dependencies = [
+    { name = "httpx" },
     { name = "pydantic-settings" },
     { name = "temporalio" },
     { name = "universal-agent-kernel" },
@@ -1699,6 +1700,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
+    { name = "httpx", specifier = "==0.28.1" },
     { name = "pydantic-settings", specifier = "==2.14.2" },
     { name = "temporalio", specifier = "==1.30.0" },
     { name = "universal-agent-kernel", editable = "libs/python/agent_kernel" },
