@@ -761,6 +761,10 @@
       "$ref": "#/$defs/PublicRunView/$defs/PublicRunCreateRequest",
       "title": "PublicRunCreateRequest"
     },
+    "PublicRunEvent": {
+      "$ref": "#/$defs/PublicRunView/$defs/PublicRunEvent",
+      "title": "PublicRunEvent"
+    },
     "PublicRunView": {
       "$defs": {
         "PublicLocale": {
@@ -830,6 +834,7 @@
               "enum": [
                 "run.queued",
                 "run.started",
+                "run.progress",
                 "run.completed",
                 "run.failed",
                 "run.cancelled"
@@ -1996,6 +2001,9 @@
     },
     "public_run_create_request": {
       "$ref": "#/$defs/PublicRunCreateRequest"
+    },
+    "public_run_event": {
+      "$ref": "#/$defs/PublicRunEvent"
     },
     "publication": {
       "$ref": "#/$defs/PublicationState"

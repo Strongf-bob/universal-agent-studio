@@ -32,6 +32,7 @@ export interface ContractBundle {
   public_agent?: PublicAgentView;
   public_run?: PublicRunView;
   public_run_create_request?: PublicRunCreateRequest;
+  public_run_event?: PublicRunEvent;
   publication?: PublicationState;
   publish_request?: PublishRequest;
   rollback_request?: RollbackRequest;
@@ -269,6 +270,17 @@ export interface PublicRunCreateRequest {
     [k: string]: unknown;
   };
   locale: "ru-RU" | "en-US";
+}
+export interface PublicRunEvent {
+  error_code: ("invocation_unavailable" | "run_cancelled") | null;
+  occurred_at: string;
+  output: {
+    [k: string]: unknown;
+  } | null;
+  schema_version: "0.1.0";
+  sequence: number;
+  status: "queued" | "running" | "completed" | "failed" | "cancelled";
+  type: "run.queued" | "run.started" | "run.progress" | "run.completed" | "run.failed" | "run.cancelled";
 }
 export interface PublicationState {
   active_version_id: string | null;

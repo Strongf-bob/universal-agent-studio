@@ -169,14 +169,26 @@ class PublishingRepository(ScopedRepository):
             self.session.add(version)
             await self.session.flush()
 
-        if previous == version.id:
-            return PublicationResult(
-                version=version,
-                previous_version_id=previous,
-                event=None,
-                reused=True,
+        already_active = previous == version.id
+        if already_active:
+            existing_publication = await self.session.scalar(
+                select(AgentPublicationEvent.id)
+                .where(
+                    AgentPublicationEvent.workspace_id == self.workspace_id,
+                    AgentPublicationEvent.project_id == self.project_id,
+                    AgentPublicationEvent.agent_id == agent.id,
+                    AgentPublicationEvent.event_type == "publish",
+                )
+                .limit(1)
             )
-        if active is None:
+            if existing_publication is not None:
+                return PublicationResult(
+                    version=version,
+                    previous_version_id=previous,
+                    event=None,
+                    reused=True,
+                )
+        elif active is None:
             active = AgentActiveVersion(
                 agent_id=agent.id,
                 workspace_id=self.workspace_id,
@@ -184,7 +196,7 @@ class PublishingRepository(ScopedRepository):
                 version_id=version.id,
             )
             self.session.add(active)
-        else:
+        elif active is not None:
             active.version_id = version.id
             active.updated_at = utc_now()
         event = AgentPublicationEvent(

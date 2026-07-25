@@ -123,6 +123,29 @@ async def test_publish_v2_then_rollback_preserves_immutable_versions(
 
 
 @pytest.mark.asyncio
+async def test_first_explicit_publish_records_existing_active_version(
+    database_session: AsyncSession,
+    request_scope: RequestScope,
+) -> None:
+    base, revision = await _seed(database_session, request_scope)
+
+    published = await PublishingRepository(
+        database_session,
+        request_scope,
+    ).publish_draft(
+        "calculator-agent",
+        expected_revision=revision,
+        expected_active_version_id=base.id,
+    )
+    await database_session.commit()
+
+    assert published.version.id == base.id
+    assert published.reused is True
+    assert published.event is not None
+    assert published.event.event_type == "publish"
+
+
+@pytest.mark.asyncio
 async def test_stale_draft_revision_does_not_publish(
     database_session: AsyncSession,
     request_scope: RequestScope,

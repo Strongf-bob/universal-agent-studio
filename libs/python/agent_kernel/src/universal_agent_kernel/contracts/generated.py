@@ -281,6 +281,15 @@ class PublicRunCreateRequest(BaseModel):
     locale: PublicLocale
 
 
+class Type2(Enum):
+    run_queued = 'run.queued'
+    run_started = 'run.started'
+    run_progress = 'run.progress'
+    run_completed = 'run.completed'
+    run_failed = 'run.failed'
+    run_cancelled = 'run.cancelled'
+
+
 class PublicRunStatus(Enum):
     queued = 'queued'
     running = 'running'
@@ -516,6 +525,19 @@ class Edge(BaseModel):
     id: Identifier
     source: Endpoint
     target: Endpoint
+
+
+class PublicRunEvent(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    error_code: ErrorCode | None
+    occurred_at: AwareDatetime
+    output: dict[str, Any] | None
+    schema_version: Literal['0.1.0']
+    sequence: int = Field(..., ge=1)
+    status: PublicRunStatus
+    type: Type2
 
 
 class ApiKeyCreateRequest(BaseModel):
@@ -756,6 +778,7 @@ class ContractBundle(BaseModel):
     public_agent: PublicAgentView | None = None
     public_run: PublicRunView | None = None
     public_run_create_request: PublicRunCreateRequest | None = None
+    public_run_event: PublicRunEvent | None = None
     publication: PublicationState | None = None
     publish_request: PublishRequest | None = None
     rollback_request: RollbackRequest | None = None

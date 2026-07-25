@@ -134,6 +134,7 @@
           "enum": [
             "run.queued",
             "run.started",
+            "run.progress",
             "run.completed",
             "run.failed",
             "run.cancelled"

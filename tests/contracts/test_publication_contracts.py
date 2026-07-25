@@ -75,3 +75,21 @@ def test_publication_contract_models_are_generated() -> None:
     }
 
     assert expected_models <= set(dir(generated))
+
+
+def test_public_event_contract_has_sanitized_progress_type() -> None:
+    from universal_agent_kernel.contracts.generated import PublicRunEvent
+
+    event = PublicRunEvent.model_validate(
+        {
+            "schema_version": "0.1.0",
+            "sequence": 2,
+            "type": "run.progress",
+            "status": "running",
+            "output": None,
+            "error_code": None,
+            "occurred_at": "2026-07-25T12:00:00Z",
+        }
+    )
+
+    assert event.type.value == "run.progress"

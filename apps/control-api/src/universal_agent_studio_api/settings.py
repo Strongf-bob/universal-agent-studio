@@ -39,6 +39,12 @@ class Settings(BaseSettings):
         "/run/secrets/uas_webhook_signing_key"
     )
     webhook_allowed_origins: list[str] = Field(default_factory=list)
+    public_capability_ttl_seconds: int = Field(
+        default=3600,
+        ge=60,
+        le=86_400,
+    )
+    public_sync_wait_seconds: float = Field(default=8, gt=0, le=30)
     sse_poll_interval_seconds: float = Field(default=0.25, gt=0, le=5)
     sse_heartbeat_seconds: float = Field(default=15, gt=0, le=60)
     sse_max_polls: int = Field(default=1200, ge=1, le=100_000)

@@ -40,11 +40,18 @@ from universal_agent_studio_api.api import (
     session,
     workspace,
 )
+from universal_agent_studio_api.api import (
+    public as public_api,
+)
 from universal_agent_studio_api.auth.models import AuthStore
 from universal_agent_studio_api.auth.service import AuthService
 from universal_agent_studio_api.auth.store import SqlAuthStore
 from universal_agent_studio_api.errors import error_document, install_exception_handlers
 from universal_agent_studio_api.publishing.crypto import load_master_key
+from universal_agent_studio_api.publishing.public_service import (
+    PublicService,
+    PublicServicePort,
+)
 from universal_agent_studio_api.publishing.service import (
     PublishingService,
     PublishingServicePort,
@@ -84,6 +91,12 @@ class RequestGuardsMiddleware(BaseHTTPMiddleware):
             and path_parts[5]
             in {"publish", "rollback", "api-keys", "webhooks"}
         )
+        is_public_mutation = (
+            len(path_parts) >= 6
+            and path_parts[1:4] == ["public", "v1", "agents"]
+            and bool(path_parts[4])
+            and path_parts[5] in {"runs", "invoke"}
+        )
         if request.method != "POST" or (
             path not in {
                 "/api/v1/bootstrap/owner",
@@ -93,6 +106,7 @@ class RequestGuardsMiddleware(BaseHTTPMiddleware):
             }
             and not is_draft_run
             and not is_publishing_mutation
+            and not is_public_mutation
         ):
             return False
         client_host = request.client.host if request.client is not None else "unknown"
@@ -100,6 +114,8 @@ class RequestGuardsMiddleware(BaseHTTPMiddleware):
             rate_path = "/api/v1/agents/*/draft/runs"
         elif is_publishing_mutation:
             rate_path = f"/api/v1/agents/*/{path_parts[5]}"
+        elif is_public_mutation:
+            rate_path = f"/public/v1/agents/*/{path_parts[5]}"
         else:
             rate_path = path
         key = (client_host, rate_path)
@@ -133,7 +149,11 @@ class RequestGuardsMiddleware(BaseHTTPMiddleware):
 
         if request.method not in {"GET", "HEAD", "OPTIONS"}:
             origin = request.headers.get("origin")
-            if origin not in self.settings.allowed_origins:
+            is_public_api = request.url.path.startswith("/public/v1/")
+            if (
+                origin is not None
+                and origin not in self.settings.allowed_origins
+            ) or (origin is None and not is_public_api):
                 return JSONResponse(
                     error_document("origin_not_allowed"),
                     status_code=403,
@@ -165,6 +185,7 @@ def create_app(
     run_persistence: RunPersistence | None = None,
     durable_execution: DurableExecutionPort | None = None,
     publishing_service: PublishingServicePort | None = None,
+    public_service: PublicServicePort | None = None,
     settings: Settings | None = None,
 ) -> FastAPI:
     resolved_settings = settings or Settings()
@@ -192,6 +213,8 @@ def create_app(
                 )
             if publishing_service is not None:
                 app.state.publishing_service = publishing_service
+            if public_service is not None:
+                app.state.public_service = public_service
             if run_persistence is not None and durable_execution is not None:
                 assert agent_persistence is not None
                 app.state.run_service = RunService(
@@ -256,6 +279,23 @@ def create_app(
             ),
             webhook_allowed_origins=resolved_settings.webhook_allowed_origins,
         )
+        app.state.public_service = PublicService(
+            session_factory,
+            run_service=app.state.run_service,
+            api_key_hash_master=load_master_key(
+                resolved_settings.api_key_hash_key_file
+            ),
+            capability_master=load_master_key(
+                resolved_settings.public_capability_key_file
+            ),
+            capability_ttl_seconds=(
+                resolved_settings.public_capability_ttl_seconds
+            ),
+            sync_wait_seconds=resolved_settings.public_sync_wait_seconds,
+            poll_interval_seconds=resolved_settings.sse_poll_interval_seconds,
+            heartbeat_seconds=resolved_settings.sse_heartbeat_seconds,
+            max_polls=resolved_settings.sse_max_polls,
+        )
         app.state.ready = True
         try:
             yield
@@ -285,6 +325,8 @@ def create_app(
         )
     if publishing_service is not None:
         app.state.publishing_service = publishing_service
+    if public_service is not None:
+        app.state.public_service = public_service
     if run_persistence is not None and durable_execution is not None:
         assert agent_persistence is not None
         app.state.run_service = RunService(
@@ -325,6 +367,7 @@ def create_app(
     app.include_router(agent_versions.router)
     app.include_router(agent_drafts.router)
     app.include_router(publishing.router)
+    app.include_router(public_api.router)
     app.include_router(runs.router)
 
     @app.get("/health/live", include_in_schema=False)

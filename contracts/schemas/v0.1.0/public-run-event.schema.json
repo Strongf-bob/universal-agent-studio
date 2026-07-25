@@ -1,0 +1,6 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.universal-agent.studio/v0.1.0/public-run-event.schema.json",
+  "title": "PublicRunEvent",
+  "$ref": "public-run.schema.json#/$defs/PublicRunEvent"
+}
