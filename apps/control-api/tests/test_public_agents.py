@@ -99,6 +99,19 @@ class FakePublicService:
         del run_id, authorization
         return self._run(agent_id, status="completed")
 
+    async def authorize_events(
+        self,
+        agent_id: str,
+        run_id: UUID,
+        *,
+        authorization: str | None,
+    ) -> None:
+        del agent_id, run_id
+        if authorization is None:
+            from universal_agent_studio_api.errors import ApiError
+
+            raise ApiError(401, "authentication_required")
+
     async def stream_events(
         self,
         request: Request,

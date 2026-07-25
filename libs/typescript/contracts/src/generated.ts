@@ -10,14 +10,6 @@ export type { NodeSpec } from "./node-spec.generated.js";
  * and run json-schema-to-typescript to regenerate this file.
  */
 
-export type ApiKeyCreateView = ApiKeyView & {
-  secret: string;
-  [k: string]: unknown;
-};
-export type WebhookCreateView = WebhookView & {
-  secret: string;
-  [k: string]: unknown;
-};
 
 export interface ContractBundle {
   agent_draft?: AgentDraft;
@@ -219,7 +211,7 @@ export interface ApiKeyCreateRequest {
    */
   scopes: ["runs:create" | "runs:read" | "events:read", ...("runs:create" | "runs:read" | "events:read")[]];
 }
-export interface ApiKeyView {
+export interface ApiKeyCreateView {
   created_at: string;
   expires_at: string | null;
   key_id: string;
@@ -231,6 +223,7 @@ export interface ApiKeyView {
    * @minItems 1
    */
   scopes: ["runs:create" | "runs:read" | "events:read", ...("runs:create" | "runs:read" | "events:read")[]];
+  secret: string;
 }
 export interface ErrorEnvelope {
   code: string;
@@ -292,6 +285,19 @@ export interface PublicationState {
   schema_version: "0.1.0";
   versions: PublishedVersionView[];
   webhooks: WebhookView[];
+}
+export interface ApiKeyView {
+  created_at: string;
+  expires_at: string | null;
+  key_id: string;
+  label: string;
+  last_used_at: string | null;
+  prefix: string;
+  revoked_at: string | null;
+  /**
+   * @minItems 1
+   */
+  scopes: ["runs:create" | "runs:read" | "events:read", ...("runs:create" | "runs:read" | "events:read")[]];
 }
 export interface PublicationEventView {
   created_at: string;
@@ -441,5 +447,17 @@ export interface WebhookCreateRequest {
    */
   events: ["run.completed" | "run.failed" | "run.cancelled", ...("run.completed" | "run.failed" | "run.cancelled")[]];
   label: string;
+  target_url: string;
+}
+export interface WebhookCreateView {
+  created_at: string;
+  /**
+   * @minItems 1
+   */
+  events: ["run.completed" | "run.failed" | "run.cancelled", ...("run.completed" | "run.failed" | "run.cancelled")[]];
+  label: string;
+  revoked_at: string | null;
+  secret: string;
+  subscription_id: string;
   target_url: string;
 }

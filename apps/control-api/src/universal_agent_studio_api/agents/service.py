@@ -7,6 +7,7 @@ from contextlib import asynccontextmanager
 from typing import Any, cast
 from uuid import UUID
 
+from sqlalchemy import exists, select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from universal_agent_kernel.contracts.canonical import (
     CanonicalJsonError,
@@ -14,6 +15,7 @@ from universal_agent_kernel.contracts.canonical import (
     parse_json_document,
 )
 from universal_agent_kernel.contracts.validation import validate_agent_spec
+from universal_agent_platform_store.models import AgentPublicationEvent
 from universal_agent_platform_store.repositories.agents import (
     ActiveVersionConflict,
     AgentRepository,
@@ -31,6 +33,10 @@ from universal_agent_studio_api.agents.models import (
     ValidationView,
 )
 from universal_agent_studio_api.errors import ApiError
+
+
+class PublishedAgentActivationForbidden(RuntimeError):
+    """Legacy activation cannot bypass the publication ledger."""
 
 
 class SqlAgentVersionPersistence:
@@ -175,6 +181,20 @@ class SqlAgentVersionPersistence:
             version = await repository.get_version_by_public_id(version_id)
             if version is None or str(version.agent_spec["agent_id"]) != agent_id:
                 raise AgentVersionNotFound("agent_version_not_found")
+            has_publication = await session.scalar(
+                select(
+                    exists().where(
+                        AgentPublicationEvent.workspace_id
+                        == scope.workspace_id,
+                        AgentPublicationEvent.project_id == scope.project_id,
+                        AgentPublicationEvent.agent_id == version.agent_id,
+                    )
+                )
+            )
+            if has_publication:
+                raise PublishedAgentActivationForbidden(
+                    "published_agent_requires_publish"
+                )
             expected_internal_id: UUID | None = None
             if expected_previous_version_id is not None:
                 expected = await repository.get_version_by_public_id(
@@ -328,6 +348,8 @@ class AgentVersionService:
             raise ApiError(409, "active_version_changed") from error
         except AgentVersionNotFound as error:
             raise ApiError(404, "agent_version_not_found") from error
+        except PublishedAgentActivationForbidden as error:
+            raise ApiError(409, "published_agent_requires_publish") from error
         return ActiveAgentVersionView(
             agent_id=agent_id,
             active_version_id=active_version_id,

@@ -295,23 +295,80 @@
     },
     "ApiKeyCreateView": {
       "title": "ApiKeyCreateView",
-      "allOf": [
-        {
-          "$ref": "#/$defs/ApiKeyView"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key_id",
+        "label",
+        "prefix",
+        "scopes",
+        "expires_at",
+        "created_at",
+        "last_used_at",
+        "revoked_at",
+        "secret"
+      ],
+      "properties": {
+        "key_id": {
+          "$ref": "common.schema.json#/$defs/uuid"
         },
-        {
-          "type": "object",
-          "required": [
-            "secret"
-          ],
-          "properties": {
-            "secret": {
-              "type": "string",
-              "pattern": "^uas_live_[a-f0-9]{16}_[A-Za-z0-9_-]{43}$"
-            }
+        "label": {
+          "type": "string"
+        },
+        "prefix": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{16}$"
+        },
+        "scopes": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/ApiKeyScope"
           }
+        },
+        "expires_at": {
+          "oneOf": [
+            {
+              "type": "string",
+              "format": "date-time"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "last_used_at": {
+          "oneOf": [
+            {
+              "type": "string",
+              "format": "date-time"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "revoked_at": {
+          "oneOf": [
+            {
+              "type": "string",
+              "format": "date-time"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "secret": {
+          "type": "string",
+          "pattern": "^uas_live_[a-f0-9]{16}_[A-Za-z0-9_-]{43}$"
         }
-      ]
+      }
     },
     "WebhookEventType": {
       "enum": [
@@ -400,23 +457,56 @@
     },
     "WebhookCreateView": {
       "title": "WebhookCreateView",
-      "allOf": [
-        {
-          "$ref": "#/$defs/WebhookView"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "subscription_id",
+        "label",
+        "target_url",
+        "events",
+        "created_at",
+        "revoked_at",
+        "secret"
+      ],
+      "properties": {
+        "subscription_id": {
+          "$ref": "common.schema.json#/$defs/uuid"
         },
-        {
-          "type": "object",
-          "required": [
-            "secret"
-          ],
-          "properties": {
-            "secret": {
-              "type": "string",
-              "pattern": "^whsec_[A-Za-z0-9_-]{43}$"
-            }
+        "label": {
+          "type": "string"
+        },
+        "target_url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "events": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/WebhookEventType"
           }
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "revoked_at": {
+          "oneOf": [
+            {
+              "type": "string",
+              "format": "date-time"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "secret": {
+          "type": "string",
+          "pattern": "^whsec_[A-Za-z0-9_-]{43}$"
         }
-      ]
+      }
     }
   }
 }

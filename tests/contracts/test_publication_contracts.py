@@ -34,6 +34,28 @@ def _validate(schema_name: str, document: dict[str, object]) -> list[object]:
     )
 
 
+def _validate_definition(
+    schema_name: str,
+    definition: str,
+    document: dict[str, object],
+) -> list[object]:
+    schemas = {
+        path.name: _load(path)
+        for path in sorted(SCHEMA_DIR.glob("*.schema.json"))
+    }
+    registry = Registry().with_resources(
+        (str(schema["$id"]), Resource.from_contents(schema))
+        for schema in schemas.values()
+    )
+    schema_id = str(schemas[schema_name]["$id"])
+    return list(
+        Draft202012Validator(
+            {"$ref": f"{schema_id}#/$defs/{definition}"},
+            registry=registry,
+        ).iter_errors(document)
+    )
+
+
 def test_public_agent_example_is_valid_and_sanitized() -> None:
     document = _load(EXAMPLE_DIR / "valid" / "public-agent.calculator.json")
 
@@ -93,3 +115,49 @@ def test_public_event_contract_has_sanitized_progress_type() -> None:
     )
 
     assert event.type.value == "run.progress"
+
+
+def test_one_time_secret_views_are_strict_and_satisfiable() -> None:
+    api_key: dict[str, object] = {
+        "key_id": "11111111-1111-4111-8111-111111111111",
+        "label": "CLI",
+        "prefix": "0123456789abcdef",
+        "scopes": ["runs:create"],
+        "expires_at": None,
+        "created_at": "2026-07-25T12:00:00Z",
+        "last_used_at": None,
+        "revoked_at": None,
+        "secret": f"uas_live_0123456789abcdef_{'A' * 43}",
+    }
+    webhook: dict[str, object] = {
+        "subscription_id": "22222222-2222-4222-8222-222222222222",
+        "label": "Terminal",
+        "target_url": "https://hooks.example.test/terminal",
+        "events": ["run.completed"],
+        "created_at": "2026-07-25T12:00:00Z",
+        "revoked_at": None,
+        "secret": f"whsec_{'A' * 43}",
+    }
+
+    assert (
+        _validate_definition(
+            "publication.schema.json",
+            "ApiKeyCreateView",
+            api_key,
+        )
+        == []
+    )
+    assert (
+        _validate_definition(
+            "publication.schema.json",
+            "WebhookCreateView",
+            webhook,
+        )
+        == []
+    )
+    api_key["unexpected"] = True
+    assert _validate_definition(
+        "publication.schema.json",
+        "ApiKeyCreateView",
+        api_key,
+    )

@@ -13,6 +13,7 @@ from universal_agent_kernel.contracts.generated import (
     ApiKeyScope,
     PublicRunCreateRequest,
 )
+from universal_agent_platform_store.models import Owner, Project, Workspace
 from universal_agent_platform_store.repositories.agents import AgentRepository
 from universal_agent_platform_store.repositories.drafts import DraftRepository
 from universal_agent_platform_store.repositories.publishing import (
@@ -42,6 +43,7 @@ GOLDEN = (
 class FakeRunService:
     def __init__(self) -> None:
         self.runs: dict[UUID, RunView] = {}
+        self.requests: list[CreateRunRequest] = []
 
     async def create_resolved_run(
         self,
@@ -50,6 +52,7 @@ class FakeRunService:
         version: object,
     ) -> CreateRunView:
         del scope, version
+        self.requests.append(request)
         run_id = uuid4()
         self.runs[run_id] = RunView(
             run_id=run_id,
@@ -190,9 +193,10 @@ async def test_scoped_api_key_requires_idempotency_header(
         ),
         request_scope,
     )
+    run_service = FakeRunService()
     public = PublicService(
         factory,
-        run_service=cast(Any, FakeRunService()),
+        run_service=cast(Any, run_service),
         api_key_hash_master=b"h" * 32,
         capability_master=b"c" * 32,
         capability_ttl_seconds=3600,
@@ -220,3 +224,129 @@ async def test_scoped_api_key_requires_idempotency_header(
         authorization=f"Bearer {key.secret}",
     )
     assert created.run_capability is None
+    await public.create_run(
+        "calculator-agent",
+        body,
+        idempotency_key="acceptance-key-0001",
+        authorization=f"Bearer {key.secret}",
+    )
+    assert len(run_service.requests) == 2
+    assert run_service.requests[0].request_id == run_service.requests[1].request_id
+
+
+@pytest.mark.asyncio
+async def test_browser_sync_timeout_preserves_read_capability(
+    database_engine: AsyncEngine,
+    database_session: AsyncSession,
+    request_scope: RequestScope,
+) -> None:
+    await _publish(database_session, request_scope)
+    public = PublicService(
+        async_sessionmaker(database_engine, expire_on_commit=False),
+        run_service=cast(Any, FakeRunService()),
+        api_key_hash_master=b"h" * 32,
+        capability_master=b"c" * 32,
+        capability_ttl_seconds=3600,
+        sync_wait_seconds=0.001,
+        poll_interval_seconds=0.001,
+        heartbeat_seconds=0.001,
+        max_polls=1,
+    )
+
+    result = await public.invoke(
+        "calculator-agent",
+        PublicRunCreateRequest.model_validate(
+            {"input": {"question": "19 * 23"}, "locale": "en-US"}
+        ),
+        idempotency_key=None,
+        authorization=None,
+    )
+
+    assert result.status.value == "queued"
+    assert result.run_capability is not None
+
+
+@pytest.mark.asyncio
+async def test_same_agent_key_api_key_cannot_cross_project(
+    database_engine: AsyncEngine,
+    database_session: AsyncSession,
+    request_scope: RequestScope,
+) -> None:
+    await _publish(database_session, request_scope)
+    attacker_workspace = uuid4()
+    attacker_project = uuid4()
+    attacker_owner = uuid4()
+    database_session.add(
+        Workspace(id=attacker_workspace, slug="attacker", name="Attacker")
+    )
+    await database_session.flush()
+    database_session.add(
+        Project(
+            id=attacker_project,
+            workspace_id=attacker_workspace,
+            slug="default",
+            name="Default",
+        )
+    )
+    await database_session.flush()
+    database_session.add(
+        Owner(
+            id=attacker_owner,
+            workspace_id=attacker_workspace,
+            project_id=attacker_project,
+            login_name="attacker",
+            password_hash="$argon2id$test",
+            preferred_locale="en-US",
+        )
+    )
+    await database_session.flush()
+    attacker_scope = RequestScope(
+        workspace_id=attacker_workspace,
+        project_id=attacker_project,
+        owner_id=attacker_owner,
+    )
+    spec = cast(dict[str, Any], json.loads(GOLDEN.read_text(encoding="utf-8")))
+    await AgentRepository(database_session, attacker_scope).import_version(
+        spec,
+        content_digest(spec),
+    )
+    await database_session.commit()
+    factory = async_sessionmaker(database_engine, expire_on_commit=False)
+    attacker_key = await PublishingService(
+        factory,
+        api_key_hash_master=b"h" * 32,
+        webhook_signing_master=b"w" * 32,
+        webhook_allowed_origins=[],
+    ).create_api_key(
+        "calculator-agent",
+        ApiKeyCreateRequest(
+            label="Attacker key",
+            scopes=[ApiKeyScope.runs_create],
+            expires_at=None,
+        ),
+        attacker_scope,
+    )
+    public = PublicService(
+        factory,
+        run_service=cast(Any, FakeRunService()),
+        api_key_hash_master=b"h" * 32,
+        capability_master=b"c" * 32,
+        capability_ttl_seconds=3600,
+        sync_wait_seconds=0.01,
+        poll_interval_seconds=0.001,
+        heartbeat_seconds=0.001,
+        max_polls=1,
+    )
+
+    with pytest.raises(ApiError) as error:
+        await public.create_run(
+            "calculator-agent",
+            PublicRunCreateRequest.model_validate(
+                {"input": {"question": "19 * 23"}, "locale": "en-US"}
+            ),
+            idempotency_key="cross-project-key",
+            authorization=f"Bearer {attacker_key.secret}",
+        )
+
+    assert error.value.status_code == 401
+    assert error.value.document["code"] == "authentication_required"

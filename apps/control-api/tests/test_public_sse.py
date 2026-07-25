@@ -48,3 +48,20 @@ async def test_public_sse_rejects_invalid_resume_cursor(
 
     assert response.status_code == 400
     assert response.json()["code"] == "last_event_id_invalid"
+
+
+@pytest.mark.asyncio
+async def test_public_sse_rejects_credentials_before_stream_headers(
+    public_app: Any,
+) -> None:
+    async with AsyncClient(
+        transport=ASGITransport(app=public_app),
+        base_url="http://testserver",
+    ) as client:
+        response = await client.get(
+            "/public/v1/agents/calculator-agent/runs/"
+            "11111111-1111-4111-8111-111111111111/events",
+        )
+
+    assert response.status_code == 401
+    assert response.json()["code"] == "authentication_required"

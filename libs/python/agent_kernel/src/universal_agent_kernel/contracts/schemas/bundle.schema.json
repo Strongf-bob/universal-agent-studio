@@ -978,24 +978,81 @@
           "type": "object"
         },
         "ApiKeyCreateView": {
-          "allOf": [
-            {
-              "$ref": "#/$defs/PublicationState/$defs/ApiKeyView"
+          "additionalProperties": false,
+          "properties": {
+            "created_at": {
+              "format": "date-time",
+              "type": "string"
             },
-            {
-              "properties": {
-                "secret": {
-                  "pattern": "^uas_live_[a-f0-9]{16}_[A-Za-z0-9_-]{43}$",
+            "expires_at": {
+              "oneOf": [
+                {
+                  "format": "date-time",
                   "type": "string"
+                },
+                {
+                  "type": "null"
                 }
+              ]
+            },
+            "key_id": {
+              "$ref": "#/$defs/Universal Agent Studio common contract definitions/$defs/uuid"
+            },
+            "label": {
+              "type": "string"
+            },
+            "last_used_at": {
+              "oneOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "prefix": {
+              "pattern": "^[a-f0-9]{16}$",
+              "type": "string"
+            },
+            "revoked_at": {
+              "oneOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "scopes": {
+              "items": {
+                "$ref": "#/$defs/PublicationState/$defs/ApiKeyScope"
               },
-              "required": [
-                "secret"
-              ],
-              "type": "object"
+              "minItems": 1,
+              "type": "array",
+              "uniqueItems": true
+            },
+            "secret": {
+              "pattern": "^uas_live_[a-f0-9]{16}_[A-Za-z0-9_-]{43}$",
+              "type": "string"
             }
+          },
+          "required": [
+            "key_id",
+            "label",
+            "prefix",
+            "scopes",
+            "expires_at",
+            "created_at",
+            "last_used_at",
+            "revoked_at",
+            "secret"
           ],
-          "title": "ApiKeyCreateView"
+          "title": "ApiKeyCreateView",
+          "type": "object"
         },
         "ApiKeyScope": {
           "enum": [
@@ -1220,24 +1277,57 @@
           "type": "object"
         },
         "WebhookCreateView": {
-          "allOf": [
-            {
-              "$ref": "#/$defs/PublicationState/$defs/WebhookView"
+          "additionalProperties": false,
+          "properties": {
+            "created_at": {
+              "format": "date-time",
+              "type": "string"
             },
-            {
-              "properties": {
-                "secret": {
-                  "pattern": "^whsec_[A-Za-z0-9_-]{43}$",
-                  "type": "string"
-                }
+            "events": {
+              "items": {
+                "$ref": "#/$defs/PublicationState/$defs/WebhookEventType"
               },
-              "required": [
-                "secret"
-              ],
-              "type": "object"
+              "minItems": 1,
+              "type": "array",
+              "uniqueItems": true
+            },
+            "label": {
+              "type": "string"
+            },
+            "revoked_at": {
+              "oneOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "secret": {
+              "pattern": "^whsec_[A-Za-z0-9_-]{43}$",
+              "type": "string"
+            },
+            "subscription_id": {
+              "$ref": "#/$defs/Universal Agent Studio common contract definitions/$defs/uuid"
+            },
+            "target_url": {
+              "format": "uri",
+              "type": "string"
             }
+          },
+          "required": [
+            "subscription_id",
+            "label",
+            "target_url",
+            "events",
+            "created_at",
+            "revoked_at",
+            "secret"
           ],
-          "title": "WebhookCreateView"
+          "title": "WebhookCreateView",
+          "type": "object"
         },
         "WebhookEventType": {
           "enum": [

@@ -124,6 +124,11 @@ async def get_public_events(
             raise ApiError(400, "last_event_id_invalid") from error
         if after_sequence < 0 or after_sequence > 9_223_372_036_854_775_807:
             raise ApiError(400, "last_event_id_invalid")
+    await service.authorize_events(
+        agent_id,
+        run_id,
+        authorization=authorization,
+    )
     return StreamingResponse(
         service.stream_events(
             request,

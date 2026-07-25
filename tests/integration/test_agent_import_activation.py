@@ -5,7 +5,13 @@ from pathlib import Path
 from uuid import uuid4
 
 import pytest
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from universal_agent_platform_store.models import AgentVersion
+from universal_agent_platform_store.repositories.drafts import DraftRepository
+from universal_agent_platform_store.repositories.publishing import (
+    PublishingRepository,
+)
 from universal_agent_platform_store.scope import RequestScope
 from universal_agent_studio_api.agents.service import (
     AgentVersionService,
@@ -75,3 +81,54 @@ async def test_import_and_activation_commit_atomically(
 
     assert active.active_version_id == first.version_id
     assert changed.active_version_id == second.version_id
+
+
+@pytest.mark.asyncio
+async def test_legacy_activation_cannot_bypass_publication_ledger(
+    database_session: AsyncSession,
+    request_scope: RequestScope,
+) -> None:
+    service = AgentVersionService(
+        SqlAgentVersionPersistence.from_session(database_session)
+    )
+    first = await service.import_raw(GOLDEN_AGENT.read_bytes(), request_scope)
+    await service.activate(
+        agent_id="calculator-agent",
+        version_id=first.version_id,
+        expected_previous_version_id=None,
+        scope=request_scope,
+    )
+    draft, _ = await DraftRepository(
+        database_session,
+        request_scope,
+    ).create_from_active(
+        "calculator-agent",
+        {"nodes": [], "viewport": {"x": 0, "y": 0, "zoom": 1}},
+    )
+    version = await database_session.scalar(
+        select(AgentVersion).where(AgentVersion.digest == first.digest)
+    )
+    assert version is not None
+    await PublishingRepository(
+        database_session,
+        request_scope,
+    ).publish_draft(
+        "calculator-agent",
+        expected_revision=draft.revision,
+        expected_active_version_id=version.id,
+    )
+    await database_session.commit()
+    document = json.loads(GOLDEN_AGENT.read_bytes())
+    document["revision"] = 2
+    second = await service.import_raw(json.dumps(document).encode(), request_scope)
+
+    with pytest.raises(ApiError) as error:
+        await service.activate(
+            agent_id="calculator-agent",
+            version_id=second.version_id,
+            expected_previous_version_id=first.version_id,
+            scope=request_scope,
+        )
+
+    assert error.value.status_code == 409
+    assert error.value.document["code"] == "published_agent_requires_publish"

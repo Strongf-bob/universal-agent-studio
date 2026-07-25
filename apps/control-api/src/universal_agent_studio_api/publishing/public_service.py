@@ -9,7 +9,7 @@ from collections.abc import AsyncIterator
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from typing import Any, Protocol, cast
-from uuid import UUID, uuid4
+from uuid import UUID, uuid4, uuid5
 
 from fastapi import Request
 from sqlalchemy import exists, select
@@ -76,6 +76,14 @@ class PublicServicePort(Protocol):
         *,
         authorization: str | None,
     ) -> PublicRunView: ...
+
+    async def authorize_events(
+        self,
+        agent_id: str,
+        run_id: UUID,
+        *,
+        authorization: str | None,
+    ) -> None: ...
 
     def stream_events(
         self,
@@ -268,11 +276,17 @@ class PublicService:
                 agent_id=resolved.agent.agent_key,
                 scopes=frozenset({"runs:create"}),
             )
-        return await self._authenticate_api_key(
+        principal = await self._authenticate_api_key(
             raw,
             agent_id=resolved.agent.agent_key,
             required_scope="runs:create",
         )
+        if (
+            principal.workspace_id,
+            principal.project_id,
+        ) != resolved.scope.tenant_ids():
+            raise ApiError(401, "authentication_required")
+        return principal
 
     async def _read_principal(
         self,
@@ -367,11 +381,13 @@ class PublicService:
             ).hexdigest()[:32]
             assert principal.key_id is not None
             durable_key = f"api:{principal.key_id.hex[:16]}:{key_material}"
+            request_id = uuid5(principal.key_id, idempotency_key)
         else:
             durable_key = f"web:{uuid4().hex}"
+            request_id = uuid4()
         request = CreateRunRequest(
             schema_version="0.1.0",
-            request_id=uuid4(),
+            request_id=request_id,
             agent_version_id=resolved.version.public_id,
             agent_version_digest=resolved.version.digest,
             idempotency_key=durable_key,
@@ -408,6 +424,14 @@ class PublicService:
         idempotency_key: str | None,
         authorization: str | None,
     ) -> PublicRunView:
+        if authorization is not None:
+            raw = self._bearer(authorization)
+            assert raw is not None
+            await self._authenticate_api_key(
+                raw,
+                agent_id=agent_id,
+                required_scope="runs:read",
+            )
         created = await self.create_run(
             agent_id,
             body,
@@ -430,6 +454,10 @@ class PublicService:
                     else authorization
                 ),
             )
+            if created.run_capability is not None:
+                current = current.model_copy(
+                    update={"run_capability": created.run_capability}
+                )
         return current
 
     async def get_run(
@@ -449,6 +477,23 @@ class PublicService:
         if not self._run_belongs_to_agent(run, agent_id):
             raise ApiError(404, "run_not_found")
         return self._view(run, agent_id=agent_id)
+
+    async def authorize_events(
+        self,
+        agent_id: str,
+        run_id: UUID,
+        *,
+        authorization: str | None,
+    ) -> None:
+        principal = await self._read_principal(
+            agent_id=agent_id,
+            run_id=run_id,
+            authorization=authorization,
+            required_scope="events:read",
+        )
+        run = await self.run_service.get_run(run_id, self._scope(principal))
+        if not self._run_belongs_to_agent(run, agent_id):
+            raise ApiError(404, "run_not_found")
 
     @staticmethod
     def _sanitize_event(

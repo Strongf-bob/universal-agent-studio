@@ -549,6 +549,21 @@ class ApiKeyCreateRequest(BaseModel):
     scopes: list[ApiKeyScope] = Field(..., min_length=1)
 
 
+class ApiKeyCreateView(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    created_at: AwareDatetime
+    expires_at: AwareDatetime | None
+    key_id: Uuid
+    label: str
+    last_used_at: AwareDatetime | None
+    prefix: str = Field(..., pattern='^[a-f0-9]{16}$')
+    revoked_at: AwareDatetime | None
+    scopes: list[ApiKeyScope] = Field(..., min_length=1)
+    secret: str = Field(..., pattern='^uas_live_[a-f0-9]{16}_[A-Za-z0-9_-]{43}$')
+
+
 class ApiKeyView(BaseModel):
     model_config = ConfigDict(
         extra='forbid',
@@ -569,6 +584,19 @@ class WebhookCreateRequest(BaseModel):
     )
     events: list[WebhookEventType] = Field(..., min_length=1)
     label: str = Field(..., max_length=120, min_length=1)
+    target_url: AnyUrl
+
+
+class WebhookCreateView(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    created_at: AwareDatetime
+    events: list[WebhookEventType] = Field(..., min_length=1)
+    label: str
+    revoked_at: AwareDatetime | None
+    secret: str = Field(..., pattern='^whsec_[A-Za-z0-9_-]{43}$')
+    subscription_id: Uuid
     target_url: AnyUrl
 
 
@@ -704,14 +732,6 @@ class ToolManifest(BaseModel):
     permissions: list[Permission]
     side_effect: SideEffect
     version: Semver
-
-
-class ApiKeyCreateView(ApiKeyView):
-    secret: str = Field(..., pattern='^uas_live_[a-f0-9]{16}_[A-Za-z0-9_-]{43}$')
-
-
-class WebhookCreateView(WebhookView):
-    secret: str = Field(..., pattern='^whsec_[A-Za-z0-9_-]{43}$')
 
 
 class AgentSpec(BaseModel):
