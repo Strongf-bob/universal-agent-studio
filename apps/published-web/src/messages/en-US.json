@@ -1,0 +1,19 @@
+{
+  "brand": "Universal Agent Studio",
+  "publicLabel": "Published agent",
+  "run": "Run agent",
+  "running": "Agent is working…",
+  "ready": "Ready to run",
+  "completed": "Result",
+  "failed": "The run could not be completed. Try again.",
+  "restart": "Start over",
+  "required": "Required",
+  "optional": "Optional",
+  "select": "Select an option",
+  "booleanOn": "Enabled",
+  "notFound": "This agent is not published.",
+  "language": "Language",
+  "technicalNote": "Runs use the currently published version.",
+  "modeChat": "Send a message",
+  "modeHybrid": "Configure and send"
+}
