@@ -10,5 +10,6 @@
 | [0006](ADR-0006-authentication-and-tenancy.md) | Local-first single workspace with project isolation | Accepted |
 | [0007](ADR-0007-agentspec-versioning.md) | Schema evolution and immutable published versions | Accepted |
 | [0008](ADR-0008-canonical-draft-editing.md) | Canonical drafts, optimistic revisions and test snapshots | Accepted |
+| [0009](ADR-0009-publishing-principals-and-traffic-pointer.md) | Public principals, immutable publication and traffic rollback | Accepted |
 
 ADRs record decisions, not implementation detail. Reversal requires a superseding ADR.
